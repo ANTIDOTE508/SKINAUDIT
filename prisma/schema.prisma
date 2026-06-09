@@ -1,0 +1,745 @@
+// SkinAudit — Prisma Schema v2
+// Segmentation : auth | app | analytics
+// IDs : Int @id @default(autoincrement())
+// DO NOT run migrations directly — managed by the developer
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters", "multiSchema"]
+}
+
+// Prisma 7: url is configured in prisma.config.ts datasource.url
+datasource db {
+  provider = "postgresql"
+  schemas  = ["auth", "app", "analytics"]
+}
+
+// ============================================================
+// ENUMS — schema app
+// ============================================================
+
+enum UserRole {
+  ADMIN
+  USER
+
+  @@schema("auth")
+}
+
+enum SkinType {
+  DRY
+  OILY
+  COMBINATION
+  NORMAL
+
+  @@schema("app")
+}
+
+enum SensitivityLevel {
+  LOW
+  MEDIUM
+  HIGH
+
+  @@schema("app")
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+
+  @@schema("app")
+}
+
+enum LocationSource {
+  GPS
+  IP_INFERENCE
+  MANUAL
+  ONBOARDING
+
+  @@schema("app")
+}
+
+enum ClimateZone {
+  DRY
+  HUMID
+  TEMPERATE
+
+  @@schema("app")
+}
+
+enum HumidityBand {
+  LOW
+  MEDIUM
+  HIGH
+
+  @@schema("app")
+}
+
+enum Season {
+  SPRING
+  SUMMER
+  AUTUMN
+  WINTER
+
+  @@schema("app")
+}
+
+enum ProductCategory {
+  CLEANSER
+  TONER
+  SERUM
+  MOISTURIZER
+  SUNSCREEN
+  MASK
+  OIL
+  TREATMENT
+  OTHER
+
+  @@schema("app")
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  UNVERIFIED
+
+  @@schema("app")
+}
+
+enum SafetyRating {
+  SAFE
+  CAUTION
+  AVOID
+  UNKNOWN
+
+  @@schema("app")
+}
+
+enum DossierProductStatus {
+  ACTIVE
+  SEASONAL
+  ARCHIVED
+
+  @@schema("app")
+}
+
+enum TimeOfDay {
+  AM
+  PM
+  BOTH
+
+  @@schema("app")
+}
+
+enum UsageFrequency {
+  DAILY
+  TWO_THREE_WEEKLY
+  WEEKLY
+  OCCASIONAL
+
+  @@schema("app")
+}
+
+enum FindingSeverity {
+  INFORMATIONAL
+  MILD
+  CAUTION
+  HIGH
+
+  @@schema("app")
+}
+
+enum FindingCategory {
+  INGREDIENT_CONFLICT
+  REDUNDANCY
+  OVERUSE
+  MISSING_STEP
+  SEQUENCING
+  CONTEXTUAL
+  DEVICE_INTERACTION
+
+  @@schema("app")
+}
+
+enum SimulationType {
+  ADD
+  REMOVE
+  MOVE
+
+  @@schema("app")
+}
+
+enum SimulationStatus {
+  PENDING
+  APPLIED
+  DISCARDED
+
+  @@schema("app")
+}
+
+enum SubscriptionTier {
+  FREE
+  PREMIUM_ACTIVE
+  PREMIUM_GRACE
+  PREMIUM_EXPIRED
+  ENTERPRISE
+
+  @@schema("app")
+}
+
+// ============================================================
+// SCHEMA auth
+// ============================================================
+
+model User {
+  id            String    @id
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  name          String?
+  image         String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  sessions      Session[]
+  accounts      Account[]
+
+  profile                  UserProfile?
+  environmentContext       UserEnvironmentContext?
+  devices                  UserDevice[]
+  dossierProducts          UserDossierProduct[]
+  regimens                 UserRegimen[]
+  regimenAssessments       RegimenAssessment[]
+  compatibilitySimulations CompatibilitySimulation[]
+  skinReflectionEntries    SkinReflectionEntry[]
+  reflectionMetrics        ReflectionMetric[]
+  environmentalSnapshots   EnvironmentalSnapshot[]
+  environmentalTriggers    EnvironmentalTrigger[]
+  tierMetadata             TierMetadata?
+  confidenceObjects        ConfidenceObject[]
+  analyticsEvents          AnalyticsEvent[]
+  formulationStudioEvents  FormulationStudioEvent[]
+
+  @@map("user")
+  @@schema("auth")
+}
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+  @@schema("auth")
+}
+
+model Account {
+  id                    String    @id
+  userId                String    @map("user_id")
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@map("account")
+  @@schema("auth")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("verification")
+  @@schema("auth")
+}
+
+// ============================================================
+// SCHEMA app
+// ============================================================
+
+model UserProfile {
+  id                   Int              @id @default(autoincrement())
+  userId               String           @unique @map("user_id")
+  skinType             SkinType         @map("skinType")
+  sensitivity          SensitivityLevel
+  concerns             String[]
+  goals                String[]
+  experienceLevel      ExperienceLevel  @default(BEGINNER) @map("experienceLevel")
+  onboardingStep       Int              @default(0) @map("onboarding_step")
+  onboardingCompletedAt DateTime?       @map("onboarding_completed_at")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updatedAt")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+  @@schema("app")
+}
+
+model UserEnvironmentContext {
+  id              Int            @id @default(autoincrement())
+  userId          String         @unique @map("user_id")
+  locationSource  LocationSource @default(ONBOARDING) @map("locationSource")
+  countryCode     String?        @map("countryCode")
+  city            String?
+  climateZone     ClimateZone?   @map("climateZone")
+  humidityBand    HumidityBand?  @map("humidityBand")
+  temperatureBand String?        @map("temperatureBand")
+  uvBand          String?        @map("uvBand")
+  pollutionLevel  String?        @map("pollutionLevel")
+  season          Season?
+  lastUpdatedAt   DateTime       @default(now()) @map("lastUpdatedAt")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_environment_context")
+  @@schema("app")
+}
+
+model UserDevice {
+  id             Int      @id @default(autoincrement())
+  userId         String   @map("user_id")
+  deviceType     String   @map("deviceType")
+  brand          String?
+  model          String?
+  usageFrequency String?  @map("usageFrequency")
+  addedAt        DateTime @default(now()) @map("addedAt")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_devices")
+  @@schema("app")
+}
+
+model EnvironmentalSnapshot {
+  id              Int            @id @default(autoincrement())
+  userId          String         @map("user_id")
+  capturedAt      DateTime       @default(now()) @map("captured_at")
+  locationSource  LocationSource? @map("locationSource")
+  countryCode     String?        @map("countryCode")
+  city            String?
+  climateZone     ClimateZone?   @map("climateZone")
+  humidityBand    HumidityBand?  @map("humidityBand")
+  temperatureBand String?        @map("temperatureBand")
+  uvBand          String?        @map("uvBand")
+  pollutionLevel  String?        @map("pollutionLevel")
+  season          Season?
+  rawWeatherData  Json?          @map("rawWeatherData")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  regimenAssessments    RegimenAssessment[]
+  skinReflectionEntries SkinReflectionEntry[]
+
+  @@map("environmental_snapshots")
+  @@schema("app")
+}
+
+model EnvironmentalTrigger {
+  id          Int       @id @default(autoincrement())
+  userId      String    @map("user_id")
+  triggerType String    @map("triggerType")
+  triggerData Json?     @map("triggerData")
+  processedAt DateTime? @map("processedAt")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("environmental_triggers")
+  @@schema("app")
+}
+
+model Brand {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+
+  aliases  BrandAlias[]
+  products Product[]
+
+  @@map("brands")
+  @@schema("app")
+}
+
+model BrandAlias {
+  id        Int      @id @default(autoincrement())
+  brandId   Int      @map("brandId")
+  alias     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, alias])
+  @@map("brand_aliases")
+  @@schema("app")
+}
+
+model Product {
+  id              Int             @id @default(autoincrement())
+  brandId         Int?            @map("brandId")
+  name            String
+  slug            String          @unique
+  category        ProductCategory
+  subcategory     String?
+  description     String?
+  confidenceLevel ConfidenceLevel @default(UNVERIFIED) @map("confidenceLevel")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updatedAt")
+
+  brand           Brand?               @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  aliases         ProductAlias[]
+  metadata        ProductMetadata[]
+  versions        ProductVersion[]
+  dossierProducts UserDossierProduct[]
+
+  @@map("products")
+  @@schema("app")
+}
+
+model ProductAlias {
+  id        Int      @id @default(autoincrement())
+  productId Int      @map("product_id")
+  alias     String
+  source    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, alias])
+  @@map("product_aliases")
+  @@schema("app")
+}
+
+model ProductMetadata {
+  id        Int      @id @default(autoincrement())
+  productId Int      @map("product_id")
+  key       String
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, key])
+  @@map("product_metadata")
+  @@schema("app")
+}
+
+model ProductVersion {
+  id             Int       @id @default(autoincrement())
+  productId      Int       @map("product_id")
+  versionLabel   String?   @map("versionLabel")
+  launchDate     DateTime? @map("launchDate")
+  discontinuedAt DateTime? @map("discontinuedAt")
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  product     Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredients ProductVersionIngredient[]
+
+  @@map("product_versions")
+  @@schema("app")
+}
+
+model ProductVersionIngredient {
+  id                    Int      @id @default(autoincrement())
+  productVersionId      Int      @map("productVersionId")
+  canonicalIngredientId Int      @map("canonicalIngredientId")
+  position              Int
+  isKeyIngredient       Boolean  @default(false) @map("isKeyIngredient")
+  concentration         String?
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  productVersion      ProductVersion      @relation(fields: [productVersionId], references: [id], onDelete: Cascade)
+  canonicalIngredient CanonicalIngredient @relation(fields: [canonicalIngredientId], references: [id], onDelete: Restrict)
+
+  @@unique([productVersionId, canonicalIngredientId])
+  @@map("product_version_ingredients")
+  @@schema("app")
+}
+
+model CanonicalIngredient {
+  id           Int          @id @default(autoincrement())
+  inci         String       @unique
+  commonName   String?      @map("commonName")
+  description  String?
+  functions    String[]
+  safetyRating SafetyRating @default(UNKNOWN) @map("safetyRating")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updatedAt")
+
+  aliases                   IngredientAlias[]
+  productVersionIngredients ProductVersionIngredient[]
+
+  @@map("canonical_ingredients")
+  @@schema("app")
+}
+
+model IngredientAlias {
+  id                    Int      @id @default(autoincrement())
+  canonicalIngredientId Int      @map("canonicalIngredientId")
+  alias                 String
+  language              String?
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  canonicalIngredient CanonicalIngredient @relation(fields: [canonicalIngredientId], references: [id], onDelete: Cascade)
+
+  @@unique([canonicalIngredientId, alias])
+  @@map("ingredient_aliases")
+  @@schema("app")
+}
+
+model UserDossierProduct {
+  id         Int                  @id @default(autoincrement())
+  userId     String               @map("user_id")
+  productId  Int                  @map("product_id")
+  status     DossierProductStatus @default(ACTIVE)
+  addedAt    DateTime             @default(now()) @map("addedAt")
+  archivedAt DateTime?            @map("archivedAt")
+  notes      String?
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updatedAt")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  ritualItems RitualItem[]
+
+  @@unique([userId, productId])
+  @@map("user_dossier_products")
+  @@schema("app")
+}
+
+model UserRegimen {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+
+  user                     User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ritualItems              RitualItem[]
+  assessments              RegimenAssessment[]
+  compatibilitySimulations CompatibilitySimulation[]
+  formulationStudioEvents  FormulationStudioEvent[]
+
+  @@map("user_regimens")
+  @@schema("app")
+}
+
+model RitualItem {
+  id               Int            @id @default(autoincrement())
+  regimenId        Int            @map("regimenId")
+  dossierProductId Int            @map("dossierProductId")
+  timeOfDay        TimeOfDay      @map("timeOfDay")
+  stepOrder        Int            @map("stepOrder")
+  frequency        UsageFrequency @default(DAILY)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updatedAt")
+
+  regimen        UserRegimen        @relation(fields: [regimenId], references: [id], onDelete: Cascade)
+  dossierProduct UserDossierProduct @relation(fields: [dossierProductId], references: [id], onDelete: Cascade)
+
+  @@map("ritual_items")
+  @@schema("app")
+}
+
+model RegimenAssessment {
+  id                      Int      @id @default(autoincrement())
+  regimenId               Int      @map("regimenId")
+  userId                  String   @map("user_id")
+  rhiScore                Float    @map("rhiScore")
+  rhiIrritationRisk       Float    @map("rhiIrritationRisk")
+  rhiBarrierSupport       Float    @map("rhiBarrierSupport")
+  rhiRegimenBalance       Float    @map("rhiRegimenBalance")
+  rhiActiveOverlap        Float    @map("rhiActiveOverlap")
+  rhiCompatibilityQuality Float    @map("rhiCompatibilityQuality")
+  rhiContextualAlignment  Float    @map("rhiContextualAlignment")
+  confidenceScore         Float    @map("confidenceScore")
+  environmentalSnapshotId Int?     @map("environmentalSnapshotId")
+  assessedAt              DateTime @default(now()) @map("assessed_at")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  regimen               UserRegimen            @relation(fields: [regimenId], references: [id], onDelete: Cascade)
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environmentalSnapshot EnvironmentalSnapshot? @relation(fields: [environmentalSnapshotId], references: [id], onDelete: SetNull)
+  findings              Finding[]
+
+  @@map("regimen_assessments")
+  @@schema("app")
+}
+
+model Finding {
+  id                  Int             @id @default(autoincrement())
+  assessmentId        Int             @map("assessmentId")
+  severity            FindingSeverity
+  category            FindingCategory
+  issue               String
+  explanation         String
+  suggestedAdjustment String          @map("suggestedAdjustment")
+  isPositive          Boolean         @default(false) @map("isPositive")
+  affectedProductIds  Int[]           @map("affectedProductIds")
+  createdAt           DateTime        @default(now()) @map("created_at")
+
+  assessment RegimenAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@map("findings")
+  @@schema("app")
+}
+
+model CompatibilitySimulation {
+  id                 Int              @id @default(autoincrement())
+  userId             String           @map("user_id")
+  regimenId          Int              @map("regimenId")
+  simulationType     SimulationType   @map("simulationType")
+  simulatedProductId Int?             @map("simulatedProductId")
+  simulatedTimeOfDay TimeOfDay?       @map("simulatedTimeOfDay")
+  simulatedStep      Int?             @map("simulatedStep")
+  baseRhiScore       Float            @map("baseRhiScore")
+  simulatedRhiScore  Float            @map("simulatedRhiScore")
+  simulatedFindings  Json             @map("simulatedFindings")
+  status             SimulationStatus @default(PENDING)
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updatedAt")
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  regimen UserRegimen @relation(fields: [regimenId], references: [id], onDelete: Cascade)
+
+  @@map("compatibility_simulations")
+  @@schema("app")
+}
+
+model ConfidenceObject {
+  id                   Int      @id @default(autoincrement())
+  userId               String?  @map("user_id")
+  entityType           String   @map("entityType")
+  entityId             Int      @map("entityId")
+  productConfidence    Float?   @map("productConfidence")
+  ingredientConfidence Float?   @map("ingredientConfidence")
+  assessmentConfidence Float?   @map("assessmentConfidence")
+  scoringConfidence    Float?   @map("scoringConfidence")
+  notes                String?
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updatedAt")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("confidence_objects")
+  @@schema("app")
+}
+
+model SkinReflectionEntry {
+  id                      Int      @id @default(autoincrement())
+  userId                  String   @map("user_id")
+  recordedAt              DateTime @default(now()) @map("recordedAt")
+  drynessValue            Int      @map("drynessValue")
+  irritationValue         Int      @map("irritationValue")
+  oilinessValue           Int      @map("oilinessValue")
+  sensitivityValue        Int      @map("sensitivityValue")
+  tightnessValue          Int      @map("tightnessValue")
+  glowValue               Int      @map("glowValue")
+  optionalNotes           String?  @map("optionalNotes")
+  linkedRegimenState      String?  @map("linkedRegimenState")
+  linkedContextualStateId Int?     @map("linkedContextualStateId")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environmentalSnapshot EnvironmentalSnapshot? @relation(fields: [linkedContextualStateId], references: [id], onDelete: SetNull)
+
+  @@map("skin_reflection_entries")
+  @@schema("app")
+}
+
+model ReflectionMetric {
+  id          Int       @id @default(autoincrement())
+  userId      String    @map("user_id")
+  metricType  String    @map("metric_type")
+  metricData  Json      @map("metricData")
+  periodStart DateTime? @map("periodStart")
+  periodEnd   DateTime? @map("periodEnd")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reflection_metrics")
+  @@schema("app")
+}
+
+model TierMetadata {
+  id                   Int              @id @default(autoincrement())
+  userId               String           @unique @map("user_id")
+  tier                 SubscriptionTier @default(FREE)
+  stripeCustomerId     String?          @map("stripeCustomerId")
+  stripeSubscriptionId String?          @map("stripeSubscriptionId")
+  currentPeriodStart   DateTime?        @map("currentPeriodStart")
+  currentPeriodEnd     DateTime?        @map("currentPeriodEnd")
+  cancelAtPeriodEnd    Boolean          @default(false) @map("cancelAtPeriodEnd")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updatedAt")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tier_metadata")
+  @@schema("app")
+}
+
+// ============================================================
+// SCHEMA analytics
+// ============================================================
+
+model AnalyticsEvent {
+  id         Int      @id @default(autoincrement())
+  userId     String?  @map("user_id")
+  sessionId  Int?     @map("sessionId")
+  eventName  String   @map("eventName")
+  eventData  Json?    @map("eventData")
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("analytics_events")
+  @@schema("analytics")
+}
+
+model FormulationStudioEvent {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  regimenId Int?     @map("regimenId")
+  eventType String   @map("eventType")
+  eventData Json?    @map("eventData")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  regimen UserRegimen? @relation(fields: [regimenId], references: [id], onDelete: SetNull)
+
+  @@map("formulation_studio_events")
+  @@schema("analytics")
+}

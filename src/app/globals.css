@@ -1,0 +1,282 @@
+@import "tailwindcss";
+
+/* ================================================================
+   SKINAUDIT — Design System
+   Luxury skincare intelligence. Clinical precision meets sensory warmth.
+   ================================================================ */
+
+@theme {
+  /* ── Obsidian (dark backgrounds) ── */
+  --color-obsidian-950: #0a0908;
+  --color-obsidian-900: #12100e;
+  --color-obsidian-800: #1c1916;
+  --color-obsidian-700: #2a2520;
+
+  /* ── Alabaster (light / text) ── */
+  --color-alabaster-50:  #fafaf8;
+  --color-alabaster-100: #f5f4f0;
+  --color-alabaster-200: #eae9e3;
+  --color-alabaster-300: #d4d2ca;
+  --color-alabaster-400: #b8b5ab;
+
+  /* ── Sienna Gold (accent) ── */
+  --color-sienna-300: #e8c99a;
+  --color-sienna-400: #d4a96a;
+  --color-sienna-500: #b8863d;
+  --color-sienna-600: #9a6e2e;
+
+  /* ── Sage (positive / success) ── */
+  --color-sage-100: #d4ddd0;
+  --color-sage-400: #8fa888;
+  --color-sage-600: #6b8f63;
+
+  /* ── Blush (caution / warning) ── */
+  --color-blush-50:  #f5ede8;
+  --color-blush-200: #e8c4b4;
+  --color-blush-500: #c9897a;
+
+  /* ── Typography ── */
+  --font-heading: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-body:    var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+  --font-mono:    var(--font-dm-mono), "DM Mono", "Courier New", monospace;
+
+  /* ── Spacing ── */
+  --spacing-section: clamp(5rem, 10vw, 14rem);
+  --spacing-container: clamp(1.5rem, 5vw, 4rem);
+
+  /* ── Border radius ── */
+  --radius-card:   12px;
+  --radius-button: 6px;
+  --radius-badge:  4px;
+
+  /* ── Motion ── */
+  --ease-luxury:  cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-enter:   cubic-bezier(0.0, 0.0, 0.2, 1.0);
+  --ease-exit:    cubic-bezier(0.4, 0.0, 1.0, 1.0);
+  --duration-enter:  800ms;
+  --duration-exit:   500ms;
+  --duration-micro:  200ms;
+  --duration-short:  350ms;
+}
+
+/* ================================================================
+   ROOT — Dark mode by default
+   ================================================================ */
+
+:root {
+  --color-background:        var(--color-obsidian-950);
+  --color-surface:           var(--color-obsidian-900);
+  --color-surface-raised:    var(--color-obsidian-800);
+  --color-border:            var(--color-obsidian-700);
+  --color-text-primary:      var(--color-alabaster-50);
+  --color-text-secondary:    var(--color-alabaster-300);
+  --color-text-muted:        var(--color-alabaster-400);
+  --color-accent:            var(--color-sienna-500);
+  --color-accent-subtle:     rgba(184, 134, 61, 0.15);
+  --color-accent-border:     rgba(184, 134, 61, 0.3);
+
+  color-scheme: dark;
+}
+
+/* Light mode override — explicit class required */
+.light {
+  --color-background:        var(--color-alabaster-50);
+  --color-surface:           var(--color-alabaster-100);
+  --color-surface-raised:    #ffffff;
+  --color-border:            var(--color-alabaster-200);
+  --color-text-primary:      var(--color-obsidian-950);
+  --color-text-secondary:    var(--color-obsidian-800);
+  --color-text-muted:        var(--color-obsidian-700);
+
+  color-scheme: light;
+}
+
+/* ================================================================
+   BASE
+   ================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* ================================================================
+   UTILITY CLASSES
+   ================================================================ */
+
+/* Cards */
+.card-base {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 2rem;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-sienna-500);
+  color: var(--color-alabaster-50);
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 0.875rem 1.75rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--duration-micro) var(--ease-luxury),
+              opacity var(--duration-micro) var(--ease-luxury);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-sienna-400);
+}
+
+.btn-primary:active {
+  background-color: var(--color-sienna-600);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  padding: 0.875rem 1.75rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color var(--duration-micro) var(--ease-luxury),
+              color var(--duration-micro) var(--ease-luxury);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-sienna-500);
+  color: var(--color-sienna-300);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-sienna-400);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: color var(--duration-micro) var(--ease-luxury);
+}
+
+.btn-ghost:hover {
+  color: var(--color-sienna-300);
+}
+
+/* Label caps */
+.label-caps {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Underline input */
+.input-underline {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 0.625rem 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 300;
+  outline: none;
+  transition: border-color var(--duration-micro) var(--ease-luxury);
+  caret-color: var(--color-sienna-400);
+}
+
+.input-underline::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.input-underline:focus {
+  border-bottom: 2px solid var(--color-sienna-500);
+}
+
+.input-underline:focus + .input-label,
+.input-underline:not(:placeholder-shown) + .input-label {
+  transform: translateY(-1.5rem) scale(0.85);
+  color: var(--color-sienna-400);
+}
+
+/* Divider */
+.divider-subtle {
+  border: none;
+  border-top: 1px solid var(--color-accent-border);
+  margin: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-obsidian-700);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sienna-600);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-sienna-300);
+}
