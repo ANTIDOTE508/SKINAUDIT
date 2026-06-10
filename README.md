@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SkinAudit
 
-## Getting Started
+> *"You've had the products. Now you have the intelligence."*
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What SkinAudit is
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+SkinAudit is a **personal skin intelligence platform**. It helps users understand, evaluate, and optimize how their skincare products work **together** — across a complete routine.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+It is **not** a marketplace. It is **not** a recommendation engine that pushes you to buy more.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+It is a **neutral analytical advisor**: it examines what you already own, detects conflicts, duplicates, and incompatibilities — and explains how to adjust, without changing your products.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## The problem SkinAudit solves
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Most people accumulate skincare products over time — a serum spotted on TikTok, a moisturizer a friend swore by, an exfoliant picked up at the pharmacy. At some point, their routine becomes a stack of 8, 10, 12 products applied every morning and evening, **with no idea whether any of it works together**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Some ingredients neutralize each other. Others cause mutual irritation. Others simply do the same job twice. And nobody tells you — because brands only sell their own products, and have no interest in auditing your full routine.
 
-## Deploy on Vercel
+**SkinAudit is the first app to analyze the complete routine, not the isolated product.**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## What the app actually does
+
+### 1. Build your Skincare Dossier
+You enter your current products. The app catalogs them, identifies their active ingredients, and maps their function within your routine.
+
+### 2. Analyze interactions
+SkinAudit detects conflicts (AHA + retinol = cumulative irritation), duplicates (two identical moisturizers), gaps (no SPF, no barrier support), and climate incompatibilities.
+
+### 3. Build an optimal routine
+The app proposes a structured AM routine and PM routine built from the products you already own — with application order, recommended frequencies, and clear explanations.
+
+### 4. Adapt to your personal context
+Skin type, sensitivity, climate zone, season — SkinAudit factors in your real environment, not a generic profile.
+
+---
+
+## Real-world examples
+
+**Sophie, 28 — irritated skin with no apparent cause**
+She uses an AHA cleanser, a vitamin C serum, and a retinol. SkinAudit detects active overload and the exfoliant/retinol conflict. She reorganizes the order and frequency — without buying anything new. The irritation clears up within two weeks.
+
+**Marc, 35 — 12 products, zero results**
+SkinAudit identifies 3 duplicates and 2 redundant products in his collection. He leaves with a 4-product AM routine and a 5-product PM routine — all already sitting in his bathroom.
+
+**Inès, 31 — relocated from Paris to Dubai**
+Her routine that worked perfectly through a Parisian winter is now clogging her pores. SkinAudit detects the climate incompatibility: a moisturizer too occlusive for heat and humidity, an SPF too low for a high UV index. She adapts — she doesn't replace.
+
+---
+
+## Who it's for
+
+- **Individuals** who want to understand their routine without becoming experts
+- **Estheticians and skin therapists** looking for a structured client analysis tool
+- **Dermatologists** who want to evaluate a patient's routine between consultations
+- **Formulators** testing ingredient combinations
+
+---
+
+## Status
+
+Actively in development — The Antidote Agency, 2026.

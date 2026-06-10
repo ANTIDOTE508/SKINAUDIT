@@ -356,7 +356,7 @@ export default function AuthLayout({
               Trusted by
             </span>
             <div style={{ height: '1px', flex: 1, backgroundColor: 'rgba(184,134,61,0.1)' }} />
-            {['Esthéticiennes', 'Dermatologists', 'Formulators'].map((label) => (
+            {['Estheticians', 'Dermatologists', 'Formulators'].map((label) => (
               <span
                 key={label}
                 style={{
