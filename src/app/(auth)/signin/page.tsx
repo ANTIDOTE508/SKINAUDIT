@@ -18,6 +18,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FieldErrors>({})
 
@@ -25,12 +26,13 @@ export default function SignInPage() {
   const dotsTimeline = useRef<gsap.core.Timeline | null>(null)
 
   useEffect(() => {
-    if (!dotsRef.current) return
+    const dots = dotsRef.current
+    if (!dots) return
     if (isLoading) {
-      const dots = dotsRef.current.querySelectorAll('.dot')
+      const dotEls = dots.querySelectorAll('.dot')
       dotsTimeline.current = gsap.timeline({ repeat: -1 })
       dotsTimeline.current.fromTo(
-        dots,
+        dotEls,
         { opacity: 0.2 },
         { opacity: 1, duration: 0.4, stagger: 0.15, ease: 'power2.inOut', yoyo: true, repeat: 1 }
       )
@@ -87,27 +89,23 @@ export default function SignInPage() {
           fontSize: '2rem',
           lineHeight: 1.15,
           color: 'var(--color-alabaster-50)',
-          marginBottom: '0.5rem',
+          marginBottom: '0.4rem',
         }}
       >
-        Welcome back.
+        Welcome back
       </h2>
       <p
         style={{
           fontFamily: 'var(--font-body)',
           fontWeight: 300,
-          fontSize: '0.9rem',
-          lineHeight: 1.6,
+          fontSize: '0.875rem',
+          lineHeight: 1.5,
           color: 'var(--color-alabaster-400)',
           marginBottom: '2rem',
         }}
       >
-        Your skincare intelligence
-        <br />
-        is waiting for you.
+        Sign in to continue your SkinAudit
       </p>
-
-      <hr className="divider-subtle" style={{ marginBottom: '2rem' }} />
 
       {errors.form && (
         <motion.p
@@ -125,21 +123,33 @@ export default function SignInPage() {
         </motion.p>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        {/* Email */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="email" className="label-caps">
-            Email
-          </label>
           <input
             id="email"
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="input-underline"
-            placeholder="you@example.com"
+            placeholder="Email address"
             disabled={isLoading}
             aria-describedby={errors.email ? 'email-error' : undefined}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '4px',
+              padding: '0.85rem 1rem',
+              color: 'var(--color-alabaster-100)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.9rem',
+              fontWeight: 300,
+              outline: 'none',
+              transition: 'border-color 200ms ease',
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)')}
           />
           {errors.email && (
             <motion.span
@@ -149,10 +159,8 @@ export default function SignInPage() {
               role="alert"
               style={{
                 fontFamily: 'var(--font-body)',
-                fontWeight: 400,
                 fontSize: '0.8125rem',
                 color: 'var(--color-blush-500)',
-                marginTop: '0.25rem',
               }}
             >
               {errors.email}
@@ -160,10 +168,8 @@ export default function SignInPage() {
           )}
         </div>
 
+        {/* Password */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="password" className="label-caps">
-            Password
-          </label>
           <div className="relative">
             <input
               id="password"
@@ -171,30 +177,55 @@ export default function SignInPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-underline pr-10"
-              placeholder="••••••••"
+              placeholder="Password"
               disabled={isLoading}
               aria-describedby={errors.password ? 'password-error' : undefined}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: '4px',
+                padding: '0.85rem 3rem 0.85rem 1rem',
+                color: 'var(--color-alabaster-100)',
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.9rem',
+                fontWeight: 300,
+                outline: 'none',
+                transition: 'border-color 200ms ease',
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)')}
+              onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)')}
             />
+            {/* Eye icon */}
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-0 bottom-2"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               style={{
+                position: 'absolute',
+                right: '0.875rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: 'var(--color-text-muted)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.05em',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 400,
+                color: 'rgba(255,255,255,0.45)',
                 padding: 0,
-                transition: 'color 200ms ease',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
             </button>
           </div>
           {errors.password && (
@@ -205,10 +236,8 @@ export default function SignInPage() {
               role="alert"
               style={{
                 fontFamily: 'var(--font-body)',
-                fontWeight: 400,
                 fontSize: '0.8125rem',
                 color: 'var(--color-blush-500)',
-                marginTop: '0.25rem',
               }}
             >
               {errors.password}
@@ -216,21 +245,81 @@ export default function SignInPage() {
           )}
         </div>
 
+        {/* Remember me + Forgot password */}
+        <div className="flex items-center justify-between" style={{ marginTop: '0.25rem' }}>
+          <label
+            className="flex items-center gap-2 cursor-pointer"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              fontWeight: 300,
+              color: 'var(--color-alabaster-400)',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{
+                width: '14px',
+                height: '14px',
+                borderRadius: '2px',
+                accentColor: 'var(--color-sienna-500)',
+                cursor: 'pointer',
+              }}
+            />
+            Remember me
+          </label>
+          <Link
+            href="/forgot-password"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              fontWeight: 300,
+              color: 'var(--color-alabaster-400)',
+              textDecoration: 'none',
+              transition: 'color 200ms ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-alabaster-100)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-alabaster-400)')}
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
           disabled={isLoading}
-          className="btn-primary w-full mt-2"
-          style={{ minHeight: '52px' }}
+          style={{
+            width: '100%',
+            marginTop: '0.5rem',
+            minHeight: '50px',
+            background: 'var(--color-sienna-300)',
+            border: 'none',
+            borderRadius: '4px',
+            color: 'var(--color-obsidian-950)',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            opacity: isLoading ? 0.6 : 1,
+            transition: 'opacity 200ms ease, background 200ms ease',
+          }}
+          onMouseEnter={(e) => { if (!isLoading) e.currentTarget.style.opacity = '0.88' }}
+          onMouseLeave={(e) => { if (!isLoading) e.currentTarget.style.opacity = '1' }}
         >
           {isLoading ? (
-            <span ref={dotsRef} className="flex items-center gap-1" aria-hidden="true">
+            <span ref={dotsRef} className="flex items-center justify-center gap-1" aria-hidden="true">
               <span className="dot" style={{ display: 'inline-block', width: 4, height: 4, borderRadius: '50%', backgroundColor: 'currentColor' }} />
               <span className="dot" style={{ display: 'inline-block', width: 4, height: 4, borderRadius: '50%', backgroundColor: 'currentColor' }} />
               <span className="dot" style={{ display: 'inline-block', width: 4, height: 4, borderRadius: '50%', backgroundColor: 'currentColor' }} />
               <span className="sr-only">Signing in…</span>
             </span>
           ) : (
-            'Access my space →'
+            'Sign in'
           )}
         </button>
       </form>
@@ -241,16 +330,19 @@ export default function SignInPage() {
           fontFamily: 'var(--font-body)',
           fontWeight: 300,
           fontSize: '0.8125rem',
-          color: 'var(--color-text-muted)',
+          color: 'var(--color-alabaster-500)',
         }}
       >
-        No account yet?{' '}
+        Don&apos;t have an account?{' '}
         <Link
           href="/signup"
-          className="btn-ghost"
-          style={{ display: 'inline', fontSize: 'inherit' }}
+          style={{
+            color: 'var(--color-alabaster-100)',
+            fontWeight: 400,
+            textDecoration: 'none',
+          }}
         >
-          Get started →
+          Create one
         </Link>
       </p>
     </motion.div>

@@ -109,9 +109,9 @@ export function StepWelcome({ user, onContinue }: Props) {
             margin: 0,
           }}
         >
-          Welcome to
+          Let's understand
           <br />
-          SkinAudit.
+          your skin.
         </h1>
       </div>
 
@@ -145,8 +145,7 @@ export function StepWelcome({ user, onContinue }: Props) {
           margin: 0,
         }}
       >
-        We'll take a few minutes to understand your skin —
-        so every insight we surface is genuinely yours.
+        We'll build your SkinAudit.
       </p>
 
       {/* CTA — skip auto-advance */}
@@ -201,7 +200,7 @@ export function StepWelcome({ user, onContinue }: Props) {
             color: 'var(--color-text-muted)',
           }}
         >
-          6 short steps
+          8 short steps
         </span>
       </div>
 

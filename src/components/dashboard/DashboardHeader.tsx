@@ -1,4 +1,5 @@
 import { SignOutButton } from './SignOutButton'
+import SkinauditLogo from '@/components/ui/SkinauditLogo'
 
 interface DashboardHeaderProps {
   user: {
@@ -24,24 +25,8 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         paddingInline: 'clamp(1.25rem, 4vw, 2.5rem)',
       }}
     >
-      {/* Wordmark */}
-      <a
-        href="/dashboard"
-        aria-label="SkinAudit — return to dashboard"
-        style={{
-          fontFamily: 'var(--font-heading)',
-          fontStyle: 'italic',
-          fontWeight: 300,
-          fontSize: 'clamp(1.125rem, 2vw, 1.375rem)',
-          letterSpacing: '0.04em',
-          color: 'var(--color-sienna-500)',
-          textDecoration: 'none',
-          lineHeight: 1,
-          userSelect: 'none',
-          flexShrink: 0,
-        }}
-      >
-        SkinAudit
+      <a href="/dashboard" aria-label="SkinAudit — return to dashboard" style={{ textDecoration: 'none' }}>
+        <SkinauditLogo />
       </a>
 
       {/* Right cluster */}

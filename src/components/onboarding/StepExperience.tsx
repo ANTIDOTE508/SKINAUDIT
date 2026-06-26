@@ -35,6 +35,13 @@ const LEVELS: {
     description: 'You read INCI lists, understand pH, and follow research.',
     traits: ['Concise, technical findings', 'Full formulation data', 'No hand-holding'],
   },
+  {
+    value: 'ENTHUSIAST',
+    label: 'Skincare obsessive',
+    subtitle: 'I live and breathe skincare',
+    description: 'You track launches, read patents, and may even formulate at home.',
+    traits: ['Expert-level depth', 'Raw data access', 'Minimal guidance'],
+  },
 ]
 
 type Props = {
@@ -82,9 +89,9 @@ export function StepExperience({ level, onChange, onContinue, onBack }: Props) {
   return (
     <div>
       <StepHeader
-        eyebrow="Step 4 of 6"
-        title="How deep should we go?"
-        subtitle="This shapes how SkinAudit explains its findings — not what it discovers."
+        eyebrow="06 / 08"
+        title="How would you describe your experience with skincare?"
+        subtitle="This helps tailor the Studio to you."
       />
 
       <div

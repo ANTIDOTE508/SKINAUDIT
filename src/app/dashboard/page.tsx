@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     where: { userId: session.user.id },
     select: {
       skinType: true,
-      sensitivity: true,
+      sensitivityScore: true,
       experienceLevel: true,
       concerns: true,
       onboardingStep: true,

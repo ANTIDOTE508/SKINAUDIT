@@ -109,7 +109,6 @@ export function StepSkinProfile({
       try {
         await saveSkinProfile({
           skinType: skinType as SkinType,
-          concerns,
         })
         onContinue()
       } catch {

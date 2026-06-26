@@ -3,119 +3,49 @@
 import { useRef, useEffect, useState, useTransition } from 'react'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
-import { SelectionCard } from './SelectionCard'
 import { StepNav } from './StepNav'
 import { saveSensitivity } from '@/app/actions/onboarding'
-import type { SensitivityLevel } from '@prisma/client'
 
-const SENSITIVITY_LEVELS = [
-  {
-    value: 'LOW' as SensitivityLevel,
-    label: 'Low',
-    description: 'My skin tolerates most products without issue.',
-    icon: '○',
-  },
-  {
-    value: 'MEDIUM' as SensitivityLevel,
-    label: 'Medium',
-    description: 'Some products cause mild reactions or irritation.',
-    icon: '◑',
-  },
-  {
-    value: 'HIGH' as SensitivityLevel,
-    label: 'High',
-    description: 'My skin reacts easily — I must patch-test everything.',
-    icon: '●',
-  },
-]
-
-const GOALS = [
-  { value: 'barrier_repair', label: 'Restore & repair skin barrier' },
-  { value: 'anti_aging', label: 'Address visible signs of aging' },
-  { value: 'brightening', label: 'Even skin tone & brighten' },
-  { value: 'hydration', label: 'Deep, lasting hydration' },
-  { value: 'acne_control', label: 'Control acne & breakouts' },
-  { value: 'calm_redness', label: 'Calm inflammation & redness' },
-  { value: 'simplify', label: 'Simplify my routine' },
-  { value: 'understand', label: 'Understand my routine better' },
-]
+const TICK_LABELS: Record<number, string> = {
+  1: 'Not sensitive',
+  2: 'Slightly',
+  3: 'Moderately',
+  4: 'Quite sensitive',
+  5: 'Very sensitive',
+}
 
 type Props = {
-  sensitivity: string
+  sensitivity: number
   goals: string[]
-  onSensitivityChange: (v: string) => void
+  onSensitivityChange: (v: number) => void
   onGoalsChange: (v: string[]) => void
   onContinue: () => void
   onBack: () => void
 }
 
-export function StepSensitivity({
-  sensitivity,
-  goals,
-  onSensitivityChange,
-  onGoalsChange,
-  onContinue,
-  onBack,
-}: Props) {
-  const cardsRef = useRef<HTMLDivElement>(null)
-  const goalsRef = useRef<HTMLDivElement>(null)
-  const scaleRef = useRef<HTMLDivElement>(null)
+export function StepSensitivity({ sensitivity, onSensitivityChange, onContinue, onBack }: Props) {
+  const sliderRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const current = sensitivity || 3
 
   useEffect(() => {
+    const node = sliderRef.current
     const ctx = gsap.context(() => {
-      // Sensitivity cards
-      const cards = cardsRef.current?.querySelectorAll('[data-card]')
-      if (cards?.length) {
-        gsap.fromTo(
-          cards,
-          { x: -20, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.25 }
-        )
-      }
-
-      // Visual scale bar
-      if (scaleRef.current) {
-        gsap.fromTo(
-          scaleRef.current,
-          { scaleX: 0, transformOrigin: 'left center' },
-          { scaleX: 1, duration: 0.6, ease: 'power2.out', delay: 0.4 }
-        )
-      }
-
-      // Goal chips
-      const goalChips = goalsRef.current?.querySelectorAll('[data-chip]')
-      if (goalChips?.length) {
-        gsap.fromTo(
-          goalChips,
-          { y: 10, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.35, stagger: 0.05, ease: 'power2.out', delay: 0.55 }
-        )
+      if (node) {
+        gsap.fromTo(node, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', delay: 0.25 })
       }
     })
     return () => ctx.revert()
   }, [])
 
-  const toggleGoal = (value: string) => {
-    const next = goals.includes(value)
-      ? goals.filter((g) => g !== value)
-      : [...goals, value]
-    onGoalsChange(next)
-  }
+  const fillPct = ((current - 1) / 4) * 100
 
   const handleContinue = () => {
-    if (!sensitivity) {
-      setError('Please select your sensitivity level.')
-      return
-    }
     setError(null)
     startTransition(async () => {
       try {
-        await saveSensitivity({
-          sensitivity: sensitivity as SensitivityLevel,
-          goals,
-        })
+        await saveSensitivity(current)
         onContinue()
       } catch {
         setError('Unable to save. Please try again.')
@@ -126,147 +56,113 @@ export function StepSensitivity({
   return (
     <div>
       <StepHeader
-        eyebrow="Step 2 of 6"
-        title="How does your skin react?"
-        subtitle="Sensitivity guides how we calibrate ingredient conflict risk in your analysis."
+        eyebrow="03 / 08"
+        title="How sensitive is your skin?"
+        subtitle="This helps calibrate your analysis."
       />
 
-      {/* Sensitivity cards — horizontal layout */}
-      <div
-        ref={cardsRef}
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '0.75rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        {SENSITIVITY_LEVELS.map((level) => (
-          <div key={level.value} data-card>
-            <SelectionCard
-              label={level.label}
-              description={level.description}
-              icon={level.icon}
-              isSelected={sensitivity === level.value}
-              onClick={() => onSensitivityChange(level.value)}
-            />
+      <div ref={sliderRef} style={{ padding: '1.5rem 0 2.5rem' }}>
+        {/* Current label */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+              fontWeight: 300,
+              color: 'var(--color-alabaster-50)',
+            }}
+          >
+            {TICK_LABELS[current]}
+          </span>
+        </div>
+
+        {/* Slider track + input */}
+        <div style={{ position: 'relative', padding: '0 0.5rem' }}>
+          {/* Visual track */}
+          <div
+            style={{
+              height: '2px',
+              borderRadius: '1px',
+              background: `linear-gradient(to right, var(--color-sienna-500) ${fillPct}%, var(--color-obsidian-700) ${fillPct}%)`,
+              marginBottom: '0.75rem',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Native input on top */}
+          <input
+            type="range"
+            min={1}
+            max={5}
+            step={1}
+            value={current}
+            onChange={(e) => onSensitivityChange(Number(e.target.value))}
+            style={{
+              position: 'absolute',
+              top: '-10px',
+              left: 0,
+              right: 0,
+              width: '100%',
+              opacity: 0,
+              cursor: 'pointer',
+              height: '24px',
+              margin: 0,
+            }}
+            aria-label="Skin sensitivity"
+            aria-valuemin={1}
+            aria-valuemax={5}
+            aria-valuenow={current}
+            aria-valuetext={TICK_LABELS[current]}
+          />
+
+          {/* Thumb visual */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '-9px',
+              left: `calc(${fillPct}% - 10px + ${fillPct === 0 ? '0.5rem' : fillPct === 100 ? '-0.5rem' : '0px'})`,
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-sienna-400)',
+              pointerEvents: 'none',
+              transition: 'left 120ms ease',
+            }}
+          />
+
+          {/* Tick marks */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <div key={n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <div
+                  style={{
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    backgroundColor: n <= current ? 'var(--color-sienna-500)' : 'var(--color-obsidian-700)',
+                    transform: n === current ? 'scale(1.4)' : 'scale(1)',
+                    transition: 'all 150ms ease',
+                  }}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Visual spectrum */}
-      <div
-        style={{
-          marginBottom: '2.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '10px',
-            color: 'var(--color-text-muted)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            flexShrink: 0,
-          }}
-        >
-          Resilient
-        </span>
-        <div
-          ref={scaleRef}
-          style={{
-            flex: 1,
-            height: '2px',
-            borderRadius: '1px',
-            background: 'linear-gradient(90deg, var(--color-sage-600) 0%, var(--color-sienna-400) 50%, var(--color-blush-500) 100%)',
-          }}
-        />
-        <span
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '10px',
-            color: 'var(--color-text-muted)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            flexShrink: 0,
-          }}
-        >
-          Reactive
-        </span>
-      </div>
-
-      {/* Priority goals */}
-      <span
-        className="label-caps"
-        style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: '1rem' }}
-      >
-        Priority goals — what matters most to you?
-      </span>
-      <div
-        ref={goalsRef}
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-        }}
-      >
-        {GOALS.map((goal) => {
-          const isSelected = goals.includes(goal.value)
-          return (
-            <button
-              key={goal.value}
-              data-chip
-              type="button"
-              onClick={() => toggleGoal(goal.value)}
-              aria-pressed={isSelected}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '100px',
-                border: isSelected
-                  ? '1px solid var(--color-sienna-400)'
-                  : '1px solid var(--color-border)',
-                backgroundColor: isSelected
-                  ? 'var(--color-accent-subtle)'
-                  : 'transparent',
-                color: isSelected
-                  ? 'var(--color-sienna-300)'
-                  : 'var(--color-alabaster-400)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.8125rem',
-                fontWeight: 400,
-                cursor: 'pointer',
-                transition: 'all 180ms var(--ease-luxury)',
-                outline: 'none',
-              }}
-            >
-              {goal.label}
-            </button>
-          )
-        })}
+        {/* Endpoint labels */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+          <span className="label-caps" style={{ color: 'var(--color-text-muted)', fontSize: '10px' }}>Not sensitive</span>
+          <span className="label-caps" style={{ color: 'var(--color-text-muted)', fontSize: '10px' }}>Very sensitive</span>
+        </div>
       </div>
 
       {error && (
-        <p
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.8125rem',
-            color: 'var(--color-blush-500)',
-            marginTop: '1rem',
-          }}
-        >
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-blush-500)', marginBottom: '1rem' }}>
           {error}
         </p>
       )}
 
-      <StepNav
-        onContinue={handleContinue}
-        onBack={onBack}
-        isLoading={isPending}
-        continueDisabled={!sensitivity}
-      />
+      <StepNav onContinue={handleContinue} onBack={onBack} isLoading={isPending} />
     </div>
   )
 }

@@ -26,18 +26,12 @@ enum UserRole {
 }
 
 enum SkinType {
+  BALANCED
   DRY
   OILY
   COMBINATION
-  NORMAL
-
-  @@schema("app")
-}
-
-enum SensitivityLevel {
-  LOW
-  MEDIUM
-  HIGH
+  SENSITIVE
+  ACNE_PRONE
 
   @@schema("app")
 }
@@ -46,6 +40,40 @@ enum ExperienceLevel {
   BEGINNER
   INTERMEDIATE
   ADVANCED
+  ENTHUSIAST
+
+  @@schema("app")
+}
+
+enum GenderIdentity {
+  WOMAN
+  MAN
+  NON_BINARY
+  OTHER
+  PREFER_NOT_TO_SAY
+
+  @@schema("app")
+}
+
+enum HomeDeviceType {
+  LED_THERAPY
+  MICROCURRENT
+  RF_DEVICE
+  GUA_SHA
+  FACIAL_ROLLER
+  DERMA_ROLLER
+  ULTRASONIC_SCRUBBER
+  HIGH_FREQUENCY_WAND
+
+  @@schema("app")
+}
+
+enum ProfessionalTreatmentType {
+  FACIALS
+  PEELS
+  INJECTABLES
+  LASERS
+  OTHER
 
   @@schema("app")
 }
@@ -208,6 +236,8 @@ model User {
   profile                  UserProfile?
   environmentContext       UserEnvironmentContext?
   devices                  UserDevice[]
+  homeDevices              UserHomeDevice[]
+  professionalTreatments   UserProfessionalTreatment[]
   dossierProducts          UserDossierProduct[]
   regimens                 UserRegimen[]
   regimenAssessments       RegimenAssessment[]
@@ -280,17 +310,18 @@ model Verification {
 // ============================================================
 
 model UserProfile {
-  id                   Int              @id @default(autoincrement())
-  userId               String           @unique @map("user_id")
-  skinType             SkinType         @map("skinType")
-  sensitivity          SensitivityLevel
-  concerns             String[]
-  goals                String[]
-  experienceLevel      ExperienceLevel  @default(BEGINNER) @map("experienceLevel")
-  onboardingStep       Int              @default(0) @map("onboarding_step")
-  onboardingCompletedAt DateTime?       @map("onboarding_completed_at")
-  createdAt            DateTime         @default(now()) @map("created_at")
-  updatedAt            DateTime         @updatedAt @map("updatedAt")
+  id                    Int              @id @default(autoincrement())
+  userId                String           @unique @map("user_id")
+  genderIdentity        GenderIdentity?  @map("gender_identity")
+  skinType              SkinType?        @map("skin_type")
+  sensitivityScore      Int?             @map("sensitivity_score")
+  concerns              String[]
+  goals                 String[]
+  experienceLevel       ExperienceLevel  @default(BEGINNER) @map("experience_level")
+  onboardingStep        Int              @default(0) @map("onboarding_step")
+  onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -322,15 +353,43 @@ model UserEnvironmentContext {
 model UserDevice {
   id             Int      @id @default(autoincrement())
   userId         String   @map("user_id")
-  deviceType     String   @map("deviceType")
+  deviceType     String   @map("device_type")
   brand          String?
   model          String?
-  usageFrequency String?  @map("usageFrequency")
-  addedAt        DateTime @default(now()) @map("addedAt")
+  usageFrequency String?  @map("usage_frequency")
+  addedAt        DateTime @default(now()) @map("added_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_devices")
+  @@schema("app")
+}
+
+model UserHomeDevice {
+  id         Int            @id @default(autoincrement())
+  userId     String         @map("user_id")
+  deviceType HomeDeviceType @map("device_type")
+  addedAt    DateTime       @default(now()) @map("added_at")
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceType])
+  @@map("user_home_devices")
+  @@schema("app")
+}
+
+model UserProfessionalTreatment {
+  id            Int                       @id @default(autoincrement())
+  userId        String                    @map("user_id")
+  treatmentType ProfessionalTreatmentType @map("treatment_type")
+  addedAt       DateTime                  @default(now()) @map("added_at")
+  createdAt     DateTime                  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, treatmentType])
+  @@map("user_professional_treatments")
   @@schema("app")
 }
 

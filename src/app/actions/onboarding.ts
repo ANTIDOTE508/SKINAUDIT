@@ -5,10 +5,12 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import type {
   SkinType,
-  SensitivityLevel,
   ExperienceLevel,
   ClimateZone,
   Season,
+  GenderIdentity,
+  HomeDeviceType,
+  ProfessionalTreatmentType,
 } from '@prisma/client'
 
 // ─── Auth helper ───────────────────────────────────────────────
@@ -18,10 +20,30 @@ async function requireSession() {
   return session.user
 }
 
-// ─── Step 2 — Skin Profile ─────────────────────────────────────
+// ─── Step 1 — Gender Identity ──────────────────────────────────
+export async function saveGenderIdentity(genderIdentity: GenderIdentity) {
+  const user = await requireSession()
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      genderIdentity,
+      experienceLevel: 'BEGINNER',
+      onboardingStep: 1,
+    },
+    update: {
+      genderIdentity,
+      onboardingStep: 1,
+    },
+  })
+
+  return { ok: true }
+}
+
+// ─── Step 2 — Skin Type ────────────────────────────────────────
 export type SkinProfilePayload = {
   skinType: SkinType
-  concerns: string[]
 }
 
 export async function saveSkinProfile(payload: SkinProfilePayload) {
@@ -32,14 +54,11 @@ export async function saveSkinProfile(payload: SkinProfilePayload) {
     create: {
       userId: user.id,
       skinType: payload.skinType,
-      concerns: payload.concerns,
-      sensitivity: 'MEDIUM',
       experienceLevel: 'BEGINNER',
       onboardingStep: 2,
     },
     update: {
       skinType: payload.skinType,
-      concerns: payload.concerns,
       onboardingStep: 2,
     },
   })
@@ -47,29 +66,20 @@ export async function saveSkinProfile(payload: SkinProfilePayload) {
   return { ok: true }
 }
 
-// ─── Step 3 — Sensitivity & Goals ─────────────────────────────
-export type SensitivityPayload = {
-  sensitivity: SensitivityLevel
-  goals: string[]
-}
-
-export async function saveSensitivity(payload: SensitivityPayload) {
+// ─── Step 3 — Sensitivity score (1–5) ─────────────────────────
+export async function saveSensitivity(sensitivityScore: number) {
   const user = await requireSession()
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
-      skinType: 'NORMAL',
-      concerns: [],
-      sensitivity: payload.sensitivity,
-      goals: payload.goals,
+      sensitivityScore,
       experienceLevel: 'BEGINNER',
       onboardingStep: 3,
     },
     update: {
-      sensitivity: payload.sensitivity,
-      goals: payload.goals,
+      sensitivityScore,
       onboardingStep: 3,
     },
   })
@@ -77,7 +87,28 @@ export async function saveSensitivity(payload: SensitivityPayload) {
   return { ok: true }
 }
 
-// ─── Step 4 — Environment ──────────────────────────────────────
+// ─── Step 4 — Skin Goals (max 3) ──────────────────────────────
+export async function saveGoals(goals: string[]) {
+  const user = await requireSession()
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      goals,
+      experienceLevel: 'BEGINNER',
+      onboardingStep: 4,
+    },
+    update: {
+      goals,
+      onboardingStep: 4,
+    },
+  })
+
+  return { ok: true }
+}
+
+// ─── Step 5 — Environment ──────────────────────────────────────
 export type EnvironmentPayload = {
   city?: string
   countryCode?: string
@@ -108,14 +139,14 @@ export async function saveEnvironment(payload: EnvironmentPayload) {
   })
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 4 } },
-    data: { onboardingStep: 4 },
+    where: { userId: user.id, onboardingStep: { lt: 5 } },
+    data: { onboardingStep: 5 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 5 — Experience Level ────────────────────────────────
+// ─── Step 6 — Experience Level ────────────────────────────────
 export async function saveExperienceLevel(level: ExperienceLevel) {
   const user = await requireSession()
 
@@ -123,49 +154,51 @@ export async function saveExperienceLevel(level: ExperienceLevel) {
     where: { userId: user.id },
     create: {
       userId: user.id,
-      skinType: 'NORMAL',
-      concerns: [],
-      sensitivity: 'MEDIUM',
       experienceLevel: level,
-      onboardingStep: 5,
+      onboardingStep: 6,
     },
     update: {
       experienceLevel: level,
-      onboardingStep: 5,
+      onboardingStep: 6,
     },
   })
 
   return { ok: true }
 }
 
-// ─── Step 6 — Education (no data, just advance) ───────────────
-export async function saveEducationStep() {
+// ─── Step 7 — Tools & Treatments ─────────────────────────────
+export type ToolsPayload = {
+  homeDevices: HomeDeviceType[]
+  professionalTreatments: ProfessionalTreatmentType[]
+}
+
+export async function saveToolsAndTreatments(payload: ToolsPayload) {
   const user = await requireSession()
 
+  await prisma.userHomeDevice.deleteMany({ where: { userId: user.id } })
+  await prisma.userProfessionalTreatment.deleteMany({ where: { userId: user.id } })
+
+  if (payload.homeDevices.length > 0) {
+    await prisma.userHomeDevice.createMany({
+      data: payload.homeDevices.map((deviceType) => ({ userId: user.id, deviceType })),
+    })
+  }
+
+  if (payload.professionalTreatments.length > 0) {
+    await prisma.userProfessionalTreatment.createMany({
+      data: payload.professionalTreatments.map((treatmentType) => ({ userId: user.id, treatmentType })),
+    })
+  }
+
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 6 } },
-    data: { onboardingStep: 6 },
+    where: { userId: user.id, onboardingStep: { lt: 7 } },
+    data: { onboardingStep: 7 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 7 — Complete onboarding ─────────────────────────────
-export async function completeOnboarding() {
-  const user = await requireSession()
-
-  await prisma.userProfile.updateMany({
-    where: { userId: user.id },
-    data: {
-      onboardingStep: 7,
-      onboardingCompletedAt: new Date(),
-    },
-  })
-
-  return { ok: true }
-}
-
-// ─── Step 7 — First product search ───────────────────────────
+// ─── Step 8 — Product search & add ───────────────────────────
 export async function searchProducts(query: string) {
   await requireSession()
   if (!query.trim() || query.length < 2) return []
@@ -202,6 +235,21 @@ export async function addProductToDossier(productId: number) {
   return { ok: true }
 }
 
+// ─── Complete onboarding ───────────────────────────────────────
+export async function completeOnboarding() {
+  const user = await requireSession()
+
+  await prisma.userProfile.updateMany({
+    where: { userId: user.id },
+    data: {
+      onboardingStep: 9,
+      onboardingCompletedAt: new Date(),
+    },
+  })
+
+  return { ok: true }
+}
+
 // ─── Check onboarding status ──────────────────────────────────
 export async function getOnboardingStatus() {
   const user = await requireSession()
@@ -210,7 +258,9 @@ export async function getOnboardingStatus() {
     where: { userId: user.id },
     select: {
       skinType: true,
-      sensitivity: true,
+      sensitivityScore: true,
+      genderIdentity: true,
+      goals: true,
       concerns: true,
       experienceLevel: true,
       onboardingStep: true,
