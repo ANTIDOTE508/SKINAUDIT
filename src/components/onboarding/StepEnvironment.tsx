@@ -7,6 +7,7 @@ import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
 import { SelectionCard } from './SelectionCard'
 import { StepNav } from './StepNav'
+import { CityAutocomplete } from './CityAutocomplete'
 import { saveEnvironment } from '@/app/actions/onboarding'
 import type { ClimateZone, Season } from '@prisma/client'
 
@@ -51,14 +52,33 @@ export function StepEnvironment({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [countryName, setCountryName] = useState('')
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (!countryCode) {
+      setCountryName('')
+      return
+    }
+    let cancelled = false
+    import('country-state-city').then(({ Country }) => {
+      if (cancelled) return
+      setCountryName(Country.getCountryByCode(countryCode)?.name ?? '')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [countryCode])
+
   const update = (patch: Partial<EnvironmentData>) => {
     onChange({ city, countryCode, climateZone, season, ...patch })
   }
+
+  const hasValidCity = Boolean(city && countryCode)
+  const canContinue = hasValidCity && Boolean(climateZone) && Boolean(season)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -92,6 +112,7 @@ export function StepEnvironment({
   }, [])
 
   const handleContinue = () => {
+    if (!canContinue) return
     setError(null)
     startTransition(async () => {
       try {
@@ -161,7 +182,6 @@ export function StepEnvironment({
 
       <div style={{ position: 'relative', zIndex: 1 }}>
       <StepHeader
-        eyebrow="Step 3 of 6"
         title="Where does your skin live?"
         subtitle="Environmental context is one of the most underestimated factors in skincare efficacy."
       />
@@ -198,43 +218,15 @@ export function StepEnvironment({
         </p>
       </div>
 
-      {/* Location fields */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '1.5rem',
-          marginBottom: '2rem',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="env-city" className="label-caps">
-            City (optional)
-          </label>
-          <input
-            id="env-city"
-            type="text"
-            value={city}
-            onChange={(e) => update({ city: e.target.value })}
-            placeholder="Paris"
-            className="input-underline"
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="env-country" className="label-caps">
-            Country code (optional)
-          </label>
-          <input
-            id="env-country"
-            type="text"
-            value={countryCode}
-            onChange={(e) => update({ countryCode: e.target.value.toUpperCase().slice(0, 2) })}
-            placeholder="FR"
-            maxLength={2}
-            className="input-underline"
-            style={{ textTransform: 'uppercase' }}
-          />
-        </div>
+      {/* Location field — city autocomplete, country deduced automatically */}
+      <div style={{ marginBottom: '2rem' }}>
+        <CityAutocomplete
+          city={city}
+          countryName={countryName}
+          onSelect={({ city: selectedCity, countryCode: selectedCountryCode }) =>
+            update({ city: selectedCity, countryCode: selectedCountryCode })
+          }
+        />
       </div>
 
       {/* Climate zone */}
@@ -312,6 +304,7 @@ export function StepEnvironment({
         onBack={onBack}
         continueLabel="Continue →"
         isLoading={isPending}
+        continueDisabled={!canContinue}
       />
       </div>
     </div>
