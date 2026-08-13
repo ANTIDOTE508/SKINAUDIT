@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useTransition } from 'react'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
 import { StepNav } from './StepNav'
+import { SelectionRow } from './SelectionRow'
 import { saveGoals } from '@/app/actions/onboarding'
 
 const MAX_GOALS = 3
@@ -33,7 +34,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const items = listRef.current?.querySelectorAll('[data-item]')
+    const items = listRef.current?.querySelectorAll('[data-row]')
     const ctx = gsap.context(() => {
       if (items?.length) {
         gsap.fromTo(
@@ -99,57 +100,17 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
         </span>
       </div>
 
-      <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
+      <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.5rem' }}>
         {GOALS.map((goal) => {
           const isSelected = value.includes(goal.value)
-          const isDisabled = isAtMax && !isSelected
-
           return (
-            <button
+            <SelectionRow
               key={goal.value}
-              data-item
-              type="button"
+              label={goal.label}
+              isSelected={isSelected}
+              isDisabled={isAtMax && !isSelected}
               onClick={() => toggle(goal.value)}
-              aria-pressed={isSelected}
-              aria-disabled={isDisabled}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.875rem',
-                padding: '0.875rem 1rem',
-                borderRadius: '6px',
-                border: isSelected ? '1.5px solid var(--color-sienna-400)' : '1px solid rgba(255,255,255,0.1)',
-                backgroundColor: isSelected ? 'var(--color-accent-subtle)' : 'transparent',
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                opacity: isDisabled ? 0.35 : 1,
-                transition: 'all 200ms var(--ease-luxury)',
-                outline: 'none',
-                width: '100%',
-                textAlign: 'left',
-              }}
-            >
-              {/* Circle checkbox */}
-              <div
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '50%',
-                  border: isSelected ? '5px solid var(--color-sienna-500)' : '1.5px solid rgba(255,255,255,0.25)',
-                  flexShrink: 0,
-                  transition: 'border 200ms ease',
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.9375rem',
-                  fontWeight: 300,
-                  color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
-                }}
-              >
-                {goal.label}
-              </span>
-            </button>
+            />
           )
         })}
       </div>

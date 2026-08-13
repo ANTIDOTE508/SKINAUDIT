@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useTransition } from 'react'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
 import { StepNav } from './StepNav'
+import { SelectionRow } from './SelectionRow'
 import { saveGenderIdentity } from '@/app/actions/onboarding'
 import type { GenderIdentity } from '@prisma/client'
 
@@ -109,43 +110,15 @@ export function StepIdentity({ value, onChange, onContinue, onBack }: Props) {
       />
 
       <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.5rem' }}>
-        {OPTIONS.map((opt) => {
-          const isSelected = value === opt.value
-          return (
-            <button
-              key={opt.value}
-              data-row
-              type="button"
-              onClick={() => onChange(opt.value)}
-              aria-pressed={isSelected}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '1rem 1.25rem',
-                borderRadius: '6px',
-                border: isSelected ? '1.5px solid var(--color-sienna-400)' : '1px solid rgba(255,255,255,0.12)',
-                backgroundColor: isSelected ? 'var(--color-accent-subtle)' : 'transparent',
-                color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 180ms var(--ease-luxury)',
-                outline: 'none',
-                width: '100%',
-              }}
-            >
-              <span style={{ color: isSelected ? 'var(--color-sienna-400)' : 'var(--color-alabaster-400)', flexShrink: 0 }}>
-                {opt.icon}
-              </span>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.9375rem', fontWeight: 300 }}>
-                {opt.label}
-              </span>
-              {isSelected && (
-                <span style={{ marginLeft: 'auto', color: 'var(--color-sienna-400)', fontSize: '1rem' }}>✓</span>
-              )}
-            </button>
-          )
-        })}
+        {OPTIONS.map((opt) => (
+          <SelectionRow
+            key={opt.value}
+            label={opt.label}
+            icon={opt.icon}
+            isSelected={value === opt.value}
+            onClick={() => onChange(opt.value)}
+          />
+        ))}
       </div>
 
       {error && (
