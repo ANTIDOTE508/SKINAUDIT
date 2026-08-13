@@ -3,18 +3,12 @@ import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 
 export default async function OnboardingPage() {
   const session = await auth.api.getSession({ headers: await headers() })
 
   if (!session?.user?.id) {
     redirect('/signin')
-  }
-
-  const user = {
-    name: session.user.name ?? null,
-    email: session.user.email,
   }
 
   const profile = await prisma.userProfile.findUnique({
@@ -31,26 +25,13 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--color-background)',
-        display: 'flex',
-        flexDirection: 'column',
+    <OnboardingWizard
+      user={{
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name ?? null,
       }}
-    >
-      <DashboardHeader user={user} />
-
-      <div style={{ flex: 1 }}>
-        <OnboardingWizard
-          user={{
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.name ?? null,
-          }}
-          initialStep={profile?.onboardingStep ?? 0}
-        />
-      </div>
-    </div>
+      initialStep={profile?.onboardingStep ?? 0}
+    />
   )
 }

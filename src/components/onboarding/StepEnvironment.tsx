@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useEffect, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
 import { SelectionCard } from './SelectionCard'
@@ -48,6 +50,11 @@ export function StepEnvironment({
   const seasonRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const update = (patch: Partial<EnvironmentData>) => {
     onChange({ city, countryCode, climateZone, season, ...patch })
@@ -103,6 +110,56 @@ export function StepEnvironment({
 
   return (
     <div>
+      {/* Background scene — portaled to body so GSAP's transform on ancestor
+          content doesn't trap this fixed layer inside the wizard's 680px
+          column. Unlike step 3, this step's content (form + two card grids)
+          spans the full height, so a single full-bleed treatment with a
+          strong, even scrim is used across all breakpoints instead of a
+          top/bottom gradient — the dense form must stay legible everywhere. */}
+      {mounted &&
+        createPortal(
+          <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', backgroundColor: 'var(--color-obsidian-950)' }}>
+            <Image
+              src="/images/onboarding/step5/bg-environment-window.webp"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="step5-bg-image"
+            />
+            <div className="step5-bg-scrim" />
+
+            <style>{`
+              .step5-bg-image {
+                object-fit: cover;
+                object-position: center 30%;
+              }
+              @media (min-width: 1024px) {
+                .step5-bg-image { object-position: 25% center; }
+              }
+              .step5-bg-scrim {
+                position: absolute;
+                inset: 0;
+                background:
+                  linear-gradient(
+                    180deg,
+                    rgba(6,5,5,0.55) 0%,
+                    rgba(6,5,5,0.45) 40%,
+                    rgba(6,5,5,0.65) 100%
+                  ),
+                  linear-gradient(
+                    90deg,
+                    rgba(6,5,5,0.2) 0%,
+                    rgba(6,5,5,0.55) 55%,
+                    rgba(6,5,5,0.7) 100%
+                  );
+              }
+            `}</style>
+          </div>,
+          document.body
+        )}
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <StepHeader
         eyebrow="Step 3 of 6"
         title="Where does your skin live?"
@@ -256,6 +313,7 @@ export function StepEnvironment({
         continueLabel="Continue →"
         isLoading={isPending}
       />
+      </div>
     </div>
   )
 }

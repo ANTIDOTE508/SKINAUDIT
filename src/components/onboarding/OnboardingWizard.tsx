@@ -181,7 +181,7 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
       <main
         style={{
           position: 'relative', zIndex: 10, flex: 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', alignItems: 'safe center', justifyContent: 'center',
           padding: 'clamp(1rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem)',
           minHeight: 0,
           overflowY: 'auto',
