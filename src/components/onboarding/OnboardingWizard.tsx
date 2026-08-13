@@ -134,12 +134,13 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
     <div
       ref={containerRef}
       style={{
-        minHeight: '100vh',
+        height: '100dvh',
         backgroundColor: 'var(--color-obsidian-950)',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         opacity: 0,
+        overflow: 'hidden',
       }}
     >
       {/* Ambient gradient */}
@@ -181,7 +182,9 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
         style={{
           position: 'relative', zIndex: 10, flex: 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 'clamp(2rem, 5vw, 4rem) clamp(1.5rem, 5vw, 4rem)',
+          padding: 'clamp(1rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem)',
+          minHeight: 0,
+          overflowY: 'auto',
         }}
       >
         <div ref={contentRef} style={{ width: '100%', maxWidth: '680px' }}>

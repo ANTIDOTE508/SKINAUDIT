@@ -1,19 +1,20 @@
 'use client'
 
 import { useRef, useEffect, useState, useTransition } from 'react'
+import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
 import { StepNav } from './StepNav'
 import { saveSkinProfile } from '@/app/actions/onboarding'
 import type { SkinType } from '@prisma/client'
 
-const SKIN_TYPES: { value: SkinType; label: string; gradient: string }[] = [
-  { value: 'BALANCED', label: 'Balanced', gradient: 'linear-gradient(135deg, #c9b49a 0%, #8a7060 100%)' },
-  { value: 'DRY', label: 'Dry', gradient: 'linear-gradient(135deg, #b0a090 0%, #6e5e50 100%)' },
-  { value: 'OILY', label: 'Oily', gradient: 'linear-gradient(135deg, #d4a96a 0%, #8a6030 100%)' },
-  { value: 'COMBINATION', label: 'Combination', gradient: 'linear-gradient(135deg, #c9b49a 50%, #8a7060 50%)' },
-  { value: 'SENSITIVE', label: 'Sensitive', gradient: 'linear-gradient(135deg, #d4b0a0 0%, #9a7068 100%)' },
-  { value: 'ACNE_PRONE', label: 'Acne-prone', gradient: 'linear-gradient(135deg, #7a8a9a 0%, #4a5a6a 100%)' },
+const SKIN_TYPES: { value: SkinType; label: string; image: string }[] = [
+  { value: 'BALANCED', label: 'Balanced', image: '/images/onboarding/step2/skin-normal.webp' },
+  { value: 'DRY', label: 'Dry', image: '/images/onboarding/step2/skin-dry.webp' },
+  { value: 'OILY', label: 'Oily', image: '/images/onboarding/step2/skin-oily.webp' },
+  { value: 'COMBINATION', label: 'Combination', image: '/images/onboarding/step2/skin-combination.webp' },
+  { value: 'SENSITIVE', label: 'Sensitive', image: '/images/onboarding/step2/skin-sensitive.webp' },
+  { value: 'ACNE_PRONE', label: 'Acne-prone', image: '/images/onboarding/step2/skin-acne-prone.webp' },
 ]
 
 type Props = {
@@ -95,15 +96,19 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
                 background: 'transparent',
               }}
             >
-              {/* Texture placeholder */}
-              <div
-                style={{
-                  height: '100px',
-                  background: type.gradient,
-                  opacity: isSelected ? 1 : 0.75,
-                  transition: 'opacity 180ms ease',
-                }}
-              />
+              <div style={{ position: 'relative', height: '100px' }}>
+                <Image
+                  src={type.image}
+                  alt={type.label}
+                  fill
+                  sizes="(max-width: 600px) 33vw, 200px"
+                  style={{
+                    objectFit: 'cover',
+                    opacity: isSelected ? 1 : 0.75,
+                    transition: 'opacity 180ms ease',
+                  }}
+                />
+              </div>
               {/* Label */}
               <div
                 style={{
