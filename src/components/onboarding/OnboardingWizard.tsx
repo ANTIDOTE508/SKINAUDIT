@@ -272,35 +272,6 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
 
         </div>
       </main>
-
-      {/* Bottom dots — steps 1–8 only */}
-      {showCounter && (
-        <footer
-          aria-hidden="true"
-          style={{ position: 'relative', zIndex: 10, padding: '1.5rem', display: 'flex', justifyContent: 'center', gap: '6px' }}
-        >
-          {Array.from({ length: 8 }, (_, i) => {
-            const idx = i + 1
-            return (
-              <span
-                key={i}
-                style={{
-                  width: idx === state.step ? '20px' : '6px',
-                  height: '2px',
-                  borderRadius: '1px',
-                  backgroundColor:
-                    idx < state.step
-                      ? 'var(--color-sienna-500)'
-                      : idx === state.step
-                      ? 'var(--color-sienna-400)'
-                      : 'var(--color-obsidian-700)',
-                  transition: 'all 0.4s var(--ease-luxury)',
-                }}
-              />
-            )
-          })}
-        </footer>
-      )}
     </div>
   )
 }

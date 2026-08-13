@@ -20,6 +20,7 @@ export function StepNav({
       style={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '1rem',
         marginTop: '2.5rem',
       }}
