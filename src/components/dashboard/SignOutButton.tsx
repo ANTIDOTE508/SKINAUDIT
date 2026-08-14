@@ -3,29 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
+import { getInitials, getDisplayName } from '@/lib/user-display'
 
 interface SignOutButtonProps {
   name: string | null
   email: string
-}
-
-function getInitials(name: string | null, email: string): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/)
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    }
-    return parts[0].slice(0, 2).toUpperCase()
-  }
-  return email.slice(0, 2).toUpperCase()
-}
-
-function getDisplayName(name: string | null, email: string): string {
-  if (name) {
-    return name.trim().split(/\s+/)[0]
-  }
-  const local = email.split('@')[0]
-  return local.length > 14 ? local.slice(0, 14) + '…' : local
 }
 
 export function SignOutButton({ name, email }: SignOutButtonProps) {
@@ -129,14 +111,12 @@ export function SignOutButton({ name, email }: SignOutButtonProps) {
         }}
         onMouseEnter={(e) => {
           if (!isPending) {
-            (e.currentTarget as HTMLButtonElement).style.color =
-              'var(--color-sienna-400)'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
           }
         }}
         onMouseLeave={(e) => {
           if (!isPending) {
-            (e.currentTarget as HTMLButtonElement).style.color =
-              'var(--color-alabaster-400)'
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
           }
         }}
       >

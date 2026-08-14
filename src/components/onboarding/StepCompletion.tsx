@@ -51,7 +51,7 @@ export function StepCompletion() {
   const handleEnter = () => {
     startTransition(async () => {
       await completeOnboarding()
-      router.push('/dashboard')
+      router.push('/studio')
     })
   }
 
@@ -172,27 +172,10 @@ export function StepCompletion() {
           ref={btnRef}
           onClick={handleEnter}
           disabled={isPending}
-          style={{
-            width: '100%',
-            minHeight: '56px',
-            opacity: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 1.5rem',
-            borderRadius: 'var(--radius-card)',
-            border: 'none',
-            backgroundColor: 'var(--color-alabaster-200)',
-            color: 'var(--color-obsidian-950)',
-            fontFamily: 'var(--font-body)',
-            fontWeight: 500,
-            fontSize: '1rem',
-            cursor: isPending ? 'default' : 'pointer',
-            transition: 'background-color 180ms var(--ease-luxury)',
-          }}
+          className="btn-primary"
+          style={{ width: '100%', minHeight: '56px', opacity: 0 }}
         >
-          {isPending ? 'Loading…' : 'Continue to Dossier'}
-          <span aria-hidden="true">→</span>
+          {isPending ? 'Loading…' : 'Enter Studio'}
         </button>
       </div>
     </div>
