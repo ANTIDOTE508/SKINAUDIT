@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useTransition } from 'react'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 import { SelectionRow } from './SelectionRow'
 import { saveExperienceLevel } from '@/app/actions/onboarding'
 import type { ExperienceLevel } from '@prisma/client'
@@ -92,7 +92,7 @@ export function StepExperience({ level, onChange, onContinue, onBack }: Props) {
         </p>
       )}
 
-      <StepNav
+      <StepFooter
         onContinue={handleContinue}
         onBack={onBack}
         isLoading={isPending}

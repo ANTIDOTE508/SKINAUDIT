@@ -39,7 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* ── Left panel — full-bleed photo ── */}
       <div className="hidden lg:block lg:w-[55%] relative overflow-hidden">
         <Image
-          src="/images/signin/signin.avif"
+          src="/images/signin/bg-login-shadow-wall.webp"
           alt=""
           aria-hidden
           fill

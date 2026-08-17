@@ -667,3 +667,79 @@ body {
     }
   }
 }
+
+/* ── Onboarding step navigation ──
+   Sits in the normal flow directly below the step content. Each arrow lives
+   inside its button, so label + arrow form a single click target. */
+.screen-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #e7d8cc;
+  font-size: 22px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1;
+  /* Comfortable tap target; the negative inline margin keeps the labels
+     optically flush with the step content's edges. */
+  padding: 0.5rem 0.25rem;
+  margin-inline: -0.25rem;
+  transition:
+    color var(--duration-micro) var(--ease-luxury),
+    opacity var(--duration-micro) var(--ease-luxury);
+}
+
+.text-button:hover:not(:disabled) {
+  color: #fbf3ec;
+}
+
+.text-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Back is the secondary action — recessed so Next reads as the primary one. */
+.text-button-back {
+  color: var(--color-alabaster-400);
+}
+
+.arrow {
+  font-size: 34px;
+  color: #d7c0ae;
+  line-height: 1;
+  /* The glyph sits high in its em box; nudge it onto the label's optical
+     centre. `align-items: center` handles the rest. */
+  transform: translateY(-2px);
+  transition: transform var(--duration-micro) var(--ease-luxury);
+}
+
+/* The arrow inherits the button's dimmed state — they read as one control. */
+.text-button:disabled .arrow {
+  color: currentColor;
+}
+
+/* Each arrow drifts outward, away from its label. */
+.text-button-next:hover:not(:disabled) .arrow {
+  transform: translateY(-2px) translateX(3px);
+}
+
+.text-button-back:hover:not(:disabled) .arrow {
+  transform: translateY(-2px) translateX(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-button:hover:not(:disabled) .arrow {
+    transform: translateY(-2px);
+  }
+}

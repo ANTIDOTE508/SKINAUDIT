@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useTransition } from 'react'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 import { SelectionRow } from './SelectionRow'
 import { saveGoals } from '@/app/actions/onboarding'
 
@@ -121,7 +121,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
         </p>
       )}
 
-      <StepNav onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={value.length === 0} />
+      <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={value.length === 0} />
     </div>
   )
 }

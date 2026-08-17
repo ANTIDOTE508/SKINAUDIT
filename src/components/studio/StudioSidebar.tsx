@@ -13,9 +13,11 @@ import {
   User,
   Settings,
   LogOut,
+  RotateCcw,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
+import { resetOnboarding } from '@/app/actions/onboarding'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
 
 type NavItem = {
@@ -99,11 +101,35 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
   )
 }
 
+/** Shared look for the sidebar's action buttons (retake, log out). */
+function actionRowStyle(isHovered: boolean, isBusy: boolean): React.CSSProperties {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.625rem 0.875rem',
+    borderRadius: 'var(--radius-button)',
+    background: isHovered ? 'rgba(255,255,255,0.02)' : 'transparent',
+    border: 'none',
+    textAlign: 'left',
+    cursor: isBusy ? 'default' : 'pointer',
+    fontFamily: 'var(--font-body)',
+    fontSize: '0.8125rem',
+    fontWeight: 300,
+    letterSpacing: '0.02em',
+    color: isHovered ? 'var(--color-alabaster-200)' : 'var(--color-alabaster-400)',
+    transition:
+      'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
+  }
+}
+
 export function StudioSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [logoutHovered, setLogoutHovered] = useState(false)
+  const [isRestarting, setIsRestarting] = useState(false)
+  const [retakeHovered, setRetakeHovered] = useState(false)
 
   async function handleSignOut() {
     if (isSigningOut) return
@@ -113,6 +139,17 @@ export function StudioSidebar() {
       router.push('/signin')
     } catch {
       setIsSigningOut(false)
+    }
+  }
+
+  async function handleRetake() {
+    if (isRestarting) return
+    setIsRestarting(true)
+    try {
+      await resetOnboarding()
+      router.push('/onboarding')
+    } catch {
+      setIsRestarting(false)
     }
   }
 
@@ -162,28 +199,23 @@ export function StudioSidebar() {
 
         <button
           type="button"
+          onClick={handleRetake}
+          disabled={isRestarting}
+          onMouseEnter={() => setRetakeHovered(true)}
+          onMouseLeave={() => setRetakeHovered(false)}
+          style={actionRowStyle(retakeHovered, isRestarting)}
+        >
+          <RotateCcw size={16} strokeWidth={1.5} aria-hidden="true" />
+          {isRestarting ? 'Opening…' : 'Retake audit'}
+        </button>
+
+        <button
+          type="button"
           onClick={handleSignOut}
           disabled={isSigningOut}
           onMouseEnter={() => setLogoutHovered(true)}
           onMouseLeave={() => setLogoutHovered(false)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            padding: '0.625rem 0.875rem',
-            borderRadius: 'var(--radius-button)',
-            background: logoutHovered ? 'rgba(255,255,255,0.02)' : 'transparent',
-            border: 'none',
-            textAlign: 'left',
-            cursor: isSigningOut ? 'default' : 'pointer',
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.8125rem',
-            fontWeight: 300,
-            letterSpacing: '0.02em',
-            color: logoutHovered ? 'var(--color-alabaster-200)' : 'var(--color-alabaster-400)',
-            transition:
-              'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
-          }}
+          style={actionRowStyle(logoutHovered, isSigningOut)}
         >
           <LogOut size={16} strokeWidth={1.5} aria-hidden="true" />
           {isSigningOut ? 'Signing out…' : 'Log out'}

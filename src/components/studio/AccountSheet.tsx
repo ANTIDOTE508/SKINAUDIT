@@ -3,8 +3,9 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings, LogOut, RotateCcw } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
+import { resetOnboarding } from '@/app/actions/onboarding'
 import { getDisplayName } from '@/lib/user-display'
 
 export type StudioUser = {
@@ -28,6 +29,7 @@ export function AccountSheet({ user, isOpen, onClose, returnFocusRef }: Props) {
   const scrimRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [isRestarting, setIsRestarting] = useState(false)
   // Keeps the sheet mounted through the closing animation. Derived during
   // render rather than synced in an effect: when `isOpen` flips true we must
   // already be rendered on that same commit, otherwise the open tween has no
@@ -176,6 +178,17 @@ export function AccountSheet({ user, isOpen, onClose, returnFocusRef }: Props) {
     }
   }
 
+  async function handleRetake() {
+    if (isRestarting) return
+    setIsRestarting(true)
+    try {
+      await resetOnboarding()
+      router.push('/onboarding')
+    } catch {
+      setIsRestarting(false)
+    }
+  }
+
   if (!isRendered) return null
 
   return (
@@ -205,6 +218,16 @@ export function AccountSheet({ user, isOpen, onClose, returnFocusRef }: Props) {
           <Settings size={18} strokeWidth={1.5} aria-hidden="true" />
           <span>Settings</span>
         </a>
+
+        <button
+          type="button"
+          onClick={handleRetake}
+          disabled={isRestarting}
+          className="studio-sheet-row"
+        >
+          <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" />
+          <span>{isRestarting ? 'Opening…' : 'Retake audit'}</span>
+        </button>
 
         <button
           type="button"

@@ -250,6 +250,26 @@ export async function completeOnboarding() {
   return { ok: true }
 }
 
+// ─── Restart onboarding ────────────────────────────────────────
+/**
+ * Reopens the wizard for a user who already finished it. Only the two
+ * progress markers are cleared — every answer already saved on the profile
+ * stays put so each step reopens pre-filled with the previous choice.
+ */
+export async function resetOnboarding() {
+  const user = await requireSession()
+
+  await prisma.userProfile.updateMany({
+    where: { userId: user.id },
+    data: {
+      onboardingStep: 0,
+      onboardingCompletedAt: null,
+    },
+  })
+
+  return { ok: true }
+}
+
 // ─── Check onboarding status ──────────────────────────────────
 export async function getOnboardingStatus() {
   const user = await requireSession()

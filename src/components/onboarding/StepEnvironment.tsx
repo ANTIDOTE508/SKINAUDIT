@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
 import { SelectionCard } from './SelectionCard'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 import { CityAutocomplete } from './CityAutocomplete'
 import { saveEnvironment } from '@/app/actions/onboarding'
 import type { ClimateZone, Season } from '@prisma/client'
@@ -299,10 +299,9 @@ export function StepEnvironment({
         </p>
       )}
 
-      <StepNav
+      <StepFooter
         onContinue={handleContinue}
         onBack={onBack}
-        continueLabel="Continue →"
         isLoading={isPending}
         continueDisabled={!canContinue}
       />

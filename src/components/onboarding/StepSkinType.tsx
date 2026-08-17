@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 import { saveSkinProfile } from '@/app/actions/onboarding'
 import type { SkinType } from '@prisma/client'
 
@@ -140,7 +140,7 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
         </p>
       )}
 
-      <StepNav onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={!value} />
+      <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={!value} />
     </div>
   )
 }

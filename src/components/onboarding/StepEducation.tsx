@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 
 const CONCEPTS = [
   {
@@ -264,10 +264,10 @@ export function StepEducation({ onContinue, onBack }: Props) {
         ))}
       </div>
 
-      <StepNav
+      <StepFooter
         onContinue={onContinue}
         onBack={onBack}
-        continueLabel="I'm ready →"
+        continueLabel="I'm ready"
       />
     </div>
   )

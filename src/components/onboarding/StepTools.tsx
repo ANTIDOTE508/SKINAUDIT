@@ -20,7 +20,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { StepHeader } from './StepHeader'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 import { saveToolsAndTreatments } from '@/app/actions/onboarding'
 import type { HomeDeviceType, ProfessionalTreatmentType } from '@prisma/client'
 
@@ -267,7 +267,7 @@ export function StepTools({
         </div>
       </div>
 
-      <StepNav onContinue={handleContinue} onBack={onBack} isLoading={isPending} />
+      <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} />
       </div>
     </div>
   )

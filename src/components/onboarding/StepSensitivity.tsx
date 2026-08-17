@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepHeader } from './StepHeader'
-import { StepNav } from './StepNav'
+import { StepFooter } from './StepFooter'
 import { saveSensitivity } from '@/app/actions/onboarding'
 
 const TICK_LABELS: Record<number, string> = {
@@ -323,7 +323,7 @@ export function StepSensitivity({ sensitivity, onSensitivityChange, onContinue, 
           </p>
         )}
 
-        <StepNav onContinue={handleContinue} onBack={onBack} isLoading={isPending} />
+        <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} />
       </div>
     </div>
   )
