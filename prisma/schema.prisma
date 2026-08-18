@@ -312,9 +312,15 @@ model Verification {
 model UserProfile {
   id                    Int              @id @default(autoincrement())
   userId                String           @unique @map("user_id")
+  preferredName         String?          @map("preferred_name")
+  birthMonth            Int?             @map("birth_month")
+  birthYear             Int?             @map("birth_year")
   genderIdentity        GenderIdentity?  @map("gender_identity")
   skinType              SkinType?        @map("skin_type")
+  skinToneScale         Int?             @map("skin_tone_scale")
+  vitiligo              Boolean?         @map("vitiligo")
   sensitivityScore      Int?             @map("sensitivity_score")
+  sunResponse           Int?             @map("sun_response")
   concerns              String[]
   goals                 String[]
   experienceLevel       ExperienceLevel  @default(BEGINNER) @map("experience_level")

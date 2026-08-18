@@ -4,9 +4,17 @@ import { useRef, useEffect, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
-import { StepHeader } from './StepHeader'
 import { StepFooter } from './StepFooter'
 import { saveSensitivity } from '@/app/actions/onboarding'
+
+const SUB_COPY: React.CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontWeight: 300,
+  fontSize: '0.9375rem',
+  lineHeight: 1.6,
+  color: 'var(--color-alabaster-400)',
+  margin: '0 0 2.25rem',
+}
 
 const TICK_LABELS: Record<number, string> = {
   1: 'Not sensitive',
@@ -17,10 +25,8 @@ const TICK_LABELS: Record<number, string> = {
 }
 
 type Props = {
-  sensitivity: number
-  goals: string[]
+  sensitivity: number | null
   onSensitivityChange: (v: number) => void
-  onGoalsChange: (v: string[]) => void
   onContinue: () => void
   onBack: () => void
 }
@@ -30,7 +36,10 @@ export function StepSensitivity({ sensitivity, onSensitivityChange, onContinue, 
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const current = sensitivity || 3
+  // A slider always needs a thumb position, unlike a radiogroup or checkbox
+  // set — 3 is only the visual starting point. It is never submitted unless
+  // the user actually answers (see handleContinue's `sensitivity == null` guard).
+  const current = sensitivity ?? 3
 
   useEffect(() => {
     setMounted(true)
@@ -49,10 +58,14 @@ export function StepSensitivity({ sensitivity, onSensitivityChange, onContinue, 
   const fillPct = ((current - 1) / 4) * 100
 
   const handleContinue = () => {
+    if (sensitivity == null) {
+      setError('Please choose how sensitive your skin is to continue.')
+      return
+    }
     setError(null)
     startTransition(async () => {
       try {
-        await saveSensitivity(current)
+        await saveSensitivity(sensitivity)
         onContinue()
       } catch {
         setError('Unable to save. Please try again.')
@@ -198,12 +211,29 @@ export function StepSensitivity({ sensitivity, onSensitivityChange, onContinue, 
           document.body
         )}
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <StepHeader
-          eyebrow="03 / 08"
-          title="How sensitive is your skin?"
-          subtitle="This helps calibrate your analysis."
-        />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: '30rem' }}>
+        <h2
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 300,
+            fontSize: 'clamp(2rem, 4vw, 3rem)',
+            lineHeight: 1.1,
+            letterSpacing: '-0.01em',
+            color: 'var(--color-alabaster-50)',
+            margin: '0 0 1rem',
+            textShadow: '0 1px 24px rgba(6,5,5,0.7)',
+          }}
+        >
+          How sensitive
+          <br />
+          is your skin?
+        </h2>
+
+        <p style={SUB_COPY}>
+          This helps calibrate
+          <br />
+          your analysis.
+        </p>
 
         <div ref={sliderRef} style={{ padding: '1.5rem 0 2.5rem' }}>
           {/* Current label */}

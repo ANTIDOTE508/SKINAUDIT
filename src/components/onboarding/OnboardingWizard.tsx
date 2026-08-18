@@ -1,15 +1,21 @@
 'use client'
 
 import { useReducer, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
+import { completeOnboarding } from '@/app/actions/onboarding'
 import { StepWelcome } from './StepWelcome'
 import { StepIdentity } from './StepIdentity'
 import { StepSkinType } from './StepSkinType'
-import { StepSensitivity } from './StepSensitivity'
+import { StepSunResponse } from './StepSunResponse'
+import { StepSkinTone } from './StepSkinTone'
 import { StepSkinGoals } from './StepSkinGoals'
+import { StepSensitivity } from './StepSensitivity'
 import { StepEnvironment } from './StepEnvironment'
 import { StepExperience } from './StepExperience'
 import { StepTools } from './StepTools'
+import { StepInterpretation } from './StepInterpretation'
+import { StepDossierIntro } from './StepDossierIntro'
 import { StepProducts } from './StepProducts'
 import { StepCompletion } from './StepCompletion'
 import { StepCounter } from './StepCounter'
@@ -25,8 +31,15 @@ type WizardState = {
   step: number
   isTransitioning: boolean
   genderIdentity: string
+  preferredName: string
+  birthMonth: string
+  birthYear: string
   skinType: string
-  sensitivityScore: number
+  skinToneScale: number | null
+  vitiligo: boolean
+  sensitivityScore: number | null
+  sunResponse: number | null
+  concerns: string[]
   goals: string[]
   city: string
   countryCode: string
@@ -41,8 +54,15 @@ type WizardAction =
   | { type: 'SET_STEP'; step: number }
   | { type: 'SET_TRANSITIONING'; value: boolean }
   | { type: 'SET_GENDER'; value: string }
+  | { type: 'SET_PREFERRED_NAME'; value: string }
+  | { type: 'SET_BIRTH_MONTH'; value: string }
+  | { type: 'SET_BIRTH_YEAR'; value: string }
   | { type: 'SET_SKIN_TYPE'; value: string }
+  | { type: 'SET_SKIN_TONE'; value: number }
+  | { type: 'SET_VITILIGO'; value: boolean }
   | { type: 'SET_SENSITIVITY'; value: number }
+  | { type: 'SET_SUN_RESPONSE'; value: number }
+  | { type: 'SET_CONCERNS'; value: string[] }
   | { type: 'SET_GOALS'; value: string[] }
   | { type: 'SET_ENVIRONMENT'; city: string; countryCode: string; climateZone: string; season: string }
   | { type: 'SET_EXPERIENCE'; value: string }
@@ -54,8 +74,15 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_STEP':           return { ...state, step: action.step }
     case 'SET_TRANSITIONING':  return { ...state, isTransitioning: action.value }
     case 'SET_GENDER':         return { ...state, genderIdentity: action.value }
+    case 'SET_PREFERRED_NAME': return { ...state, preferredName: action.value }
+    case 'SET_BIRTH_MONTH':    return { ...state, birthMonth: action.value }
+    case 'SET_BIRTH_YEAR':     return { ...state, birthYear: action.value }
     case 'SET_SKIN_TYPE':      return { ...state, skinType: action.value }
+    case 'SET_SKIN_TONE':      return { ...state, skinToneScale: action.value }
+    case 'SET_VITILIGO':       return { ...state, vitiligo: action.value }
     case 'SET_SENSITIVITY':    return { ...state, sensitivityScore: action.value }
+    case 'SET_SUN_RESPONSE':   return { ...state, sunResponse: action.value }
+    case 'SET_CONCERNS':       return { ...state, concerns: action.value }
     case 'SET_GOALS':          return { ...state, goals: action.value }
     case 'SET_ENVIRONMENT':    return { ...state, city: action.city, countryCode: action.countryCode, climateZone: action.climateZone, season: action.season }
     case 'SET_EXPERIENCE':     return { ...state, experienceLevel: action.value }
@@ -65,30 +92,79 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-// step 0 = welcome, steps 1–8 = wizard steps, step 9 = completion
-const TOTAL_STEPS = 9
+// step 0 = welcome, steps 1–13 = wizard steps. Step 13 (product picker) is
+// the last one and completes onboarding itself, so there is no separate
+// completion step beyond it.
+const TOTAL_STEPS = 13
 
-export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; initialStep?: number }) {
+/** Answers already saved on the profile, used to repopulate fields on resume. */
+export type WizardInitialProfile = {
+  genderIdentity?: string | null
+  preferredName?: string | null
+  birthMonth?: number | null
+  birthYear?: number | null
+  skinToneScale?: number | null
+  vitiligo?: boolean | null
+  sunResponse?: number | null
+  skinType?: string | null
+  concerns?: string[] | null
+  sensitivityScore?: number | null
+  goals?: string[] | null
+  city?: string | null
+  countryCode?: string | null
+  climateZone?: string | null
+  season?: string | null
+  experienceLevel?: string | null
+  homeDevices?: string[] | null
+  professionalTreatments?: string[] | null
+}
+
+export function OnboardingWizard({
+  user,
+  initialStep = 0,
+  initialProfile,
+}: {
+  user: WizardUser
+  initialStep?: number
+  initialProfile?: WizardInitialProfile | null
+}) {
   const resumeStep = initialStep >= 2 ? initialStep + 1 : 1
 
   const [state, dispatch] = useReducer(wizardReducer, {
     step: resumeStep > TOTAL_STEPS ? TOTAL_STEPS : resumeStep,
     isTransitioning: false,
-    genderIdentity: '',
-    skinType: '',
-    sensitivityScore: 3,
-    goals: [],
-    city: '',
-    countryCode: '',
-    climateZone: '',
-    season: '',
-    experienceLevel: '',
-    homeDevices: [],
-    professionalTreatments: [],
+    genderIdentity: initialProfile?.genderIdentity ?? '',
+    preferredName: initialProfile?.preferredName ?? '',
+    birthMonth: initialProfile?.birthMonth ? String(initialProfile.birthMonth) : '',
+    birthYear: initialProfile?.birthYear ? String(initialProfile.birthYear) : '',
+    skinType: initialProfile?.skinType ?? '',
+    skinToneScale: initialProfile?.skinToneScale ?? null,
+    // null (never answered) and false both open the toggle in its off state.
+    vitiligo: initialProfile?.vitiligo ?? false,
+    sensitivityScore: initialProfile?.sensitivityScore ?? null,
+    sunResponse: initialProfile?.sunResponse ?? null,
+    concerns: initialProfile?.concerns ?? [],
+    goals: initialProfile?.goals ?? [],
+    city: initialProfile?.city ?? '',
+    countryCode: initialProfile?.countryCode ?? '',
+    climateZone: initialProfile?.climateZone ?? '',
+    season: initialProfile?.season ?? '',
+    experienceLevel: initialProfile?.experienceLevel ?? '',
+    homeDevices: initialProfile?.homeDevices ?? [],
+    professionalTreatments: initialProfile?.professionalTreatments ?? [],
   })
 
   const contentRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  // The product picker is the final step, so it — not a trailing completion
+  // screen — is what marks onboarding complete and hands the user to the
+  // Studio. Errors propagate to StepProducts, which surfaces them.
+  const completeAndEnterStudio = useCallback(async () => {
+    await completeOnboarding()
+    router.push('/studio')
+  }, [router])
 
   useEffect(() => {
     const node = containerRef.current
@@ -125,10 +201,10 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
   const goNext = useCallback(() => transitionToStep(state.step + 1), [state.step, transitionToStep])
   const goBack = useCallback(() => { if (state.step > 1) transitionToStep(state.step - 1) }, [state.step, transitionToStep])
 
-  // steps 1–8 show counter
-  const showCounter = state.step >= 1 && state.step <= 8
+  // steps 1–13 show counter (only the step 0 welcome screen doesn't)
+  const showCounter = state.step >= 1 && state.step <= TOTAL_STEPS
   const counterCurrent = state.step
-  const counterTotal = 8
+  const counterTotal = TOTAL_STEPS
 
   return (
     <div
@@ -195,32 +271,57 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
             <StepIdentity
               value={state.genderIdentity}
               onChange={(v) => dispatch({ type: 'SET_GENDER', value: v })}
+              preferredName={state.preferredName}
+              onPreferredNameChange={(v) => dispatch({ type: 'SET_PREFERRED_NAME', value: v })}
+              birthMonth={state.birthMonth}
+              onBirthMonthChange={(v) => dispatch({ type: 'SET_BIRTH_MONTH', value: v })}
+              birthYear={state.birthYear}
+              onBirthYearChange={(v) => dispatch({ type: 'SET_BIRTH_YEAR', value: v })}
               onContinue={goNext}
-              onBack={goBack}
             />
           )}
 
           {state.step === 2 && (
-            <StepSkinType
-              value={state.skinType}
-              onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
+            <StepSkinTone
+              value={state.skinToneScale}
+              onChange={(v) => dispatch({ type: 'SET_SKIN_TONE', value: v })}
+              vitiligo={state.vitiligo}
+              onVitiligoChange={(v) => dispatch({ type: 'SET_VITILIGO', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
           {state.step === 3 && (
-            <StepSensitivity
-              sensitivity={state.sensitivityScore}
-              goals={[]}
-              onSensitivityChange={(v) => dispatch({ type: 'SET_SENSITIVITY', value: v })}
-              onGoalsChange={() => {}}
+            <StepSunResponse
+              value={state.sunResponse}
+              onChange={(v) => dispatch({ type: 'SET_SUN_RESPONSE', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
           {state.step === 4 && (
+            <StepSkinType
+              value={state.skinType}
+              onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
+              concerns={state.concerns}
+              onConcernsChange={(v) => dispatch({ type: 'SET_CONCERNS', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 5 && (
+            <StepSensitivity
+              sensitivity={state.sensitivityScore}
+              onSensitivityChange={(v) => dispatch({ type: 'SET_SENSITIVITY', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 6 && (
             <StepSkinGoals
               value={state.goals}
               onChange={(v) => dispatch({ type: 'SET_GOALS', value: v })}
@@ -229,19 +330,27 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
             />
           )}
 
-          {state.step === 5 && (
+          {state.step === 7 && (
             <StepEnvironment
               city={state.city}
               countryCode={state.countryCode}
               climateZone={state.climateZone}
               season={state.season}
-              onChange={(env) => dispatch({ type: 'SET_ENVIRONMENT', ...env })}
+              onChange={(data) =>
+                dispatch({
+                  type: 'SET_ENVIRONMENT',
+                  city: data.city,
+                  countryCode: data.countryCode,
+                  climateZone: data.climateZone,
+                  season: data.season,
+                })
+              }
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
-          {state.step === 6 && (
+          {state.step === 8 && (
             <StepExperience
               level={state.experienceLevel}
               onChange={(v) => dispatch({ type: 'SET_EXPERIENCE', value: v })}
@@ -250,7 +359,7 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
             />
           )}
 
-          {state.step === 7 && (
+          {state.step === 9 && (
             <StepTools
               homeDevices={state.homeDevices}
               professionalTreatments={state.professionalTreatments}
@@ -261,14 +370,19 @@ export function OnboardingWizard({ user, initialStep = 0 }: { user: WizardUser; 
             />
           )}
 
-          {state.step === 8 && (
-            <StepProducts
-              onBack={goBack}
-              onComplete={async () => goNext()}
-            />
+          {state.step === 10 && (
+            <StepInterpretation onContinue={goNext} onBack={goBack} />
           )}
 
-          {state.step === 9 && <StepCompletion />}
+          {state.step === 11 && <StepCompletion onContinue={goNext} />}
+
+          {state.step === 12 && (
+            <StepDossierIntro onContinue={goNext} onBack={goBack} />
+          )}
+
+          {state.step === 13 && (
+            <StepProducts onBack={goBack} onComplete={completeAndEnterStudio} />
+          )}
 
         </div>
       </main>

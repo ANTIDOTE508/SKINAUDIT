@@ -1,13 +1,21 @@
 'use client'
 
-import { useRef, useEffect, useState, useTransition } from 'react'
+import { useRef, useEffect, useState, useTransition, useId } from 'react'
 import { gsap } from 'gsap'
-import { StepHeader } from './StepHeader'
 import { StepFooter } from './StepFooter'
 import { SelectionRow } from './SelectionRow'
 import { saveGoals } from '@/app/actions/onboarding'
 
 const MAX_GOALS = 3
+
+const SUB_COPY: React.CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontWeight: 300,
+  fontSize: '0.9375rem',
+  lineHeight: 1.6,
+  color: 'var(--color-alabaster-400)',
+  margin: '0 0 2.25rem',
+}
 
 const GOALS = [
   { value: 'hydration', label: 'Hydration' },
@@ -32,6 +40,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
   const listRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const goalsLabelId = useId()
 
   useEffect(() => {
     const items = listRef.current?.querySelectorAll('[data-row]')
@@ -55,6 +64,13 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
     }
   }
 
+  const handleGoalKeyDown = (e: React.KeyboardEvent, goal: string, isDisabled: boolean) => {
+    if ((e.key === ' ' || e.key === 'Enter') && !isDisabled) {
+      e.preventDefault()
+      toggle(goal)
+    }
+  }
+
   const isAtMax = value.length >= MAX_GOALS
 
   const handleContinue = () => {
@@ -75,15 +91,26 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
 
   return (
     <div>
-      <StepHeader
-        eyebrow="04 / 08"
-        title="What are your skin goals?"
-        subtitle="Select up to 3."
-      />
+      <h2
+        style={{
+          fontFamily: 'var(--font-heading)',
+          fontWeight: 300,
+          fontSize: 'clamp(2rem, 4vw, 3rem)',
+          lineHeight: 1.1,
+          letterSpacing: '-0.01em',
+          color: 'var(--color-alabaster-50)',
+          margin: '0 0 1rem',
+        }}
+      >
+        What are your skin goals?
+      </h2>
+
+      <p style={SUB_COPY}>Select up to 3.</p>
 
       {/* Count indicator */}
       <div style={{ marginBottom: '1rem' }}>
         <span
+          id={goalsLabelId}
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: '11px',
@@ -100,16 +127,23 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
         </span>
       </div>
 
-      <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.5rem' }}>
+      <div
+        ref={listRef}
+        role="group"
+        aria-labelledby={goalsLabelId}
+        style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.5rem' }}
+      >
         {GOALS.map((goal) => {
           const isSelected = value.includes(goal.value)
+          const isDisabled = isAtMax && !isSelected
           return (
             <SelectionRow
               key={goal.value}
               label={goal.label}
               isSelected={isSelected}
-              isDisabled={isAtMax && !isSelected}
+              isDisabled={isDisabled}
               onClick={() => toggle(goal.value)}
+              onKeyDown={(e) => handleGoalKeyDown(e, goal.value, isDisabled)}
             />
           )
         })}

@@ -4,9 +4,8 @@ import { useRef, useEffect, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
-import { useRouter } from 'next/navigation'
 import { Check, Activity, CloudSun, TrendingUp, Lock } from 'lucide-react'
-import { completeOnboarding } from '@/app/actions/onboarding'
+import { acknowledgeAllSet } from '@/app/actions/onboarding'
 
 const BULLETS = [
   { icon: Activity, text: 'Your regimen will be analyzed continuously' },
@@ -17,13 +16,23 @@ const BULLETS = [
 
 const HEXAGON_CLIP = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
 
-export function StepCompletion() {
+type Props = {
+  onContinue: () => void
+}
+
+/**
+ * Milestone screen closing the questionnaire portion of onboarding. It is
+ * NOT the final step — the dossier-building steps follow — so it advances
+ * the resume marker and hands control back to the wizard rather than
+ * completing onboarding and redirecting to the Studio.
+ */
+export function StepCompletion({ onContinue }: Props) {
   const badgeRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLDivElement>(null)
   const bulletsRef = useRef<HTMLUListElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -48,10 +57,15 @@ export function StepCompletion() {
     return () => ctx.revert()
   }, [])
 
-  const handleEnter = () => {
+  const handleContinue = () => {
+    setError(null)
     startTransition(async () => {
-      await completeOnboarding()
-      router.push('/studio')
+      try {
+        await acknowledgeAllSet()
+        onContinue()
+      } catch {
+        setError('Unable to save. Please try again.')
+      }
     })
   }
 
@@ -167,15 +181,29 @@ export function StepCompletion() {
           ))}
         </ul>
 
+        {error && (
+          <p
+            role="alert"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              color: 'var(--color-blush-500)',
+              margin: 0,
+            }}
+          >
+            {error}
+          </p>
+        )}
+
         {/* CTA */}
         <button
           ref={btnRef}
-          onClick={handleEnter}
+          onClick={handleContinue}
           disabled={isPending}
           className="btn-primary"
           style={{ width: '100%', minHeight: '56px', opacity: 0 }}
         >
-          {isPending ? 'Loading…' : 'Enter Studio'}
+          {isPending ? 'Loading…' : 'Continue'}
         </button>
       </div>
     </div>

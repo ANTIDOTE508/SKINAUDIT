@@ -1,17 +1,25 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 type CityMatch = {
   name: string
   countryCode: string
   countryName: string
+  latitude: string | null
+  longitude: string | null
 }
 
 type Props = {
   city: string
   countryName: string
-  onSelect: (match: { city: string; countryCode: string }) => void
+  onSelect: (match: {
+    city: string
+    countryCode: string
+    latitude: string | null
+    longitude: string | null
+  }) => void
 }
 
 const MAX_RESULTS = 8
@@ -22,22 +30,56 @@ export function CityAutocomplete({ city, countryName, onSelect }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)
-  const dataRef = useRef<{ name: string; countryCode: string }[] | null>(null)
+  const dataRef = useRef<
+    { name: string; countryCode: string; latitude: string | null; longitude: string | null }[] | null
+  >(null)
   const countriesRef = useRef<Map<string, string> | null>(null)
+  const [mounted, setMounted] = useState(false)
+  // Position of the dropdown, computed from the field's own rect. The list
+  // is portaled to <body> rather than absolutely positioned inside this
+  // component, because every ancestor `data-reveal` block carries a GSAP
+  // `transform` (never cleared after the entrance tween) — each one becomes
+  // its own stacking context, so a plain `z-index` here would still be
+  // trapped behind the very next `data-reveal` sibling (the Climate section).
+  const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     setQuery(city)
   }, [city])
 
+  const menuRef = useRef<HTMLUListElement>(null)
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
-      }
+      const target = e.target as Node
+      if (containerRef.current?.contains(target)) return
+      if (menuRef.current?.contains(target)) return
+      setIsOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Keep the portaled menu's position pinned to the field while it's open.
+  useLayoutEffect(() => {
+    if (!isOpen || results.length === 0) return
+    const measure = () => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      if (!rect) return
+      setMenuRect({ top: rect.bottom + 8, left: rect.left, width: rect.width })
+    }
+    measure()
+    window.addEventListener('scroll', measure, true)
+    window.addEventListener('resize', measure)
+    return () => {
+      window.removeEventListener('scroll', measure, true)
+      window.removeEventListener('resize', measure)
+    }
+  }, [isOpen, results.length])
 
   const search = useCallback(async (value: string) => {
     if (value.trim().length < 2) {
@@ -47,7 +89,12 @@ export function CityAutocomplete({ city, countryName, onSelect }: Props) {
 
     if (!dataRef.current || !countriesRef.current) {
       const { City, Country } = await import('country-state-city')
-      dataRef.current = City.getAllCities().map((c) => ({ name: c.name, countryCode: c.countryCode }))
+      dataRef.current = City.getAllCities().map((c) => ({
+        name: c.name,
+        countryCode: c.countryCode,
+        latitude: c.latitude ?? null,
+        longitude: c.longitude ?? null,
+      }))
       countriesRef.current = new Map(Country.getAllCountries().map((c) => [c.isoCode, c.name]))
     }
 
@@ -61,6 +108,8 @@ export function CityAutocomplete({ city, countryName, onSelect }: Props) {
             name: c.name,
             countryCode: c.countryCode,
             countryName: countriesRef.current.get(c.countryCode) ?? c.countryCode,
+            latitude: c.latitude,
+            longitude: c.longitude,
           },
           exact: name === needle,
         })
@@ -85,7 +134,12 @@ export function CityAutocomplete({ city, countryName, onSelect }: Props) {
     setQuery(match.name)
     setResults([])
     setIsOpen(false)
-    onSelect({ city: match.name, countryCode: match.countryCode })
+    onSelect({
+      city: match.name,
+      countryCode: match.countryCode,
+      latitude: match.latitude,
+      longitude: match.longitude,
+    })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -117,7 +171,7 @@ export function CityAutocomplete({ city, countryName, onSelect }: Props) {
           setQuery(e.target.value)
           setIsOpen(true)
           if (e.target.value !== city) {
-            onSelect({ city: '', countryCode: '' })
+            onSelect({ city: '', countryCode: '', latitude: null, longitude: null })
           }
         }}
         onFocus={() => setIsOpen(true)}
@@ -143,55 +197,61 @@ export function CityAutocomplete({ city, countryName, onSelect }: Props) {
         </span>
       )}
 
-      {isOpen && results.length > 0 && (
-        <ul
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 0.5rem)',
-            left: 0,
-            right: 0,
-            zIndex: 20,
-            margin: 0,
-            padding: '0.375rem',
-            listStyle: 'none',
-            borderRadius: 'var(--radius-card)',
-            border: '1px solid var(--color-border)',
-            backgroundColor: 'var(--color-surface-raised)',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-            maxHeight: '260px',
-            overflowY: 'auto',
-          }}
-        >
-          {results.map((match, i) => (
-            <li key={`${match.name}-${match.countryCode}-${i}`}>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  commit(match)
-                }}
-                onMouseEnter={() => setHighlightedIndex(i)}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'baseline',
-                  width: '100%',
-                  padding: '0.5rem 0.625rem',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: i === highlightedIndex ? 'var(--color-accent-subtle)' : 'transparent',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontFamily: 'var(--font-body)',
-                }}
-              >
-                <span style={{ fontSize: '0.875rem', color: 'var(--color-alabaster-100)' }}>{match.name}</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{match.countryName}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {mounted &&
+        isOpen &&
+        results.length > 0 &&
+        menuRect &&
+        createPortal(
+          <ul
+            ref={menuRef}
+            style={{
+              position: 'fixed',
+              top: menuRect.top,
+              left: menuRect.left,
+              width: menuRect.width,
+              zIndex: 100,
+              margin: 0,
+              padding: '0.375rem',
+              listStyle: 'none',
+              borderRadius: 'var(--radius-card)',
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-surface-raised)',
+              boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+              maxHeight: '260px',
+              overflowY: 'auto',
+            }}
+          >
+            {results.map((match, i) => (
+              <li key={`${match.name}-${match.countryCode}-${i}`}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    commit(match)
+                  }}
+                  onMouseEnter={() => setHighlightedIndex(i)}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    width: '100%',
+                    padding: '0.5rem 0.625rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: i === highlightedIndex ? 'var(--color-accent-subtle)' : 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'var(--font-body)',
+                  }}
+                >
+                  <span style={{ fontSize: '0.875rem', color: 'var(--color-alabaster-100)' }}>{match.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{match.countryName}</span>
+                </button>
+              </li>
+            ))}
+          </ul>,
+          document.body
+        )}
     </div>
   )
 }
