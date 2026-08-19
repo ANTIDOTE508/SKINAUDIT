@@ -164,6 +164,25 @@ body {
   cursor: not-allowed;
 }
 
+/* Light accent variant — same tone as the sienna-400 icon badges, black label. */
+.btn-primary-accent {
+  background-color: var(--color-sienna-400);
+  color: #000;
+  /* Title-case label, not the uppercase tracking of the base .btn-primary */
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.btn-primary-accent:hover {
+  background-color: var(--color-sienna-300);
+}
+
+.btn-primary-accent:active {
+  background-color: var(--color-sienna-500);
+}
+
 .btn-secondary {
   display: inline-flex;
   align-items: center;

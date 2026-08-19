@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { gsap } from 'gsap'
-import { Camera, Search, Pencil } from 'lucide-react'
+import { Camera, Search, Pencil, ArrowRight } from 'lucide-react'
 import { StepHeader } from './StepHeader'
 
 const ICON_SIZE = 26
@@ -33,11 +33,10 @@ const ADD_METHODS = [
 ]
 
 type Props = {
-  onBack: () => void
   onComplete?: () => Promise<void>
 }
 
-export function StepProducts({ onBack, onComplete }: Props) {
+export function StepProducts({ onComplete }: Props) {
   const actionsRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLDivElement>(null)
 
@@ -179,22 +178,24 @@ export function StepProducts({ onBack, onComplete }: Props) {
       <div ref={navRef} style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <button
           type="button"
-          onClick={onBack}
-          className="btn-secondary"
-          style={{ minHeight: '52px' }}
-          disabled={isFinishing}
-        >
-          ← Back
-        </button>
-
-        <button
-          type="button"
           onClick={handleFinish}
-          className="btn-primary"
-          style={{ minHeight: '52px', flex: 1, minWidth: '200px' }}
+          className="btn-primary btn-primary-accent"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            flex: 1,
+            minWidth: '200px',
+            minHeight: '58px',
+            paddingInline: '1.5rem',
+          }}
           disabled={isFinishing}
         >
+          {/* Spacer mirrors the arrow so the label stays optically centred */}
+          <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
           {isFinishing ? 'Setting up your space…' : 'Continue to Studio'}
+          <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
         </button>
       </div>
     </div>

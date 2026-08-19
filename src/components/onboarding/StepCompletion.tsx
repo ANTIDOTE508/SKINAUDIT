@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
-import { Check, Activity, CloudSun, TrendingUp, Lock } from 'lucide-react'
+import { Check, Activity, CloudSun, TrendingUp, Lock, ArrowRight } from 'lucide-react'
 import { acknowledgeAllSet } from '@/app/actions/onboarding'
 
 const BULLETS = [
@@ -99,7 +99,20 @@ export function StepCompletion({ onContinue }: Props) {
           document.body
         )}
 
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '480px' }}>
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '2rem',
+          width: '100%',
+          maxWidth: '480px',
+          marginInline: 'auto',
+          textAlign: 'center',
+        }}
+      >
         {/* Checkmark badge */}
         <div
           ref={badgeRef}
@@ -146,7 +159,18 @@ export function StepCompletion({ onContinue }: Props) {
         {/* Bullets */}
         <ul
           ref={bulletsRef}
-          style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          style={{
+            listStyle: 'none',
+            padding: 0,
+            margin: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            /* The list is centred as a block while each row stays left-aligned,
+               so the icons form a single column as in the reference. */
+            alignSelf: 'center',
+            textAlign: 'left',
+          }}
         >
           {BULLETS.map(({ icon: Icon, text }) => (
             <li
@@ -198,12 +222,25 @@ export function StepCompletion({ onContinue }: Props) {
         {/* CTA */}
         <button
           ref={btnRef}
+          type="button"
           onClick={handleContinue}
           disabled={isPending}
-          className="btn-primary"
-          style={{ width: '100%', minHeight: '56px', opacity: 0 }}
+          className="btn-primary btn-primary-accent"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            width: '100%',
+            minHeight: '58px',
+            paddingInline: '1.5rem',
+            opacity: 0,
+          }}
         >
-          {isPending ? 'Loading…' : 'Continue'}
+          {/* Spacer mirrors the arrow so the label stays optically centred */}
+          <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
+          {isPending ? 'Loading…' : 'Continue to Dossier'}
+          <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
         </button>
       </div>
     </div>

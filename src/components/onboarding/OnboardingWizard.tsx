@@ -377,11 +377,11 @@ export function OnboardingWizard({
           {state.step === 11 && <StepCompletion onContinue={goNext} />}
 
           {state.step === 12 && (
-            <StepDossierIntro onContinue={goNext} onBack={goBack} />
+            <StepDossierIntro onContinue={goNext} />
           )}
 
           {state.step === 13 && (
-            <StepProducts onBack={goBack} onComplete={completeAndEnterStudio} />
+            <StepProducts onComplete={completeAndEnterStudio} />
           )}
 
         </div>

@@ -9,14 +9,13 @@ import { acknowledgeDossierIntro } from '@/app/actions/onboarding'
 
 type Props = {
   onContinue: () => void
-  onBack: () => void
 }
 
 /**
  * Opens the dossier-building portion of onboarding. No user input — the CTA
  * only advances the resume marker and moves to the product picker.
  */
-export function StepDossierIntro({ onContinue, onBack }: Props) {
+export function StepDossierIntro({ onContinue }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -168,31 +167,21 @@ export function StepDossierIntro({ onContinue, onBack }: Props) {
             type="button"
             onClick={handleContinue}
             disabled={isPending}
-            className="btn-primary"
+            className="btn-primary btn-primary-accent"
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'space-between',
               gap: '0.75rem',
               width: '100%',
               minHeight: '58px',
+              paddingInline: '1.5rem',
             }}
           >
+            {/* Spacer mirrors the arrow so the label stays optically centred */}
+            <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
             {isPending ? 'Loading…' : 'Fill My Dossier'}
-            <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
-          </button>
-
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={isPending}
-            className="text-button text-button-back"
-            style={{ marginTop: '1.25rem' }}
-          >
-            <span className="arrow" aria-hidden="true">
-              ←
-            </span>
-            Back
+            <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
           </button>
         </div>
       </div>
