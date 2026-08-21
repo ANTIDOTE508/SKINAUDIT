@@ -1,6 +1,6 @@
 export default function LandingFooter() {
   return (
-    <div className="shrink-0 px-6 md:px-16 py-3 border-t border-white/10 flex items-center justify-between">
+    <div className="px-6 md:px-16 py-5 border-t border-white/10 flex flex-col md:flex-row items-center gap-4 md:gap-0 justify-between">
       <span className="text-[9px] tracking-[0.2em] text-alabaster-400/50 uppercase">
         © 2024 SKINAUDIT
       </span>

@@ -10,7 +10,7 @@ export default function LandingNav({ navRef }: { navRef: React.RefObject<HTMLEle
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <nav ref={navRef} className="opacity-0 relative z-30 shrink-0">
+    <nav ref={navRef} className="opacity-0 relative z-30">
       <div className="flex items-center justify-between px-6 md:px-16 py-5">
         <SkinauditLogo />
 
