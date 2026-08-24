@@ -1,85 +1,102 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import SkinauditLogo from '@/components/ui/SkinauditLogo'
+import { Menu, X } from 'lucide-react'
 
-const NAV_ITEMS = ['PHILOSOPHY', 'HOW IT WORKS', 'FEATURES', 'ABOUT'] as const
+const NAV_ITEMS = [
+  { label: 'Philosophy', href: '#philosophy' },
+  { label: 'How It Works', href: '#how-it-works' },
+  { label: 'Features', href: '#features' },
+  { label: 'About', href: '#about' },
+] as const
 
-export default function LandingNav({ navRef }: { navRef: React.RefObject<HTMLElement | null> }) {
+export default function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!menuOpen) return
+
+    const body = document.body
+    const previousOverflow = body.style.overflow
+    body.style.overflow = 'hidden'
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [menuOpen])
+
+  const closeMenu = () => setMenuOpen(false)
 
   return (
-    <nav ref={navRef} className="opacity-0 relative z-30">
-      <div className="flex items-center justify-between px-6 md:px-16 py-5">
-        <SkinauditLogo />
+    <header className="site-header">
+      <Link className="logo" href="/">
+        SKINAUDIT
+      </Link>
 
-        {/* Desktop nav */}
-        <ul className="hidden md:flex items-center gap-9">
-          {NAV_ITEMS.map((item) => (
-            <li key={item}>
-              <a
-                href="#"
-                className="text-[12px] tracking-[0.15em] text-alabaster-400 hover:text-alabaster-100 transition-colors duration-300 uppercase"
-              >
-                {item}
-              </a>
-            </li>
-          ))}
-        </ul>
+      <nav className="nav-links" aria-label="Primary">
+        {NAV_ITEMS.map(({ label, href }) => (
+          <a key={href} href={href}>
+            {label}
+          </a>
+        ))}
+        <Link href="/signin">Sign In</Link>
+      </nav>
 
-        <div className="flex items-center gap-5">
-          <Link
-            href="/signin"
-            className="text-[10px] tracking-[0.18em] text-alabaster-400 hover:text-alabaster-100 transition-colors duration-300 uppercase"
-          >
-            SIGN IN
-          </Link>
+      {/*
+        Both the toggle and the panel are portaled to body together.
+        .hero-section has overflow: hidden (for the background image), which
+        clips fixed-position descendants in Chromium/WebKit even though
+        `fixed` is normally supposed to escape ancestor bounds — so a fixed
+        button left inside .site-header/.hero-section physically disappears
+        or becomes unclickable once scrolled/composited. Rendering both
+        elements as siblings of <body> sidesteps that clipping entirely.
+      */}
+      {mounted &&
+        createPortal(
+          <>
+            <button
+              type="button"
+              className="menu-toggle"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {menuOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
+            </button>
 
-          {/* Hamburger — mobile only */}
-          <button
-            className="md:hidden flex flex-col justify-center items-center gap-[5px] w-6 h-6"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          >
-            <span
-              className="block w-5 h-px bg-alabaster-300 transition-all duration-300 origin-center"
-              style={{ transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none' }}
-            />
-            <span
-              className="block w-5 h-px bg-alabaster-300 transition-all duration-300"
-              style={{ opacity: menuOpen ? 0 : 1 }}
-            />
-            <span
-              className="block w-5 h-px bg-alabaster-300 transition-all duration-300 origin-center"
-              style={{ transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none' }}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu drawer */}
-      <div
-        className="md:hidden overflow-hidden transition-all duration-500"
-        style={{ maxHeight: menuOpen ? '300px' : '0px' }}
-      >
-        <ul
-          className="flex flex-col border-t border-white/10"
-          style={{ background: 'rgba(10,9,8,0.97)' }}
-        >
-          {NAV_ITEMS.map((item) => (
-            <li key={item}>
-              <a
-                href="#"
-                onClick={() => setMenuOpen(false)}
-                className="block px-6 py-4 text-[13px] tracking-[0.2em] text-alabaster-400 hover:text-alabaster-100 uppercase transition-colors duration-200 border-b border-white/5"
-              >
-                {item}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </nav>
+            <div
+              id="mobile-nav"
+              className={`mobile-nav-panel${menuOpen ? ' mobile-nav-panel--open' : ''}`}
+              aria-hidden={!menuOpen}
+            >
+              <nav className="mobile-nav-links" aria-label="Primary">
+                {NAV_ITEMS.map(({ label, href }) => (
+                  <a key={href} href={href} onClick={closeMenu}>
+                    {label}
+                  </a>
+                ))}
+                <Link href="/signin" onClick={closeMenu}>
+                  Sign In
+                </Link>
+              </nav>
+            </div>
+          </>,
+          document.body
+        )}
+    </header>
   )
 }
