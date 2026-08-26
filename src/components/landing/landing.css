@@ -22,8 +22,9 @@
   --gap-x: clamp(2rem, 6vw, 6rem);
   --f-label: 0.6875rem;
   --f-body: 0.8125rem;
-  --f-disp: clamp(4rem, 9vw, 9rem);
-  --f-fin: clamp(2rem, 12vw, 18rem);
+  /* Scale by width but cap by height so everything fits in the viewport */
+  --f-disp: min(clamp(3rem, 20vw, 28rem), 28svh);
+  --f-fin: min(clamp(1.5rem, 9vw, 13rem), 13svh);
 }
 
 html:has(.home-page) {
@@ -220,8 +221,9 @@ html:has(.home-page) {
   height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 0 var(--gap-x) clamp(3.5rem, 7vh, 6rem);
+  justify-content: space-between;
+  /* top padding clears the fixed nav (~80px) + breathing room */
+  padding: clamp(5.5rem, 11vh, 8rem) var(--gap-x) clamp(3.5rem, 7vh, 6rem);
   border-bottom: 1px solid var(--rule-md);
   overflow: clip; /* clips background zoom without cutting off text children */
   z-index: 1;
@@ -533,10 +535,10 @@ html:has(.home-page) {
 .home-page .feat-header {
   padding: clamp(4rem, 8vh, 7rem) var(--gap-x) clamp(3rem, 5vh, 5rem);
   border-bottom: 1px solid var(--rule-md);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2rem clamp(4rem, 8vw, 10rem);
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 52rem;
   opacity: 0;
   transform: translateY(20px);
   transition:
@@ -568,11 +570,10 @@ html:has(.home-page) {
   font-weight: 300;
   letter-spacing: 0.1em;
   color: var(--mid);
-  max-width: 30ch;
+  max-width: 48ch;
   line-height: 1.9;
-  padding-bottom: 0.35rem;
-  border-left: 1px solid var(--rule-md);
-  padding-left: 2rem;
+  border-left: none;
+  padding-left: 0;
 }
 
 .home-page .feat-grid {
@@ -665,15 +666,6 @@ html:has(.home-page) {
 }
 
 @media (max-width: 680px) {
-  .home-page .feat-header {
-    grid-template-columns: 1fr;
-  }
-  .home-page .feat-header-sub {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid var(--rule-md);
-    padding-top: 1.5rem;
-  }
   .home-page .feat-grid {
     grid-template-columns: 1fr;
   }
@@ -892,8 +884,8 @@ html:has(.home-page) {
   }
 
   .home-page {
-    --f-disp: clamp(3.5rem, 20vw, 28rem);
-    --f-fin: clamp(1.75rem, 9.5vw, 13rem);
+    --f-disp: min(clamp(3rem, 18vw, 22rem), 26svh);
+    --f-fin: min(clamp(1.5rem, 8vw, 10rem), 12svh);
   }
 
   .home-page .feat-card {
@@ -904,8 +896,8 @@ html:has(.home-page) {
 /* Phone (≤ 680px) */
 @media (max-width: 680px) {
   .home-page {
-    --f-disp: clamp(3.5rem, 22vw, 12rem);
-    --f-fin: clamp(1.75rem, 10.5vw, 6rem);
+    --f-disp: min(clamp(3rem, 18vw, 10rem), 24svh);
+    --f-fin: min(clamp(1.5rem, 8vw, 5rem), 11svh);
     --gap-x: clamp(1.25rem, 5vw, 2.5rem);
   }
 
@@ -938,15 +930,6 @@ html:has(.home-page) {
     border-top: none;
   }
 
-  .home-page .feat-header {
-    grid-template-columns: 1fr;
-  }
-  .home-page .feat-header-sub {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid var(--rule-md);
-    padding-top: 1.5rem;
-  }
   .home-page .feat-grid {
     grid-template-columns: 1fr;
   }
@@ -981,8 +964,8 @@ html:has(.home-page) {
 /* Small phone (≤ 400px) */
 @media (max-width: 400px) {
   .home-page {
-    --f-disp: clamp(3rem, 20vw, 8rem);
-    --f-fin: clamp(1.5rem, 9.5vw, 4rem);
+    --f-disp: min(clamp(2.5rem, 17vw, 6rem), 22svh);
+    --f-fin: min(clamp(1.25rem, 8vw, 3rem), 10svh);
   }
   .home-page .site-header {
     padding-inline: 1.25rem;
