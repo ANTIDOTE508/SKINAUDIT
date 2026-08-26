@@ -1,37 +1,34 @@
-import type { ReactNode } from 'react'
+import StatRow from './StatRow'
 
-const STATS: { value: string; label: ReactNode }[] = [
+const STATS = [
   {
-    value: '2,400+',
-    label: 'ingredient interactions mapped',
+    label: 'Ingredient interactions mapped',
+    target: 2400,
+    suffix: '+',
+    display: '2,400+',
   },
   {
-    value: '87%',
-    label: 'of routines carry a silent conflict',
+    label: 'Of routines carry a silent conflict',
+    target: 87,
+    suffix: '%',
+    display: '87%',
+    transitionDelay: '0.12s',
   },
   {
-    value: '3.2×',
-    label: (
-      <>
-        better results with
-        <br />
-        sequencing awareness
-      </>
-    ),
+    label: 'Better results with sequencing awareness',
+    target: 3.2,
+    suffix: '×',
+    display: '3.2×',
+    transitionDelay: '0.22s',
   },
-]
+] as const
 
 export default function LandingStats() {
   return (
-    <section className="stats-section">
-      <div className="stats-card">
-        {STATS.map(({ value, label }) => (
-          <div className="stat" key={value}>
-            <div className="stat-number">{value}</div>
-            <div className="stat-label">{label}</div>
-          </div>
-        ))}
-      </div>
+    <section className="stats" aria-label="Key statistics">
+      {STATS.map((stat) => (
+        <StatRow key={stat.label} {...stat} />
+      ))}
     </section>
   )
 }

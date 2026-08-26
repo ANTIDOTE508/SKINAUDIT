@@ -15,9 +15,17 @@ const NAV_ITEMS = [
 export default function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
@@ -41,9 +49,9 @@ export default function LandingNav() {
   const closeMenu = () => setMenuOpen(false)
 
   return (
-    <header className="site-header">
-      <Link className="logo" href="/">
-        SKINAUDIT
+    <header className={`site-header${scrolled ? ' site-header--scrolled' : ''}`}>
+      <Link className="nav-brand" href="/">
+        Skinaudit
       </Link>
 
       <nav className="nav-links" aria-label="Primary">
@@ -52,15 +60,17 @@ export default function LandingNav() {
             {label}
           </a>
         ))}
-        <Link href="/signin">Sign In</Link>
+        <Link className="sign-in" href="/signin">
+          Sign In
+        </Link>
       </nav>
 
       {/*
         Both the toggle and the panel are portaled to body together.
-        .hero-section has overflow: hidden (for the background image), which
+        .hero has overflow: clip (for the background zoom), which
         clips fixed-position descendants in Chromium/WebKit even though
         `fixed` is normally supposed to escape ancestor bounds — so a fixed
-        button left inside .site-header/.hero-section physically disappears
+        button left inside .site-header/.hero physically disappears
         or becomes unclickable once scrolled/composited. Rendering both
         elements as siblings of <body> sidesteps that clipping entirely.
       */}
