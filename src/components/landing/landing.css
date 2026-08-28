@@ -1,7 +1,9 @@
 /* ======================================================
    SKINAUDIT LANDING PAGE
    Ported from the skinaudit_new_homepage.html spec — same tokens,
-   layout, typography, and motion feel. Selectors are scoped under
+   layout, typography, and motion feel. Hero type scale (--f-disp /
+   --f-fin) and the "Finally." treatment are aligned to the latest
+   spec: "Finally." renders at the same size as the headline. Selectors are scoped under
    `.home-page` because the template authored them as page-global
    (bare `nav`, `.hero`, `.stats`, etc). The nav's mobile menu-toggle
    button and mobile-nav-panel are portaled to <body> (see
@@ -23,8 +25,8 @@
   --f-label: 0.6875rem;
   --f-body: 0.8125rem;
   /* Scale by width but cap by height so everything fits in the viewport */
-  --f-disp: min(clamp(3rem, 20vw, 28rem), 28svh);
-  --f-fin: min(clamp(1.5rem, 9vw, 13rem), 13svh);
+  --f-disp: min(clamp(3rem, 23vw, 32rem), 30svh);
+  --f-fin: min(clamp(3rem, 23vw, 32rem), 30svh); /* same size as headline */
 }
 
 html:has(.home-page) {
@@ -293,11 +295,11 @@ html:has(.home-page) {
   font-style: italic;
   line-height: 0.95;
   color: var(--accent);
-  margin-left: 0.65em;
+  margin-left: 0;
   margin-top: 0.18em;
   will-change: transform, opacity;
-  filter: drop-shadow(0 0 50px rgba(9, 8, 10, 0.4));
-  animation: hed-load 1.2s 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  filter: drop-shadow(0 0 60px rgba(196, 176, 154, 0.25)) drop-shadow(0 0 30px rgba(9, 8, 10, 0.5));
+  animation: hed-load 1.2s 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .home-page .hero-sub-row {
@@ -885,7 +887,7 @@ html:has(.home-page) {
 
   .home-page {
     --f-disp: min(clamp(3rem, 18vw, 22rem), 26svh);
-    --f-fin: min(clamp(1.5rem, 8vw, 10rem), 12svh);
+    --f-fin: min(clamp(3rem, 18vw, 22rem), 26svh);
   }
 
   .home-page .feat-card {
@@ -897,7 +899,7 @@ html:has(.home-page) {
 @media (max-width: 680px) {
   .home-page {
     --f-disp: min(clamp(3rem, 18vw, 10rem), 24svh);
-    --f-fin: min(clamp(1.5rem, 8vw, 5rem), 11svh);
+    --f-fin: min(clamp(3rem, 18vw, 10rem), 24svh);
     --gap-x: clamp(1.25rem, 5vw, 2.5rem);
   }
 
@@ -906,8 +908,8 @@ html:has(.home-page) {
     letter-spacing: -0.025em;
   }
   .home-page .hed-finally {
-    margin-left: 0.4em;
-    margin-top: 0.22em;
+    margin-left: 0;
+    margin-top: 0.18em;
   }
 
   .home-page .hero-sub-row {
@@ -965,7 +967,7 @@ html:has(.home-page) {
 @media (max-width: 400px) {
   .home-page {
     --f-disp: min(clamp(2.5rem, 17vw, 6rem), 22svh);
-    --f-fin: min(clamp(1.25rem, 8vw, 3rem), 10svh);
+    --f-fin: min(clamp(2.5rem, 17vw, 6rem), 22svh);
   }
   .home-page .site-header {
     padding-inline: 1.25rem;
