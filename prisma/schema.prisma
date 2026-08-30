@@ -45,6 +45,41 @@ enum ExperienceLevel {
   @@schema("app")
 }
 
+enum SkinUndertone {
+  WARM
+  COOL
+  NEUTRAL
+
+  @@schema("app")
+}
+
+enum PIHFrequency {
+  OFTEN
+  SOMETIMES
+  RARELY
+  NEVER
+
+  @@schema("app")
+}
+
+enum PIHDuration {
+  LT_1MO
+  ONE_3MO
+  THREE_6MO
+  GT_6MO
+
+  @@schema("app")
+}
+
+enum Frequency4 {
+  YES_OFTEN
+  SOMETIMES
+  RARELY
+  NEVER
+
+  @@schema("app")
+}
+
 enum GenderIdentity {
   WOMAN
   MAN
@@ -321,6 +356,10 @@ model UserProfile {
   vitiligo              Boolean?         @map("vitiligo")
   sensitivityScore      Int?             @map("sensitivity_score")
   sunResponse           Int?             @map("sun_response")
+  skinUndertone         SkinUndertone?   @map("skin_undertone")
+  pihFrequency          PIHFrequency?    @map("pih_frequency")
+  pihDuration           PIHDuration?     @map("pih_duration")
+  unevenPatches         Frequency4?      @map("uneven_patches")
   concerns              String[]
   goals                 String[]
   experienceLevel       ExperienceLevel  @default(BEGINNER) @map("experience_level")

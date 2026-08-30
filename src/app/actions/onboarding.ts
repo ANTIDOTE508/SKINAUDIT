@@ -11,6 +11,10 @@ import type {
   GenderIdentity,
   HomeDeviceType,
   ProfessionalTreatmentType,
+  SkinUndertone,
+  PIHFrequency,
+  PIHDuration,
+  Frequency4,
 } from '@prisma/client'
 import {
   PREFERRED_NAME_MAX_LENGTH,
@@ -115,7 +119,7 @@ export async function saveSkinTone(payload: SkinTonePayload) {
   return { ok: true }
 }
 
-// ─── Step 4 — Skin type & primary concerns ─────────────────────
+// ─── Step 8 — Skin type & primary concerns ─────────────────────
 export type SkinProfilePayload = {
   skinType: SkinType
   concerns: string[]
@@ -142,11 +146,11 @@ export async function saveSkinProfile(payload: SkinProfilePayload) {
       userId: user.id,
       ...values,
       experienceLevel: 'BEGINNER',
-      onboardingStep: 4,
+      onboardingStep: 8,
     },
     update: {
       ...values,
-      onboardingStep: 4,
+      onboardingStep: 8,
     },
   })
 
@@ -178,7 +182,104 @@ export async function saveSunResponse(sunResponse: number) {
   return { ok: true }
 }
 
-// ─── Step 5 — Sensitivity score (1–5) ─────────────────────────
+// ─── Step 4 — Skin undertone (optional) ──────────────────────
+export async function saveUndertone(undertone: SkinUndertone | null) {
+  const user = await requireSession()
+
+  // Undertone is optional — a null answer is valid and simply stored as-is.
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      skinUndertone: undertone,
+      experienceLevel: 'BEGINNER',
+      onboardingStep: 4,
+    },
+    update: {
+      skinUndertone: undertone,
+      onboardingStep: 4,
+    },
+  })
+
+  return { ok: true }
+}
+
+// ─── Step 5 — PIH frequency (dark marks after healing) ───────
+export async function savePihFrequency(pihFrequency: PIHFrequency) {
+  const user = await requireSession()
+
+  if (!pihFrequency) throw new Error('PIH frequency is required')
+
+  // "rarely" / "never" skip the follow-up duration screen (Screen 08), so
+  // any previously-saved duration must be cleared. "often" / "sometimes"
+  // leave it untouched (undefined) — the user is about to land on Screen 08.
+  const skipsDuration = pihFrequency === 'RARELY' || pihFrequency === 'NEVER'
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      pihFrequency,
+      pihDuration: skipsDuration ? null : undefined,
+      experienceLevel: 'BEGINNER',
+      onboardingStep: 5,
+    },
+    update: {
+      pihFrequency,
+      pihDuration: skipsDuration ? null : undefined,
+      onboardingStep: 5,
+    },
+  })
+
+  return { ok: true }
+}
+
+// ─── Step 6 — PIH duration (follow-up; only after often / sometimes) ──
+export async function savePihDuration(pihDuration: PIHDuration | null) {
+  const user = await requireSession()
+
+  // Optional — a null answer is valid and stored as-is.
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      pihDuration,
+      experienceLevel: 'BEGINNER',
+      onboardingStep: 6,
+    },
+    update: {
+      pihDuration,
+      onboardingStep: 6,
+    },
+  })
+
+  return { ok: true }
+}
+
+// ─── Step 7 — Uneven patches vs. even tan ────────────────────
+export async function saveUnevenPatches(unevenPatches: Frequency4) {
+  const user = await requireSession()
+
+  if (!unevenPatches) throw new Error('Uneven patches answer is required')
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      unevenPatches,
+      experienceLevel: 'BEGINNER',
+      onboardingStep: 7,
+    },
+    update: {
+      unevenPatches,
+      onboardingStep: 7,
+    },
+  })
+
+  return { ok: true }
+}
+
+// ─── Step 9 — Sensitivity score (1–5) ─────────────────────────
 export async function saveSensitivity(sensitivityScore: number) {
   const user = await requireSession()
 
@@ -188,18 +289,18 @@ export async function saveSensitivity(sensitivityScore: number) {
       userId: user.id,
       sensitivityScore,
       experienceLevel: 'BEGINNER',
-      onboardingStep: 5,
+      onboardingStep: 9,
     },
     update: {
       sensitivityScore,
-      onboardingStep: 5,
+      onboardingStep: 9,
     },
   })
 
   return { ok: true }
 }
 
-// ─── Step 6 — Skin Goals (max 3) ──────────────────────────────
+// ─── Step 10 — Skin Goals (max 3) ─────────────────────────────
 export async function saveGoals(goals: string[]) {
   const user = await requireSession()
 
@@ -209,18 +310,18 @@ export async function saveGoals(goals: string[]) {
       userId: user.id,
       goals,
       experienceLevel: 'BEGINNER',
-      onboardingStep: 6,
+      onboardingStep: 10,
     },
     update: {
       goals,
-      onboardingStep: 6,
+      onboardingStep: 10,
     },
   })
 
   return { ok: true }
 }
 
-// ─── Step 7 — Environment ──────────────────────────────────────
+// ─── Step 11 — Environment ────────────────────────────────────
 export type EnvironmentPayload = {
   city?: string
   countryCode?: string
@@ -251,14 +352,14 @@ export async function saveEnvironment(payload: EnvironmentPayload) {
   })
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 7 } },
-    data: { onboardingStep: 7 },
+    where: { userId: user.id, onboardingStep: { lt: 11 } },
+    data: { onboardingStep: 11 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 8 — Experience Level ────────────────────────────────
+// ─── Step 12 — Experience Level ───────────────────────────────
 export async function saveExperienceLevel(level: ExperienceLevel) {
   const user = await requireSession()
 
@@ -267,18 +368,18 @@ export async function saveExperienceLevel(level: ExperienceLevel) {
     create: {
       userId: user.id,
       experienceLevel: level,
-      onboardingStep: 8,
+      onboardingStep: 12,
     },
     update: {
       experienceLevel: level,
-      onboardingStep: 8,
+      onboardingStep: 12,
     },
   })
 
   return { ok: true }
 }
 
-// ─── Step 9 — Tools & Treatments ──────────────────────────────
+// ─── Step 13 — Tools & Treatments ────────────────────────────
 export type ToolsPayload = {
   homeDevices: HomeDeviceType[]
   professionalTreatments: ProfessionalTreatmentType[]
@@ -308,33 +409,33 @@ export async function saveToolsAndTreatments(payload: ToolsPayload) {
         ]
       : []),
     prisma.userProfile.updateMany({
-      where: { userId: user.id, onboardingStep: { lt: 9 } },
-      data: { onboardingStep: 9 },
+      where: { userId: user.id, onboardingStep: { lt: 13 } },
+      data: { onboardingStep: 13 },
     }),
   ])
 
   return { ok: true }
 }
 
-// ─── Step 10 — Interpretation notice ──────────────────────────
+// ─── Step 14 — Interpretation notice ──────────────────────────
 /**
  * The interpretation/scope screen carries no user input — acknowledging it
  * only advances the resume marker so returning users land past it instead
- * of re-reading it. `lt: 10` keeps a further-along user from being pulled
+ * of re-reading it. `lt: 14` keeps a further-along user from being pulled
  * backwards if they navigate back to this screen and continue again.
  */
 export async function acknowledgeInterpretation() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 10 } },
-    data: { onboardingStep: 10 },
+    where: { userId: user.id, onboardingStep: { lt: 14 } },
+    data: { onboardingStep: 14 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 11 — "All set" transition ───────────────────────────
+// ─── Step 15 — "All set" transition ───────────────────────────
 /**
  * The "All set" screen is a milestone marker, not the end of onboarding —
  * it sits between the questionnaire and the dossier-building steps.
@@ -344,14 +445,14 @@ export async function acknowledgeAllSet() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 11 } },
-    data: { onboardingStep: 11 },
+    where: { userId: user.id, onboardingStep: { lt: 15 } },
+    data: { onboardingStep: 15 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 12 — Dossier intro ──────────────────────────────────
+// ─── Step 16 — Dossier intro ──────────────────────────────────
 /**
  * Like the interpretation screen, this one carries no user input —
  * acknowledging it only advances the resume marker so returning users land
@@ -361,14 +462,14 @@ export async function acknowledgeDossierIntro() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 12 } },
-    data: { onboardingStep: 12 },
+    where: { userId: user.id, onboardingStep: { lt: 16 } },
+    data: { onboardingStep: 16 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 13 — Product search & add ──────────────────────────
+// ─── Step 17 — Product search & add ──────────────────────────
 export async function searchProducts(query: string) {
   await requireSession()
   if (!query.trim() || query.length < 2) return []
@@ -412,7 +513,7 @@ export async function completeOnboarding() {
   await prisma.userProfile.updateMany({
     where: { userId: user.id },
     data: {
-      onboardingStep: 13,
+      onboardingStep: 17,
       onboardingCompletedAt: new Date(),
     },
   })
@@ -452,6 +553,10 @@ export async function getOnboardingStatus() {
       vitiligo: true,
       sensitivityScore: true,
       sunResponse: true,
+      skinUndertone: true,
+      pihFrequency: true,
+      pihDuration: true,
+      unevenPatches: true,
       genderIdentity: true,
       preferredName: true,
       birthMonth: true,

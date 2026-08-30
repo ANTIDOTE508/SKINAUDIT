@@ -47,7 +47,10 @@ export default function LandingQuote() {
         word.style.transform = `translateY(${(1 - ease) * 18}px)`
       })
 
-      if (progress > 0.75) {
+      // On tall desktop viewports the section can finish scrolling past
+      // without `progress` ever exceeding 0.75, leaving the attribution
+      // hidden. Reveal it once the section top clears the viewport top.
+      if (progress > 0.6 || rect.top < 0) {
         attr.classList.add('on')
       }
 

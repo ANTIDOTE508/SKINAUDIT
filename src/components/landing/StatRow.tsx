@@ -65,10 +65,23 @@ export default function StatRow({ label, target, suffix, display, transitionDela
           observer.unobserve(entry.target)
         }
       },
-      { threshold: 0.3 }
+      // threshold 0 + bottom bias: a tall desktop stat row must not need
+      // 30% of its own box visible before it reveals.
+      { threshold: 0, rootMargin: '0px 0px -10% 0px' }
     )
 
     observer.observe(node)
+
+    // Safety net for rows already on-screen at mount on tall viewports.
+    if (!prefersReducedMotion) {
+      const rect = node.getBoundingClientRect()
+      const vh = window.innerHeight || document.documentElement.clientHeight
+      if (rect.top < vh - 40 && rect.bottom > 0) {
+        observer.unobserve(node)
+        setOn(true)
+        setValue(display)
+      }
+    }
 
     return () => {
       observer.disconnect()

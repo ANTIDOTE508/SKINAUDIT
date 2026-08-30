@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
+import { RadioPill } from './RadioPill'
 import { saveSunResponse } from '@/app/actions/onboarding'
 import { SUN_RESPONSE_SCALE_COUNT } from '@/lib/onboarding-rules'
 
@@ -82,7 +83,7 @@ export function StepSunResponse({ value, onChange, onContinue, onBack }: Props) 
     e.preventDefault()
     const next = (index + delta + OPTIONS.length) % OPTIONS.length
     onChange(OPTIONS[next].value)
-    const rows = listRef.current?.querySelectorAll<HTMLButtonElement>('[data-sun-row]')
+    const rows = listRef.current?.querySelectorAll<HTMLButtonElement>('[data-radio-pill]')
     rows?.[next]?.focus()
   }
 
@@ -234,77 +235,18 @@ export function StepSunResponse({ value, onChange, onContinue, onBack }: Props) 
           {OPTIONS.map((option, index) => {
             const isSelected = value === option.value
             return (
-              <button
-                key={option.value}
-                type="button"
-                role="radio"
-                data-sun-row
-                data-reveal
-                aria-checked={isSelected}
-                aria-label={`${option.label} — option ${option.value} of ${SUN_RESPONSE_SCALE_COUNT}`}
-                tabIndex={isSelected || (value == null && index === 0) ? 0 : -1}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                onClick={() => onChange(option.value)}
-                className="sun-response-row"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '0.9375rem 1.125rem',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  border: isSelected
-                    ? '1px solid var(--color-sienna-400)'
-                    : '1px solid rgba(184,134,61,0.28)',
-                  backgroundColor: isSelected
-                    ? 'rgba(184,134,61,0.14)'
-                    : 'rgba(6,5,5,0.42)',
-                  transition:
-                    'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: 'flex',
-                    flexShrink: 0,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    border: isSelected
-                      ? '1px solid var(--color-sienna-400)'
-                      : '1px solid rgba(184,134,61,0.45)',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 300,
-                    fontSize: '0.8125rem',
-                    lineHeight: 1,
-                    color: 'var(--color-sienna-400)',
-                    transition: 'border-color var(--duration-micro) var(--ease-luxury)',
-                  }}
-                >
-                  {option.value}
-                </span>
-
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 300,
-                    fontSize: '0.9375rem',
-                    color: isSelected
-                      ? 'var(--color-alabaster-50)'
-                      : 'var(--color-alabaster-300)',
-                    transition: 'color var(--duration-micro) var(--ease-luxury)',
-                  }}
-                >
-                  {option.label}
-                </span>
-              </button>
+              <div key={option.value} data-reveal>
+                <RadioPill
+                  value={String(option.value)}
+                  title={option.label}
+                  ariaLabel={`${option.label} — option ${option.value} of ${SUN_RESPONSE_SCALE_COUNT}`}
+                  leftSlot={option.value}
+                  selected={isSelected}
+                  onChange={() => onChange(option.value)}
+                  tabIndex={isSelected || (value == null && index === 0) ? 0 : -1}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                />
+              </div>
             )
           })}
         </div>

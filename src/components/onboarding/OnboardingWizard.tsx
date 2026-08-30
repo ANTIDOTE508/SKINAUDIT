@@ -8,6 +8,10 @@ import { StepWelcome } from './StepWelcome'
 import { StepIdentity } from './StepIdentity'
 import { StepSkinType } from './StepSkinType'
 import { StepSunResponse } from './StepSunResponse'
+import { StepUndertone } from './StepUndertone'
+import { StepPihFrequency } from './StepPihFrequency'
+import { StepPihDuration } from './StepPihDuration'
+import { StepUnevenPatches } from './StepUnevenPatches'
 import { StepSkinTone } from './StepSkinTone'
 import { StepSkinGoals } from './StepSkinGoals'
 import { StepSensitivity } from './StepSensitivity'
@@ -19,6 +23,7 @@ import { StepDossierIntro } from './StepDossierIntro'
 import { StepProducts } from './StepProducts'
 import { StepCompletion } from './StepCompletion'
 import { StepCounter } from './StepCounter'
+import type { SkinUndertone, PIHFrequency, PIHDuration, Frequency4 } from '@prisma/client'
 
 // ─── Types ────────────────────────────────────────────────────
 export type WizardUser = {
@@ -39,6 +44,10 @@ type WizardState = {
   vitiligo: boolean
   sensitivityScore: number | null
   sunResponse: number | null
+  skinUndertone: SkinUndertone | null
+  pihFrequency: PIHFrequency | null
+  pihDuration: PIHDuration | null
+  unevenPatches: Frequency4 | null
   concerns: string[]
   goals: string[]
   city: string
@@ -62,6 +71,10 @@ type WizardAction =
   | { type: 'SET_VITILIGO'; value: boolean }
   | { type: 'SET_SENSITIVITY'; value: number }
   | { type: 'SET_SUN_RESPONSE'; value: number }
+  | { type: 'SET_UNDERTONE'; value: SkinUndertone }
+  | { type: 'SET_PIH_FREQUENCY'; value: PIHFrequency }
+  | { type: 'SET_PIH_DURATION'; value: PIHDuration }
+  | { type: 'SET_UNEVEN_PATCHES'; value: Frequency4 }
   | { type: 'SET_CONCERNS'; value: string[] }
   | { type: 'SET_GOALS'; value: string[] }
   | { type: 'SET_ENVIRONMENT'; city: string; countryCode: string; climateZone: string; season: string }
@@ -82,6 +95,10 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_VITILIGO':       return { ...state, vitiligo: action.value }
     case 'SET_SENSITIVITY':    return { ...state, sensitivityScore: action.value }
     case 'SET_SUN_RESPONSE':   return { ...state, sunResponse: action.value }
+    case 'SET_UNDERTONE':      return { ...state, skinUndertone: action.value }
+    case 'SET_PIH_FREQUENCY':  return { ...state, pihFrequency: action.value }
+    case 'SET_PIH_DURATION':   return { ...state, pihDuration: action.value }
+    case 'SET_UNEVEN_PATCHES': return { ...state, unevenPatches: action.value }
     case 'SET_CONCERNS':       return { ...state, concerns: action.value }
     case 'SET_GOALS':          return { ...state, goals: action.value }
     case 'SET_ENVIRONMENT':    return { ...state, city: action.city, countryCode: action.countryCode, climateZone: action.climateZone, season: action.season }
@@ -92,10 +109,33 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-// step 0 = welcome, steps 1–13 = wizard steps. Step 13 (product picker) is
+// step 0 = welcome, steps 1–17 = wizard steps. Step 17 (product picker) is
 // the last one and completes onboarding itself, so there is no separate
-// completion step beyond it.
-const TOTAL_STEPS = 13
+// completion step beyond it. TOTAL_STEPS is the count of *possible* screens;
+// the number shown to the user is derived from activeScreens() below, which
+// drops any screen skipped for this user's answers.
+const TOTAL_STEPS = 17
+
+// Screen 6 (PIH duration) is a follow-up shown only when PIH frequency is
+// "often" or "sometimes". Every other screen is always shown.
+const CONDITIONAL_SCREEN_PIH_DURATION = 6
+
+/**
+ * Ordered list of the wizard screen numbers active for this user's current
+ * answers. Skipped conditional screens simply don't appear, so navigating
+ * and the progress counter both renumber automatically — add a screen to
+ * this filter and nothing else needs to change.
+ */
+function activeScreens(state: WizardState): number[] {
+  const pihDurationApplies =
+    state.pihFrequency === 'OFTEN' || state.pihFrequency === 'SOMETIMES'
+  const screens: number[] = []
+  for (let n = 1; n <= TOTAL_STEPS; n++) {
+    if (n === CONDITIONAL_SCREEN_PIH_DURATION && !pihDurationApplies) continue
+    screens.push(n)
+  }
+  return screens
+}
 
 /** Answers already saved on the profile, used to repopulate fields on resume. */
 export type WizardInitialProfile = {
@@ -106,6 +146,10 @@ export type WizardInitialProfile = {
   skinToneScale?: number | null
   vitiligo?: boolean | null
   sunResponse?: number | null
+  skinUndertone?: SkinUndertone | null
+  pihFrequency?: PIHFrequency | null
+  pihDuration?: PIHDuration | null
+  unevenPatches?: Frequency4 | null
   skinType?: string | null
   concerns?: string[] | null
   sensitivityScore?: number | null
@@ -143,6 +187,10 @@ export function OnboardingWizard({
     vitiligo: initialProfile?.vitiligo ?? false,
     sensitivityScore: initialProfile?.sensitivityScore ?? null,
     sunResponse: initialProfile?.sunResponse ?? null,
+    skinUndertone: initialProfile?.skinUndertone ?? null,
+    pihFrequency: initialProfile?.pihFrequency ?? null,
+    pihDuration: initialProfile?.pihDuration ?? null,
+    unevenPatches: initialProfile?.unevenPatches ?? null,
     concerns: initialProfile?.concerns ?? [],
     goals: initialProfile?.goals ?? [],
     city: initialProfile?.city ?? '',
@@ -198,13 +246,36 @@ export function OnboardingWizard({
     })
   }, [state.isTransitioning])
 
-  const goNext = useCallback(() => transitionToStep(state.step + 1), [state.step, transitionToStep])
-  const goBack = useCallback(() => { if (state.step > 1) transitionToStep(state.step - 1) }, [state.step, transitionToStep])
+  // Navigation walks the *active* screens for this user, so a skipped
+  // conditional screen (e.g. PIH duration after "rarely" / "never") is
+  // stepped straight over in both directions with no special-casing.
+  const screens = activeScreens(state)
 
-  // steps 1–13 show counter (only the step 0 welcome screen doesn't)
+  const goNext = useCallback(() => {
+    const list = activeScreens(state)
+    const i = list.indexOf(state.step)
+    const next = i >= 0 && i < list.length - 1 ? list[i + 1] : state.step + 1
+    transitionToStep(next)
+  }, [state, transitionToStep])
+
+  const goBack = useCallback(() => {
+    const list = activeScreens(state)
+    const i = list.indexOf(state.step)
+    if (i > 0) transitionToStep(list[i - 1])
+  }, [state, transitionToStep])
+
+  // Screen 07 (PIH frequency, step 5) routing per its spec:
+  //   often | sometimes → Screen 08 (step 6, the duration follow-up)
+  //   rarely | never    → Screen 09 (step 7, skipping the follow-up)
+  // The answer is already in state by the time this fires, so activeScreens()
+  // reflects it and goNext() lands on the right screen on its own.
+  const handlePihContinue = useCallback(() => goNext(), [goNext])
+
+  // steps 1–TOTAL_STEPS show the counter (the step 0 welcome screen doesn't)
   const showCounter = state.step >= 1 && state.step <= TOTAL_STEPS
-  const counterCurrent = state.step
-  const counterTotal = TOTAL_STEPS
+  // Position within the screens active for this user, not the raw step number.
+  const counterCurrent = Math.max(1, screens.indexOf(state.step) + 1)
+  const counterTotal = screens.length
 
   return (
     <div
@@ -302,6 +373,42 @@ export function OnboardingWizard({
           )}
 
           {state.step === 4 && (
+            <StepUndertone
+              value={state.skinUndertone}
+              onChange={(v) => dispatch({ type: 'SET_UNDERTONE', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 5 && (
+            <StepPihFrequency
+              value={state.pihFrequency}
+              onChange={(v) => dispatch({ type: 'SET_PIH_FREQUENCY', value: v })}
+              onContinue={handlePihContinue}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 6 && (
+            <StepPihDuration
+              value={state.pihDuration}
+              onChange={(v) => dispatch({ type: 'SET_PIH_DURATION', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 7 && (
+            <StepUnevenPatches
+              value={state.unevenPatches}
+              onChange={(v) => dispatch({ type: 'SET_UNEVEN_PATCHES', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 8 && (
             <StepSkinType
               value={state.skinType}
               onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
@@ -312,7 +419,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 5 && (
+          {state.step === 9 && (
             <StepSensitivity
               sensitivity={state.sensitivityScore}
               onSensitivityChange={(v) => dispatch({ type: 'SET_SENSITIVITY', value: v })}
@@ -321,7 +428,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 6 && (
+          {state.step === 10 && (
             <StepSkinGoals
               value={state.goals}
               onChange={(v) => dispatch({ type: 'SET_GOALS', value: v })}
@@ -330,7 +437,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 7 && (
+          {state.step === 11 && (
             <StepEnvironment
               city={state.city}
               countryCode={state.countryCode}
@@ -350,7 +457,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 8 && (
+          {state.step === 12 && (
             <StepExperience
               level={state.experienceLevel}
               onChange={(v) => dispatch({ type: 'SET_EXPERIENCE', value: v })}
@@ -359,7 +466,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 9 && (
+          {state.step === 13 && (
             <StepTools
               homeDevices={state.homeDevices}
               professionalTreatments={state.professionalTreatments}
@@ -370,17 +477,17 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 10 && (
+          {state.step === 14 && (
             <StepInterpretation onContinue={goNext} onBack={goBack} />
           )}
 
-          {state.step === 11 && <StepCompletion onContinue={goNext} />}
+          {state.step === 15 && <StepCompletion onContinue={goNext} />}
 
-          {state.step === 12 && (
+          {state.step === 16 && (
             <StepDossierIntro onContinue={goNext} />
           )}
 
-          {state.step === 13 && (
+          {state.step === 17 && (
             <StepProducts onComplete={completeAndEnterStudio} />
           )}
 

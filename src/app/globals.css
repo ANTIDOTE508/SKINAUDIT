@@ -807,18 +807,19 @@ body {
 }
 
 /* ================================================================
-   SUN RESPONSE ROWS — onboarding step 3
-   The rows sit directly on a photograph, so hover and focus both
-   need to read against dappled light, not just flat obsidian.
-   Selection is carried by the sienna border + wash set inline.
+   RADIO PILLS — shared single-choice onboarding rows
+   (sun response, PIH frequency, …). Some sit directly on a
+   photograph, so hover and focus both need to read against dappled
+   light, not just flat obsidian. Selection is carried by the sienna
+   border + wash set inline on the pill.
    ================================================================ */
 
-.sun-response-row:hover:not(:disabled) {
+[data-radio-pill]:hover:not(:disabled) {
   border-color: rgba(184, 134, 61, 0.55);
   background-color: rgba(6, 5, 5, 0.62);
 }
 
-.sun-response-row:focus-visible {
+[data-radio-pill]:focus-visible {
   box-shadow:
     0 0 0 2px var(--color-obsidian-950),
     0 0 0 4px var(--color-sienna-400);

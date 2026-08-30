@@ -23,6 +23,10 @@ export default async function OnboardingPage() {
       skinToneScale: true,
       vitiligo: true,
       sunResponse: true,
+      skinUndertone: true,
+      pihFrequency: true,
+      pihDuration: true,
+      unevenPatches: true,
       skinType: true,
       concerns: true,
       sensitivityScore: true,
@@ -74,6 +78,10 @@ export default async function OnboardingPage() {
               skinToneScale: profile.skinToneScale,
               vitiligo: profile.vitiligo,
               sunResponse: profile.sunResponse,
+              skinUndertone: profile.skinUndertone,
+              pihFrequency: profile.pihFrequency,
+              pihDuration: profile.pihDuration,
+              unevenPatches: profile.unevenPatches,
               skinType: profile.skinType,
               concerns: profile.concerns,
               sensitivityScore: profile.sensitivityScore,
@@ -85,9 +93,9 @@ export default async function OnboardingPage() {
               // experienceLevel defaults to BEGINNER in the DB the moment a
               // UserProfile row exists (schema default), even if the user
               // never reached this step — only trust it once onboardingStep
-              // shows they've actually answered step 8, otherwise every
+              // shows they've actually answered step 12, otherwise every
               // first-time visitor would see "New to skincare" pre-selected.
-              experienceLevel: (profile.onboardingStep ?? 0) >= 8 ? profile.experienceLevel : null,
+              experienceLevel: (profile.onboardingStep ?? 0) >= 12 ? profile.experienceLevel : null,
               homeDevices: homeDevices.map((d) => d.deviceType),
               professionalTreatments: professionalTreatments.map((t) => t.treatmentType),
             }

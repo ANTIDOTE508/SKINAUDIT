@@ -24,9 +24,13 @@
   --gap-x: clamp(2rem, 6vw, 6rem);
   --f-label: 0.6875rem;
   --f-body: 0.8125rem;
-  /* Scale by width but cap by height so everything fits in the viewport */
-  --f-disp: min(clamp(3rem, 23vw, 32rem), 30svh);
-  --f-fin: min(clamp(3rem, 23vw, 32rem), 30svh); /* same size as headline */
+  /* Scale by width but cap by height so everything fits in the viewport.
+     The svh cap is deliberately tight: the hero stacks two headline lines
+     plus "Finally." inside a `space-between` column of height 100svh, so
+     three lines at ~0.82 line-height must leave room for the sub-row and
+     CTA even on wide, short desktop viewports (≥1600px, 1440p/1080p). */
+  --f-disp: min(clamp(3rem, 21vw, 30rem), 26svh);
+  --f-fin: min(clamp(3rem, 21vw, 30rem), 26svh); /* same size as headline */
 }
 
 html:has(.home-page) {
@@ -482,6 +486,11 @@ html:has(.home-page) {
   color: var(--ink);
   max-width: 26ch;
   margin-bottom: 2.25rem;
+  /* Cormorant Garamond ships a discretionary "Th" ligature that, at large
+     desktop sizes, fuses the "h" into the "T" crossbar — "The" reads as
+     "Tea". Disable common ligatures on the quote only. */
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'clig' 0, 'dlig' 0;
 }
 
 .home-page .q-text .word {
