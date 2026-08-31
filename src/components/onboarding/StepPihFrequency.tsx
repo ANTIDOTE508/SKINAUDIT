@@ -8,10 +8,18 @@ import { savePihFrequency } from '@/app/actions/onboarding'
 import type { PIHFrequency } from '@prisma/client'
 
 const OPTIONS: { value: PIHFrequency; title: string; subtitle: string }[] = [
-  { value: 'OFTEN', title: 'Often', subtitle: 'I frequently get dark marks' },
-  { value: 'SOMETIMES', title: 'Sometimes', subtitle: 'I occasionally get dark marks' },
-  { value: 'RARELY', title: 'Rarely', subtitle: 'I rarely get dark marks' },
-  { value: 'NEVER', title: 'Never', subtitle: "I don't get dark marks" },
+  { value: 'OFTEN', title: 'Yes', subtitle: 'Almost always' },
+  {
+    value: 'SOMETIMES',
+    title: 'Sometimes',
+    subtitle: 'It depends on where it is or how bad it was',
+  },
+  {
+    value: 'RARELY',
+    title: 'Rarely',
+    subtitle: "Marks usually fade quickly or don't appear",
+  },
+  { value: 'NEVER', title: 'Never', subtitle: "I don't notice this" },
 ]
 
 const SUB_COPY: React.CSSProperties = {
@@ -108,11 +116,14 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
             margin: '0 0 1rem',
           }}
         >
-          Do you get dark marks after your skin heals?
+          When your skin heals from something — a pimple, a cut, an insect bite,
+          or friction — does the area typically leave a dark mark behind?
         </h2>
 
         <p data-reveal style={SUB_COPY}>
-          This can happen after pimples, cuts, insect bites, waxing, or friction.
+          This includes: dark spots after a breakout clears, a shadow where a
+          scratch was, darkening after waxing or threading, or a patch that stays
+          discoloured after any kind of irritation.
         </p>
 
         <p

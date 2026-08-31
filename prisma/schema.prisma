@@ -32,6 +32,7 @@ enum SkinType {
   COMBINATION
   SENSITIVE
   ACNE_PRONE
+  DEHYDRATED
 
   @@schema("app")
 }
@@ -49,6 +50,7 @@ enum SkinUndertone {
   WARM
   COOL
   NEUTRAL
+  UNSURE
 
   @@schema("app")
 }
@@ -71,11 +73,45 @@ enum PIHDuration {
   @@schema("app")
 }
 
-enum Frequency4 {
-  YES_OFTEN
-  SOMETIMES
-  RARELY
-  NEVER
+enum TanPattern {
+  EVEN_TAN
+  UNEVEN_PATCHES
+  BURN_PEEL
+  NO_CHANGE
+
+  @@schema("app")
+}
+
+enum ProductReactivity {
+  FREQUENT_STING
+  MILD_TRANSIENT
+  RARE
+  ALMOST_NEVER
+
+  @@schema("app")
+}
+
+enum InflammatoryHistory {
+  DIAGNOSED
+  SUSPECTED
+  NO
+
+  @@schema("app")
+}
+
+enum ProductReactionSeverity {
+  REPEATED
+  ONCE_OR_TWICE
+  NO
+
+  @@schema("app")
+}
+
+enum BreakoutPattern {
+  LOCALISED
+  UNPREDICTABLE
+  OCCASIONAL
+  RARE_NEVER
 
   @@schema("app")
 }
@@ -359,8 +395,12 @@ model UserProfile {
   skinUndertone         SkinUndertone?   @map("skin_undertone")
   pihFrequency          PIHFrequency?    @map("pih_frequency")
   pihDuration           PIHDuration?     @map("pih_duration")
-  unevenPatches         Frequency4?      @map("uneven_patches")
-  concerns              String[]
+  unevenPatches         TanPattern?      @map("uneven_patches")
+  productReactivity     ProductReactivity? @map("product_reactivity")
+  inflammatoryHistory   InflammatoryHistory? @map("inflammatory_history")
+  productReactionSeverity ProductReactionSeverity? @map("product_reaction_severity")
+  breakoutPattern       BreakoutPattern? @map("breakout_pattern")
+  breakoutAreas         String[]         @map("breakout_areas")
   goals                 String[]
   experienceLevel       ExperienceLevel  @default(BEGINNER) @map("experience_level")
   onboardingStep        Int              @default(0) @map("onboarding_step")

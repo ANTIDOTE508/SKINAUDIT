@@ -4,56 +4,37 @@ import { useRef, useEffect, useState, useTransition, useId } from 'react'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
 import { RadioPill } from './RadioPill'
-import { saveSkinProfile } from '@/app/actions/onboarding'
-import type { SkinType } from '@prisma/client'
+import { saveProductReactivity } from '@/app/actions/onboarding'
+import type { ProductReactivity } from '@prisma/client'
 
-/**
- * Skin type is inferred from a concrete behavioural scenario (how skin feels
- * 4–6h after cleansing, no products applied) rather than asking the user to
- * self-classify. Each answer maps to exactly one SkinType.
- */
-const SKIN_TYPES: { value: SkinType; title: string }[] = [
-  { value: 'OILY', title: 'Oily all over — shiny, greasy, pores visible' },
+const OPTIONS: { value: ProductReactivity; title: string }[] = [
   {
-    value: 'COMBINATION',
+    value: 'FREQUENT_STING',
     title:
-      'Oily in my T-zone (forehead, nose, chin), normal or drier on cheeks',
+      'I often feel stinging, burning, or tingling that lasts more than a few minutes',
   },
   {
-    value: 'BALANCED',
-    title: 'Normal — comfortable, not noticeably oily or dry',
+    value: 'MILD_TRANSIENT',
+    title: 'I sometimes notice a mild reaction, but it passes quickly',
   },
-  { value: 'DRY', title: 'Dry and tight — pulled feeling, possibly flaky' },
-  {
-    value: 'DEHYDRATED',
-    title:
-      'Tight but oily by midday — uncomfortable and shiny at the same time',
-  },
+  { value: 'RARE', title: 'My skin rarely reacts to new products' },
+  { value: 'ALMOST_NEVER', title: 'My skin almost never reacts' },
 ]
 
-const SUB_COPY: React.CSSProperties = {
-  fontFamily: 'var(--font-body)',
-  fontWeight: 300,
-  fontSize: '0.9375rem',
-  lineHeight: 1.6,
-  color: 'var(--color-alabaster-400)',
-  margin: '0 0 2.25rem',
-}
-
 type Props = {
-  value: string
-  onChange: (v: string) => void
+  value: ProductReactivity | null
+  onChange: (v: ProductReactivity) => void
   onContinue: () => void
   onBack: () => void
 }
 
-export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
+export function StepProductReactivity({ value, onChange, onContinue, onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  const skinTypeLabelId = useId()
+  const groupLabelId = useId()
 
   useEffect(() => {
     const node = rootRef.current
@@ -80,28 +61,28 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
 
   /** Arrow keys move between pills and select as they go, per the WAI-ARIA
    *  radiogroup pattern. Wraps around at both ends. */
-  const handleSkinTypeKeyDown = (e: React.KeyboardEvent, index: number) => {
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
       e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
       : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
       : 0
     if (delta === 0) return
     e.preventDefault()
-    const next = (index + delta + SKIN_TYPES.length) % SKIN_TYPES.length
-    onChange(SKIN_TYPES[next].value)
+    const next = (index + delta + OPTIONS.length) % OPTIONS.length
+    onChange(OPTIONS[next].value)
     const pills = listRef.current?.querySelectorAll<HTMLButtonElement>('[data-radio-pill]')
     pills?.[next]?.focus()
   }
 
   const handleContinue = () => {
-    if (!value) {
+    if (value == null) {
       setError('Please choose the answer closest to your experience.')
       return
     }
     setError(null)
     startTransition(async () => {
       try {
-        await saveSkinProfile({ skinType: value as SkinType })
+        await saveProductReactivity(value)
         onContinue()
       } catch {
         setError('Unable to save. Please try again.')
@@ -111,7 +92,7 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
 
   return (
     <div ref={rootRef}>
-      <div style={{ maxWidth: '30rem' }}>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: '30rem' }}>
         <h2
           data-reveal
           style={{
@@ -121,19 +102,15 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
             color: 'var(--color-alabaster-50)',
-            margin: '0 0 1rem',
+            margin: '0 0 2.25rem',
           }}
         >
-          Think about a morning when you cleansed your face and then went about
-          your day without applying any products.
+          When you apply new skincare products — especially serums, exfoliants, or
+          actives — how does your skin usually respond?
         </h2>
 
-        <p data-reveal style={SUB_COPY}>
-          How would your skin typically feel or look about 4–6 hours later?
-        </p>
-
         <span
-          id={skinTypeLabelId}
+          id={groupLabelId}
           style={{
             position: 'absolute',
             width: '1px',
@@ -144,33 +121,32 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
             whiteSpace: 'nowrap',
           }}
         >
-          How your skin feels 4–6 hours after cleansing, with no products applied
+          How your skin responds to new skincare products
         </span>
 
         <div
           ref={listRef}
           role="radiogroup"
-          aria-labelledby={skinTypeLabelId}
+          aria-labelledby={groupLabelId}
           aria-required="true"
           style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '0.625rem',
-            marginBottom: '2.25rem',
           }}
         >
-          {SKIN_TYPES.map((type, index) => {
-            const isSelected = value === type.value
+          {OPTIONS.map((option, index) => {
+            const isSelected = value === option.value
             return (
-              <div key={type.value} data-reveal>
+              <div key={option.value} data-reveal>
                 <RadioPill
-                  value={type.value}
-                  title={type.title}
-                  ariaLabel={type.title}
+                  value={option.value}
+                  title={option.title}
+                  ariaLabel={option.title}
                   selected={isSelected}
-                  onChange={(v) => onChange(v)}
-                  tabIndex={isSelected || (!value && index === 0) ? 0 : -1}
-                  onKeyDown={(e) => handleSkinTypeKeyDown(e, index)}
+                  onChange={(v) => onChange(v as ProductReactivity)}
+                  tabIndex={isSelected || (value == null && index === 0) ? 0 : -1}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                 />
               </div>
             )
@@ -180,13 +156,24 @@ export function StepSkinType({ value, onChange, onContinue, onBack }: Props) {
         {error && (
           <p
             role="alert"
-            style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-blush-500)', marginBottom: '1rem' }}
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              color: 'var(--color-blush-500)',
+              marginTop: '1rem',
+              marginBottom: 0,
+            }}
           >
             {error}
           </p>
         )}
 
-        <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={!value} />
+        <StepFooter
+          onContinue={handleContinue}
+          onBack={onBack}
+          isLoading={isPending}
+          continueDisabled={value == null}
+        />
       </div>
     </div>
   )

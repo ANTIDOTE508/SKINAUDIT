@@ -23,7 +23,25 @@ import { StepDossierIntro } from './StepDossierIntro'
 import { StepProducts } from './StepProducts'
 import { StepCompletion } from './StepCompletion'
 import { StepCounter } from './StepCounter'
-import type { SkinUndertone, PIHFrequency, PIHDuration, Frequency4 } from '@prisma/client'
+import { OnboardingSignOut } from './OnboardingSignOut'
+import {
+  InterstitialScreen,
+  findInterstitialAfter,
+  getInterstitialById,
+} from './interstitials'
+import { StepProductReactivity } from './StepProductReactivity'
+import { StepReactionHistory } from './StepReactionHistory'
+import { StepBreakouts } from './StepBreakouts'
+import type {
+  SkinUndertone,
+  PIHFrequency,
+  PIHDuration,
+  TanPattern,
+  ProductReactivity,
+  InflammatoryHistory,
+  ProductReactionSeverity,
+  BreakoutPattern,
+} from '@prisma/client'
 
 // ─── Types ────────────────────────────────────────────────────
 export type WizardUser = {
@@ -34,6 +52,11 @@ export type WizardUser = {
 
 type WizardState = {
   step: number
+  // When non-null, the wizard shows this transition screen *instead of* the
+  // step content. `step` still points at the step just finished, so the
+  // counter and every other derived value stay put. Interstitials never
+  // persist and are forward-flow only (Back from one returns to `step`).
+  interstitialId: string | null
   isTransitioning: boolean
   genderIdentity: string
   preferredName: string
@@ -47,8 +70,12 @@ type WizardState = {
   skinUndertone: SkinUndertone | null
   pihFrequency: PIHFrequency | null
   pihDuration: PIHDuration | null
-  unevenPatches: Frequency4 | null
-  concerns: string[]
+  unevenPatches: TanPattern | null
+  productReactivity: ProductReactivity | null
+  inflammatoryHistory: InflammatoryHistory | null
+  productReactionSeverity: ProductReactionSeverity | null
+  breakoutPattern: BreakoutPattern | null
+  breakoutAreas: string[]
   goals: string[]
   city: string
   countryCode: string
@@ -61,6 +88,8 @@ type WizardState = {
 
 type WizardAction =
   | { type: 'SET_STEP'; step: number }
+  | { type: 'SHOW_INTERSTITIAL'; id: string }
+  | { type: 'CLEAR_INTERSTITIAL' }
   | { type: 'SET_TRANSITIONING'; value: boolean }
   | { type: 'SET_GENDER'; value: string }
   | { type: 'SET_PREFERRED_NAME'; value: string }
@@ -74,8 +103,12 @@ type WizardAction =
   | { type: 'SET_UNDERTONE'; value: SkinUndertone }
   | { type: 'SET_PIH_FREQUENCY'; value: PIHFrequency }
   | { type: 'SET_PIH_DURATION'; value: PIHDuration }
-  | { type: 'SET_UNEVEN_PATCHES'; value: Frequency4 }
-  | { type: 'SET_CONCERNS'; value: string[] }
+  | { type: 'SET_UNEVEN_PATCHES'; value: TanPattern }
+  | { type: 'SET_PRODUCT_REACTIVITY'; value: ProductReactivity }
+  | { type: 'SET_INFLAMMATORY_HISTORY'; value: InflammatoryHistory }
+  | { type: 'SET_PRODUCT_REACTION_SEVERITY'; value: ProductReactionSeverity }
+  | { type: 'SET_BREAKOUT_PATTERN'; value: BreakoutPattern }
+  | { type: 'SET_BREAKOUT_AREAS'; value: string[] }
   | { type: 'SET_GOALS'; value: string[] }
   | { type: 'SET_ENVIRONMENT'; city: string; countryCode: string; climateZone: string; season: string }
   | { type: 'SET_EXPERIENCE'; value: string }
@@ -84,7 +117,9 @@ type WizardAction =
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
-    case 'SET_STEP':           return { ...state, step: action.step }
+    case 'SET_STEP':           return { ...state, step: action.step, interstitialId: null }
+    case 'SHOW_INTERSTITIAL':  return { ...state, interstitialId: action.id }
+    case 'CLEAR_INTERSTITIAL': return { ...state, interstitialId: null }
     case 'SET_TRANSITIONING':  return { ...state, isTransitioning: action.value }
     case 'SET_GENDER':         return { ...state, genderIdentity: action.value }
     case 'SET_PREFERRED_NAME': return { ...state, preferredName: action.value }
@@ -99,7 +134,11 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_PIH_FREQUENCY':  return { ...state, pihFrequency: action.value }
     case 'SET_PIH_DURATION':   return { ...state, pihDuration: action.value }
     case 'SET_UNEVEN_PATCHES': return { ...state, unevenPatches: action.value }
-    case 'SET_CONCERNS':       return { ...state, concerns: action.value }
+    case 'SET_PRODUCT_REACTIVITY': return { ...state, productReactivity: action.value }
+    case 'SET_INFLAMMATORY_HISTORY': return { ...state, inflammatoryHistory: action.value }
+    case 'SET_PRODUCT_REACTION_SEVERITY': return { ...state, productReactionSeverity: action.value }
+    case 'SET_BREAKOUT_PATTERN': return { ...state, breakoutPattern: action.value }
+    case 'SET_BREAKOUT_AREAS': return { ...state, breakoutAreas: action.value }
     case 'SET_GOALS':          return { ...state, goals: action.value }
     case 'SET_ENVIRONMENT':    return { ...state, city: action.city, countryCode: action.countryCode, climateZone: action.climateZone, season: action.season }
     case 'SET_EXPERIENCE':     return { ...state, experienceLevel: action.value }
@@ -109,16 +148,20 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-// step 0 = welcome, steps 1–17 = wizard steps. Step 17 (product picker) is
+// step 0 = welcome, steps 1–20 = wizard steps. Step 20 (product picker) is
 // the last one and completes onboarding itself, so there is no separate
 // completion step beyond it. TOTAL_STEPS is the count of *possible* screens;
 // the number shown to the user is derived from activeScreens() below, which
 // drops any screen skipped for this user's answers.
-const TOTAL_STEPS = 17
+const TOTAL_STEPS = 20
 
 // Screen 6 (PIH duration) is a follow-up shown only when PIH frequency is
 // "often" or "sometimes". Every other screen is always shown.
 const CONDITIONAL_SCREEN_PIH_DURATION = 6
+
+// Screen 9 (reaction history) is a follow-up shown only when product
+// reactivity was "frequent stinging" or "mild transient reaction".
+const CONDITIONAL_SCREEN_REACTION_HISTORY = 9
 
 /**
  * Ordered list of the wizard screen numbers active for this user's current
@@ -129,9 +172,13 @@ const CONDITIONAL_SCREEN_PIH_DURATION = 6
 function activeScreens(state: WizardState): number[] {
   const pihDurationApplies =
     state.pihFrequency === 'OFTEN' || state.pihFrequency === 'SOMETIMES'
+  const reactionHistoryApplies =
+    state.productReactivity === 'FREQUENT_STING' ||
+    state.productReactivity === 'MILD_TRANSIENT'
   const screens: number[] = []
   for (let n = 1; n <= TOTAL_STEPS; n++) {
     if (n === CONDITIONAL_SCREEN_PIH_DURATION && !pihDurationApplies) continue
+    if (n === CONDITIONAL_SCREEN_REACTION_HISTORY && !reactionHistoryApplies) continue
     screens.push(n)
   }
   return screens
@@ -149,9 +196,13 @@ export type WizardInitialProfile = {
   skinUndertone?: SkinUndertone | null
   pihFrequency?: PIHFrequency | null
   pihDuration?: PIHDuration | null
-  unevenPatches?: Frequency4 | null
+  unevenPatches?: TanPattern | null
+  productReactivity?: ProductReactivity | null
+  inflammatoryHistory?: InflammatoryHistory | null
+  productReactionSeverity?: ProductReactionSeverity | null
+  breakoutPattern?: BreakoutPattern | null
+  breakoutAreas?: string[] | null
   skinType?: string | null
-  concerns?: string[] | null
   sensitivityScore?: number | null
   goals?: string[] | null
   city?: string | null
@@ -176,6 +227,9 @@ export function OnboardingWizard({
 
   const [state, dispatch] = useReducer(wizardReducer, {
     step: resumeStep > TOTAL_STEPS ? TOTAL_STEPS : resumeStep,
+    // Interstitials never persist — a resuming user simply doesn't see the
+    // one that would have followed the step they left off on.
+    interstitialId: null,
     isTransitioning: false,
     genderIdentity: initialProfile?.genderIdentity ?? '',
     preferredName: initialProfile?.preferredName ?? '',
@@ -191,7 +245,11 @@ export function OnboardingWizard({
     pihFrequency: initialProfile?.pihFrequency ?? null,
     pihDuration: initialProfile?.pihDuration ?? null,
     unevenPatches: initialProfile?.unevenPatches ?? null,
-    concerns: initialProfile?.concerns ?? [],
+    productReactivity: initialProfile?.productReactivity ?? null,
+    inflammatoryHistory: initialProfile?.inflammatoryHistory ?? null,
+    productReactionSeverity: initialProfile?.productReactionSeverity ?? null,
+    breakoutPattern: initialProfile?.breakoutPattern ?? null,
+    breakoutAreas: initialProfile?.breakoutAreas ?? [],
     goals: initialProfile?.goals ?? [],
     city: initialProfile?.city ?? '',
     countryCode: initialProfile?.countryCode ?? '',
@@ -222,10 +280,13 @@ export function OnboardingWizard({
     return () => ctx.revert()
   }, [])
 
-  const transitionToStep = useCallback((nextStep: number) => {
+  // Shared fade-out → apply → fade-in choreography. `applyChange` dispatches
+  // whatever swaps the visible screen (a step change, or showing/clearing an
+  // interstitial); the animation around it is identical either way.
+  const runTransition = useCallback((applyChange: () => void) => {
     const node = contentRef.current
     if (state.isTransitioning || !node) {
-      dispatch({ type: 'SET_STEP', step: nextStep })
+      applyChange()
       return
     }
     dispatch({ type: 'SET_TRANSITIONING', value: true })
@@ -235,7 +296,7 @@ export function OnboardingWizard({
       duration: 0.35,
       ease: 'power2.in',
       onComplete: () => {
-        dispatch({ type: 'SET_STEP', step: nextStep })
+        applyChange()
         const target = contentRef.current
         if (!target) { dispatch({ type: 'SET_TRANSITIONING', value: false }); return }
         gsap.fromTo(target, { opacity: 0, y: 18 }, {
@@ -246,23 +307,48 @@ export function OnboardingWizard({
     })
   }, [state.isTransitioning])
 
+  const transitionToStep = useCallback((nextStep: number) => {
+    runTransition(() => dispatch({ type: 'SET_STEP', step: nextStep }))
+  }, [runTransition])
+
   // Navigation walks the *active* screens for this user, so a skipped
   // conditional screen (e.g. PIH duration after "rarely" / "never") is
   // stepped straight over in both directions with no special-casing.
   const screens = activeScreens(state)
 
   const goNext = useCallback(() => {
+    // On an interstitial: Continue clears it and advances to the real step.
+    if (state.interstitialId) {
+      const list = activeScreens(state)
+      const i = list.indexOf(state.step)
+      const next = i >= 0 && i < list.length - 1 ? list[i + 1] : state.step + 1
+      transitionToStep(next)
+      return
+    }
+    // On a step: if an interstitial is registered after it, show that first
+    // and leave `step` where it is — goNext() called again from the
+    // interstitial then advances to the real next step.
+    const pending = findInterstitialAfter(state.step, state)
+    if (pending) {
+      runTransition(() => dispatch({ type: 'SHOW_INTERSTITIAL', id: pending.id }))
+      return
+    }
     const list = activeScreens(state)
     const i = list.indexOf(state.step)
     const next = i >= 0 && i < list.length - 1 ? list[i + 1] : state.step + 1
     transitionToStep(next)
-  }, [state, transitionToStep])
+  }, [state, transitionToStep, runTransition])
 
   const goBack = useCallback(() => {
+    // Back from an interstitial just returns to the step it followed.
+    if (state.interstitialId) {
+      runTransition(() => dispatch({ type: 'CLEAR_INTERSTITIAL' }))
+      return
+    }
     const list = activeScreens(state)
     const i = list.indexOf(state.step)
     if (i > 0) transitionToStep(list[i - 1])
-  }, [state, transitionToStep])
+  }, [state, transitionToStep, runTransition])
 
   // Screen 07 (PIH frequency, step 5) routing per its spec:
   //   often | sometimes → Screen 08 (step 6, the duration follow-up)
@@ -271,8 +357,13 @@ export function OnboardingWizard({
   // reflects it and goNext() lands on the right screen on its own.
   const handlePihContinue = useCallback(() => goNext(), [goNext])
 
-  // steps 1–TOTAL_STEPS show the counter (the step 0 welcome screen doesn't)
-  const showCounter = state.step >= 1 && state.step <= TOTAL_STEPS
+  // steps 1–TOTAL_STEPS show the counter (the step 0 welcome screen doesn't);
+  // interstitials hide it — they are framing, not a counted step.
+  const showCounter =
+    state.step >= 1 && state.step <= TOTAL_STEPS && !state.interstitialId
+  const activeInterstitial = state.interstitialId
+    ? getInterstitialById(state.interstitialId)
+    : null
   // Position within the screens active for this user, not the raw step number.
   const counterCurrent = Math.max(1, screens.indexOf(state.step) + 1)
   const counterTotal = screens.length
@@ -322,6 +413,8 @@ export function OnboardingWizard({
         </span>
 
         {showCounter && <StepCounter current={counterCurrent} total={counterTotal} />}
+
+        <OnboardingSignOut />
       </header>
 
       {/* Main content */}
@@ -335,6 +428,15 @@ export function OnboardingWizard({
         }}
       >
         <div ref={contentRef} style={{ width: '100%', maxWidth: '680px' }}>
+
+          {activeInterstitial ? (
+            <InterstitialScreen
+              interstitial={activeInterstitial}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          ) : (
+          <>
 
           {state.step === 0 && <StepWelcome user={user} onContinue={goNext} />}
 
@@ -409,17 +511,46 @@ export function OnboardingWizard({
           )}
 
           {state.step === 8 && (
-            <StepSkinType
-              value={state.skinType}
-              onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
-              concerns={state.concerns}
-              onConcernsChange={(v) => dispatch({ type: 'SET_CONCERNS', value: v })}
+            <StepProductReactivity
+              value={state.productReactivity}
+              onChange={(v) => dispatch({ type: 'SET_PRODUCT_REACTIVITY', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
           {state.step === 9 && (
+            <StepReactionHistory
+              historyValue={state.inflammatoryHistory}
+              severityValue={state.productReactionSeverity}
+              onHistoryChange={(v) => dispatch({ type: 'SET_INFLAMMATORY_HISTORY', value: v })}
+              onSeverityChange={(v) => dispatch({ type: 'SET_PRODUCT_REACTION_SEVERITY', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 10 && (
+            <StepSkinType
+              value={state.skinType}
+              onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 11 && (
+            <StepBreakouts
+              pattern={state.breakoutPattern}
+              areas={state.breakoutAreas}
+              onPatternChange={(v) => dispatch({ type: 'SET_BREAKOUT_PATTERN', value: v })}
+              onAreasChange={(v) => dispatch({ type: 'SET_BREAKOUT_AREAS', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 12 && (
             <StepSensitivity
               sensitivity={state.sensitivityScore}
               onSensitivityChange={(v) => dispatch({ type: 'SET_SENSITIVITY', value: v })}
@@ -428,7 +559,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 10 && (
+          {state.step === 13 && (
             <StepSkinGoals
               value={state.goals}
               onChange={(v) => dispatch({ type: 'SET_GOALS', value: v })}
@@ -437,7 +568,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 11 && (
+          {state.step === 14 && (
             <StepEnvironment
               city={state.city}
               countryCode={state.countryCode}
@@ -457,7 +588,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 12 && (
+          {state.step === 15 && (
             <StepExperience
               level={state.experienceLevel}
               onChange={(v) => dispatch({ type: 'SET_EXPERIENCE', value: v })}
@@ -466,7 +597,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 13 && (
+          {state.step === 16 && (
             <StepTools
               homeDevices={state.homeDevices}
               professionalTreatments={state.professionalTreatments}
@@ -477,18 +608,21 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 14 && (
+          {state.step === 17 && (
             <StepInterpretation onContinue={goNext} onBack={goBack} />
           )}
 
-          {state.step === 15 && <StepCompletion onContinue={goNext} />}
+          {state.step === 18 && <StepCompletion onContinue={goNext} />}
 
-          {state.step === 16 && (
+          {state.step === 19 && (
             <StepDossierIntro onContinue={goNext} />
           )}
 
-          {state.step === 17 && (
+          {state.step === 20 && (
             <StepProducts onComplete={completeAndEnterStudio} />
+          )}
+
+          </>
           )}
 
         </div>

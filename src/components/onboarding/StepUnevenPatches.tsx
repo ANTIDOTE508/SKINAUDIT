@@ -5,27 +5,18 @@ import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
 import { RadioPill } from './RadioPill'
 import { saveUnevenPatches } from '@/app/actions/onboarding'
-import type { Frequency4 } from '@prisma/client'
+import type { TanPattern } from '@prisma/client'
 
-const OPTIONS: { value: Frequency4; title: string; subtitle: string }[] = [
-  { value: 'YES_OFTEN', title: 'Yes, often', subtitle: 'I have uneven patches' },
-  { value: 'SOMETIMES', title: 'Sometimes', subtitle: 'I notice it occasionally' },
-  { value: 'RARELY', title: 'Rarely', subtitle: 'I rarely notice this' },
-  { value: 'NEVER', title: 'Never', subtitle: 'My skin tans evenly' },
+const OPTIONS: { value: TanPattern; title: string }[] = [
+  { value: 'EVEN_TAN', title: 'It tans fairly evenly' },
+  { value: 'UNEVEN_PATCHES', title: 'I develop uneven patches or darker spots' },
+  { value: 'BURN_PEEL', title: 'I burn and peel, rather than tan' },
+  { value: 'NO_CHANGE', title: "I don't notice much change either way" },
 ]
 
-const SUB_COPY: React.CSSProperties = {
-  fontFamily: 'var(--font-body)',
-  fontWeight: 300,
-  fontSize: '0.9375rem',
-  lineHeight: 1.6,
-  color: 'var(--color-alabaster-400)',
-  margin: '0 0 2.25rem',
-}
-
 type Props = {
-  value: Frequency4 | null
-  onChange: (v: Frequency4) => void
+  value: TanPattern | null
+  onChange: (v: TanPattern) => void
   onContinue: () => void
   onBack: () => void
 }
@@ -76,6 +67,7 @@ export function StepUnevenPatches({ value, onChange, onContinue, onBack }: Props
     pills?.[next]?.focus()
   }
 
+
   const handleContinue = () => {
     if (value == null) {
       setError('Please choose the answer closest to your experience.')
@@ -104,15 +96,13 @@ export function StepUnevenPatches({ value, onChange, onContinue, onBack }: Props
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
             color: 'var(--color-alabaster-50)',
-            margin: '0 0 1rem',
+            margin: '0 0 2.25rem',
           }}
         >
-          Do you notice uneven dark patches on your skin?
+          After significant sun exposure — a full day outside, a beach weekend —
+          does your skin tend to tan evenly, or do you develop uneven patches or
+          darker spots in certain areas?
         </h2>
-
-        <p data-reveal style={SUB_COPY}>
-          Think about areas that look darker and don&apos;t tan evenly.
-        </p>
 
         <span
           id={groupLabelId}
@@ -126,7 +116,7 @@ export function StepUnevenPatches({ value, onChange, onContinue, onBack }: Props
             whiteSpace: 'nowrap',
           }}
         >
-          How often you notice uneven dark patches on your skin
+          How your skin responds to significant sun exposure
         </span>
 
         <div
@@ -147,10 +137,9 @@ export function StepUnevenPatches({ value, onChange, onContinue, onBack }: Props
                 <RadioPill
                   value={option.value}
                   title={option.title}
-                  subtitle={option.subtitle}
-                  ariaLabel={`${option.title} — ${option.subtitle}`}
+                  ariaLabel={option.title}
                   selected={isSelected}
-                  onChange={(v) => onChange(v as Frequency4)}
+                  onChange={(v) => onChange(v as TanPattern)}
                   tabIndex={isSelected || (value == null && index === 0) ? 0 : -1}
                   onKeyDown={(e) => handleKeyDown(e, index)}
                 />

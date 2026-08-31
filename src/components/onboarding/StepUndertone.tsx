@@ -7,10 +7,11 @@ import { UndertoneCard } from './UndertoneCard'
 import { saveUndertone } from '@/app/actions/onboarding'
 import type { SkinUndertone } from '@prisma/client'
 
-const OPTIONS: { value: SkinUndertone; label: string; subtitle: string }[] = [
-  { value: 'WARM', label: 'Warm', subtitle: 'Golden, yellow, or peach' },
-  { value: 'COOL', label: 'Cool', subtitle: 'Pink, red, or blue' },
-  { value: 'NEUTRAL', label: 'Neutral', subtitle: 'A mix of warm and cool' },
+const OPTIONS: { value: SkinUndertone; label: string; subtitle?: string }[] = [
+  { value: 'WARM', label: 'Warm', subtitle: 'Golden, yellow, or peachy' },
+  { value: 'COOL', label: 'Cool', subtitle: 'Pink, red, or bluish' },
+  { value: 'NEUTRAL', label: 'Neutral', subtitle: 'A mix of both' },
+  { value: 'UNSURE', label: "I'm not sure" },
 ]
 
 const SUB_COPY: React.CSSProperties = {
@@ -104,11 +105,12 @@ export function StepUndertone({ value, onChange, onContinue, onBack }: Props) {
             margin: '0 0 1rem',
           }}
         >
-          What is your skin undertone?
+          How would you describe the undertone of your skin?
         </h2>
 
         <p data-reveal style={SUB_COPY}>
-          This helps us understand how your skin looks naturally.
+          Look at the veins on your inner wrist. Greenish veins tend to suggest
+          warm undertones; bluish or purple veins tend to suggest cool.
         </p>
 
         <span

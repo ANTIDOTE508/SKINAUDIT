@@ -3,7 +3,7 @@
 type Props = {
   value: string
   label: string
-  subtitle: string
+  subtitle?: string
   selected: boolean
   onChange: (value: string) => void
   tabIndex?: number
@@ -96,17 +96,19 @@ export function UndertoneCard({
         >
           {label}
         </span>
-        <span
-          aria-hidden="true"
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontWeight: 300,
-            fontSize: '0.8125rem',
-            color: 'var(--color-alabaster-400)',
-          }}
-        >
-          {subtitle}
-        </span>
+        {subtitle && (
+          <span
+            aria-hidden="true"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontWeight: 300,
+              fontSize: '0.8125rem',
+              color: 'var(--color-alabaster-400)',
+            }}
+          >
+            {subtitle}
+          </span>
+        )}
       </span>
     </button>
   )

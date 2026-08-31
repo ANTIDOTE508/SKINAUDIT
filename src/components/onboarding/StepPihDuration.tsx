@@ -8,20 +8,11 @@ import { savePihDuration } from '@/app/actions/onboarding'
 import type { PIHDuration } from '@prisma/client'
 
 const OPTIONS: { value: PIHDuration; label: string }[] = [
-  { value: 'LT_1MO', label: 'Less than 1 month' },
-  { value: 'ONE_3MO', label: '1 to 3 months' },
-  { value: 'THREE_6MO', label: '3 to 6 months' },
-  { value: 'GT_6MO', label: 'More than 6 months' },
+  { value: 'LT_1MO', label: 'A few weeks' },
+  { value: 'ONE_3MO', label: 'A month or two' },
+  { value: 'THREE_6MO', label: 'Several months' },
+  { value: 'GT_6MO', label: "They stay for a long time, or don't fully fade" },
 ]
-
-const SUB_COPY: React.CSSProperties = {
-  fontFamily: 'var(--font-body)',
-  fontWeight: 300,
-  fontSize: '0.9375rem',
-  lineHeight: 1.6,
-  color: 'var(--color-alabaster-400)',
-  margin: '0 0 2.25rem',
-}
 
 type Props = {
   value: PIHDuration | null
@@ -121,15 +112,11 @@ export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) 
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
             color: 'var(--color-alabaster-50)',
-            margin: '0 0 1rem',
+            margin: '0 0 2.25rem',
           }}
         >
-          How long do these dark marks usually last?
+          When those marks appear, how long do they typically take to fade?
         </h2>
-
-        <p data-reveal style={SUB_COPY}>
-          Think about how long the marks typically take to fade.
-        </p>
 
         <span
           id={groupLabelId}

@@ -27,8 +27,12 @@ export default async function OnboardingPage() {
       pihFrequency: true,
       pihDuration: true,
       unevenPatches: true,
+      productReactivity: true,
+      inflammatoryHistory: true,
+      productReactionSeverity: true,
+      breakoutPattern: true,
+      breakoutAreas: true,
       skinType: true,
-      concerns: true,
       sensitivityScore: true,
       goals: true,
       experienceLevel: true,
@@ -82,8 +86,12 @@ export default async function OnboardingPage() {
               pihFrequency: profile.pihFrequency,
               pihDuration: profile.pihDuration,
               unevenPatches: profile.unevenPatches,
+              productReactivity: profile.productReactivity,
+              inflammatoryHistory: profile.inflammatoryHistory,
+              productReactionSeverity: profile.productReactionSeverity,
+              breakoutPattern: profile.breakoutPattern,
+              breakoutAreas: profile.breakoutAreas,
               skinType: profile.skinType,
-              concerns: profile.concerns,
               sensitivityScore: profile.sensitivityScore,
               goals: profile.goals,
               city: environment?.city,
@@ -93,9 +101,9 @@ export default async function OnboardingPage() {
               // experienceLevel defaults to BEGINNER in the DB the moment a
               // UserProfile row exists (schema default), even if the user
               // never reached this step — only trust it once onboardingStep
-              // shows they've actually answered step 12, otherwise every
+              // shows they've actually answered step 15, otherwise every
               // first-time visitor would see "New to skincare" pre-selected.
-              experienceLevel: (profile.onboardingStep ?? 0) >= 12 ? profile.experienceLevel : null,
+              experienceLevel: (profile.onboardingStep ?? 0) >= 15 ? profile.experienceLevel : null,
               homeDevices: homeDevices.map((d) => d.deviceType),
               professionalTreatments: professionalTreatments.map((t) => t.treatmentType),
             }

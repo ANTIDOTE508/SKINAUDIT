@@ -9,15 +9,16 @@ import { RadioPill } from './RadioPill'
 import { saveSunResponse } from '@/app/actions/onboarding'
 import { SUN_RESPONSE_SCALE_COUNT } from '@/lib/onboarding-rules'
 
-/** 1 = always burns … 6 = never burns. The index IS the stored value, so the
- *  order of this list and the scale can never drift apart. */
+/** 1 = burns most / tans least … 6 = no visible change in the sun. The index
+ *  IS the stored value, so the order of this list and the scale can never
+ *  drift apart. */
 const OPTIONS = [
-  'Always burns',
-  'Burns easily',
-  'Sometimes burns',
-  'Rarely burns',
-  'Almost never burns',
-  'Never burns',
+  'I burn quickly and rarely tan',
+  'I burn first, then tan slowly',
+  'I sometimes burn lightly, then tan',
+  'I rarely burn and tan easily',
+  'I almost never burn and tan deeply',
+  "My skin doesn't noticeably change in the sun",
 ].map((label, i) => ({ value: i + 1, label }))
 
 const SUB_COPY: React.CSSProperties = {
@@ -198,8 +199,7 @@ export function StepSunResponse({ value, onChange, onContinue, onBack }: Props) 
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          When unprotected skin receives strong sun exposure, what usually
-          happens?
+          When you spend time in direct sun without protection, what usually happens to your skin?
         </h2>
 
         <p data-reveal style={SUB_COPY}>
