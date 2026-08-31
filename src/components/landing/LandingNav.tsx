@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Philosophy', href: '#philosophy' },
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Features', href: '#features' },
-  { label: 'About', href: '#about' },
+  // `/philosophy` is a real route (App Router page); the rest are in-page anchors.
+  { label: 'Philosophy', href: '/philosophy', route: true },
+  { label: 'How It Works', href: '#how-it-works', route: false },
+  { label: 'Features', href: '#features', route: false },
+  { label: 'About', href: '#about', route: false },
 ] as const
 
 export default function LandingNav() {
@@ -55,11 +56,17 @@ export default function LandingNav() {
       </Link>
 
       <nav className="nav-links" aria-label="Primary">
-        {NAV_ITEMS.map(({ label, href }) => (
-          <a key={href} href={href}>
-            {label}
-          </a>
-        ))}
+        {NAV_ITEMS.map(({ label, href, route }) =>
+          route ? (
+            <Link key={href} href={href}>
+              {label}
+            </Link>
+          ) : (
+            <a key={href} href={href}>
+              {label}
+            </a>
+          )
+        )}
         <Link className="sign-in" href="/signin">
           Sign In
         </Link>
@@ -94,11 +101,17 @@ export default function LandingNav() {
               aria-hidden={!menuOpen}
             >
               <nav className="mobile-nav-links" aria-label="Primary">
-                {NAV_ITEMS.map(({ label, href }) => (
-                  <a key={href} href={href} onClick={closeMenu}>
-                    {label}
-                  </a>
-                ))}
+                {NAV_ITEMS.map(({ label, href, route }) =>
+                  route ? (
+                    <Link key={href} href={href} onClick={closeMenu}>
+                      {label}
+                    </Link>
+                  ) : (
+                    <a key={href} href={href} onClick={closeMenu}>
+                      {label}
+                    </a>
+                  )
+                )}
                 <Link href="/signin" onClick={closeMenu}>
                   Sign In
                 </Link>

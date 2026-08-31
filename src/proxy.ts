@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
 
-const PUBLIC_PATHS = new Set(['/', '/signin', '/signup'])
+const PUBLIC_PATHS = new Set(['/', '/signin', '/signup', '/philosophy'])
 const AUTH_API_PREFIX = '/api/auth'
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {

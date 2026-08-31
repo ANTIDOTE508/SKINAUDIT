@@ -1,0 +1,782 @@
+/*
+  Scoped styles for the /philosophy route. Everything is namespaced under
+  `.page` (the route's outer wrapper) so it cannot leak into the rest of
+  the app, which uses Tailwind + the landing CSS. Motion is transform-only
+  and scroll-driven where possible, so copy is never stranded invisible if
+  the scroll timeline is unavailable.
+*/
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.page {
+  --accent: #c4b09a;
+  --bg: #09080a;
+  --ink: #eae2d8;
+  --mid: #9a9088;
+  --dim: #5a5350;
+  --accent-br: #d4c2ae;
+  --rule: rgba(234, 226, 216, 0.07);
+  --rule-md: rgba(234, 226, 216, 0.13);
+  --gap-x: clamp(1.5rem, 6vw, 6rem);
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-jost), 'Helvetica Neue', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.page a {
+  color: #c4b09a;
+  text-decoration: none;
+}
+.page a:hover {
+  color: #d4c2ae;
+}
+
+/* ── ART LAYERING ── */
+.page .section,
+.page .hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.page .art {
+  position: absolute;
+  inset: -6%;
+  z-index: 0;
+  width: 112%;
+  height: 112%;
+  display: block;
+}
+.page .art-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.page .inner {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── NAV ── */
+.page .nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.625rem var(--gap-x);
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+  z-index: 20;
+  background: rgba(9, 8, 10, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.page .nav-brand {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.page .nav-links {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+.page .nav-links a {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+.page .nav-links a.here {
+  color: var(--accent);
+}
+.page .nav-links a.sign-in {
+  color: var(--ink);
+  border-bottom: 1px solid rgba(234, 226, 216, 0.22);
+  padding-bottom: 1px;
+}
+
+/* ── SHARED TYPE ── */
+.page .label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.page .label::after {
+  content: '';
+  width: 3.5rem;
+  height: 1px;
+  background: rgba(196, 176, 154, 0.3);
+}
+
+.page .section {
+  padding: clamp(5rem, 15vh, 11rem) var(--gap-x);
+  border-top: 1px solid var(--rule);
+}
+
+.page .disp {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.page .body-copy {
+  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+  line-height: 2.05;
+  color: var(--mid);
+  max-width: 34em;
+}
+
+/* ══ HERO — overlapping fields ══ */
+.page .hero {
+  padding: clamp(5rem, 14vh, 10rem) var(--gap-x) clamp(5rem, 13vh, 9rem);
+  background: #09080a;
+}
+.page .hero .art-veil {
+  background:
+    radial-gradient(85% 68% at 10% 32%, rgba(9, 8, 10, 0.82) 0%, rgba(9, 8, 10, 0.34) 46%, rgba(9, 8, 10, 0) 100%),
+    linear-gradient(to bottom, rgba(9, 8, 10, 0.42) 0%, rgba(9, 8, 10, 0.02) 42%, rgba(9, 8, 10, 0.62) 100%);
+}
+.page .hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 6vh, 4.5rem);
+}
+.page .hero-lead {
+  font-size: clamp(2.25rem, 5.4vw, 5rem);
+  max-width: 15ch;
+}
+.page .hero-system {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.75rem, 3.9vw, 3.5rem);
+  line-height: 1.15;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+  max-width: 20ch;
+}
+.page .hero-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+  padding-top: clamp(1rem, 3vh, 2.5rem);
+  border-top: 1px solid var(--rule);
+}
+.page .hero-idea {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.page .idea-tag {
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.page .idea-line {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.25rem, 1.9vw, 1.75rem);
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+/* ══ 02 — THE PROBLEM · interference ══ */
+.page .sec-problem {
+  background: #0a0a0d;
+}
+.page .sec-problem .art-veil {
+  background:
+    linear-gradient(105deg, rgba(10, 10, 13, 0.9) 0%, rgba(10, 10, 13, 0.58) 40%, rgba(10, 10, 13, 0.06) 74%, rgba(10, 10, 13, 0.4) 100%),
+    linear-gradient(to bottom, rgba(10, 10, 13, 0.5) 0%, rgba(10, 10, 13, 0.04) 38%, rgba(10, 10, 13, 0.62) 100%);
+}
+.page .q-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 2.5rem 0 0;
+}
+.page .q-stack .q {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.125rem, 1.9vw, 1.6875rem);
+  line-height: 1.4;
+  color: var(--dim);
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--rule-md);
+}
+.page .pivot {
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-top: 3.5rem;
+}
+.page .pivot-q {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(1.75rem, 4.2vw, 3.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  margin-top: 1.25rem;
+  max-width: 18ch;
+}
+
+/* ══ 03 — TOPOGRAPHY ══ */
+.page .topo-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(24rem, 62vh, 46rem);
+  overflow: hidden;
+  background: #060508;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.page .topo-art {
+  position: absolute;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
+  display: block;
+  animation: philo-topo-drift 42s ease-in-out infinite alternate;
+}
+@keyframes philo-topo-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-1.6%, -1%, 0) scale(1.05);
+  }
+}
+.page .topo-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(125% 95% at 20% 40%, rgba(6, 5, 8, 0) 0%, rgba(6, 5, 8, 0.42) 64%, rgba(9, 8, 10, 0.86) 100%),
+    linear-gradient(to bottom, rgba(9, 8, 10, 0.6) 0%, rgba(9, 8, 10, 0) 32%, rgba(9, 8, 10, 0.04) 62%, rgba(9, 8, 10, 0.8) 100%);
+}
+.page .topo-copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--gap-x);
+}
+.page .topo-hed {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(2.5rem, 7vw, 6.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  filter: drop-shadow(0 0 70px rgba(6, 5, 8, 0.85));
+}
+@media (prefers-reduced-motion: reduce) {
+  .page .topo-art {
+    animation: none;
+  }
+}
+
+/* ── after topo ── */
+.page .sec-context {
+  background: #08070a;
+}
+.page .after-topo {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 6vh, 4rem);
+}
+.page .ctx-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+  border-top: 1px solid var(--rule);
+  padding-top: clamp(2rem, 5vh, 3.5rem);
+}
+.page .ctx-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.page .ctx-key {
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.page .ctx-val {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(1.25rem, 2.3vw, 2.125rem);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.page .ctx-block.full .ctx-val {
+  color: var(--accent);
+}
+
+/* ══ 04 — OUR APPROACH ══ */
+.page .sec-approach {
+  background: #100e11;
+}
+.page .principles {
+  display: flex;
+  flex-direction: column;
+  margin-top: clamp(3rem, 8vh, 5.5rem);
+}
+.page .principle {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding: clamp(2rem, 5vh, 3.25rem) 0;
+  border-top: 1px solid var(--rule);
+  align-items: start;
+}
+.page .principle:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.page .p-num {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 300;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  padding-top: 0.35em;
+}
+.page .p-name {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(1.375rem, 2.4vw, 2.125rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.page .p-desc {
+  font-size: clamp(0.875rem, 1.05vw, 1rem);
+  line-height: 2;
+  color: var(--mid);
+  padding-top: 0.3em;
+}
+
+/* ══ 05 — THE SHIFT ══ */
+.page .sec-shift {
+  background: #0d0a09;
+}
+.page .sec-shift .art-veil {
+  background:
+    linear-gradient(to right, rgba(13, 10, 9, 0.88) 0%, rgba(13, 10, 9, 0.5) 42%, rgba(13, 10, 9, 0.06) 100%),
+    linear-gradient(to bottom, rgba(13, 10, 9, 0.5) 0%, rgba(13, 10, 9, 0) 44%, rgba(13, 10, 9, 0.6) 100%);
+}
+.page .shift-hed {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  font-size: clamp(2.5rem, 7.6vw, 7rem);
+  margin: clamp(2.5rem, 6vh, 4rem) 0 clamp(3rem, 7vh, 4.5rem);
+  color: var(--ink);
+}
+.page .shift-hed .from {
+  display: block;
+  color: var(--dim);
+}
+.page .shift-hed .to {
+  display: block;
+  font-style: italic;
+  color: var(--accent);
+  padding-left: clamp(1.5rem, 7vw, 7rem);
+}
+.page .shift-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  max-width: 40em;
+}
+.page .shift-body .beat {
+  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+  line-height: 2.05;
+  color: var(--mid);
+}
+.page .shift-body .beat.hold {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.page .shift-body .beat.last {
+  color: var(--ink);
+}
+
+/* ══ 06 — CLOSING ══ */
+.page .sec-closer {
+  background: #0a090c;
+}
+.page .sec-closer .art-veil {
+  background:
+    radial-gradient(78% 88% at 76% 66%, rgba(196, 176, 154, 0.09) 0%, rgba(10, 9, 12, 0) 64%),
+    linear-gradient(to bottom, rgba(10, 9, 12, 0.62) 0%, rgba(10, 9, 12, 0.06) 46%, rgba(10, 9, 12, 0.42) 100%);
+}
+.page .closer-hl {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(2.25rem, 5.6vw, 5.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  max-width: 17ch;
+  text-wrap: balance;
+  margin: clamp(2rem, 5vh, 3rem) 0 clamp(2.75rem, 6vh, 4rem);
+}
+.page .closer-hl em {
+  font-style: italic;
+  color: var(--accent);
+}
+.page .closer-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  flex-wrap: wrap;
+}
+.page .cta {
+  display: inline-block;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #09080a;
+  background: var(--accent);
+  padding: 0.9em 1.8em;
+  white-space: nowrap;
+}
+.page .cta:hover {
+  background: var(--accent-br);
+  color: #09080a;
+}
+.page .link-2 {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mid);
+  border-bottom: 1px solid var(--rule-md);
+  padding-bottom: 3px;
+}
+.page .link-2:hover {
+  color: var(--ink);
+}
+
+/* ── FOOTER ── */
+.page .foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 2.5rem var(--gap-x);
+  border-top: 1px solid var(--rule);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: #08070a;
+}
+
+/* ── DOSSIER-INTRO-STYLE BG (topography section wrapper reused nowhere else) ── */
+
+/* ══════════ MOTION ══════════
+   Background fields drift continuously. Text motion is scroll-driven but
+   TRANSFORM-ONLY — never opacity — so copy can never be stranded invisible
+   if the scroll timeline is unavailable. */
+
+@keyframes philo-orbit-cw {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes philo-orbit-ccw {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes philo-driftA {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(2.6%, -1.8%);
+  }
+}
+@keyframes philo-driftB {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-2.2%, 1.3%);
+  }
+}
+@keyframes philo-driftC {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(2.8%, -1.1%);
+  }
+}
+@keyframes philo-breathe {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+/* each point is a piece of information coming to light */
+@keyframes philo-ignite {
+  0% {
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  9% {
+    opacity: 0.82;
+  }
+  86% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes philo-riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes philo-riseMove {
+  from {
+    transform: translateY(34px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes philo-parallaxUp {
+  from {
+    transform: translateY(48px);
+  }
+  to {
+    transform: translateY(-48px);
+  }
+}
+@keyframes philo-streamFwd {
+  from {
+    transform: translateX(-1440px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes philo-streamRev {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-1440px);
+  }
+}
+@keyframes philo-ruleGrow {
+  from {
+    transform: scaleX(0.2);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page svg.art g {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+  }
+
+  /* hero — lenses orbit at different rates, so intersections keep re-forming */
+  .page .hl-a {
+    animation: philo-orbit-cw 240s linear infinite;
+  }
+  .page .hl-b {
+    animation: philo-orbit-ccw 340s linear infinite;
+  }
+  .page .hl-c {
+    animation: philo-orbit-cw 460s linear infinite;
+  }
+  .page .hr-a {
+    animation: philo-orbit-ccw 300s linear infinite;
+  }
+  .page .hr-b {
+    animation: philo-orbit-cw 400s linear infinite;
+  }
+  .page .hr-c {
+    animation: philo-orbit-ccw 520s linear infinite;
+  }
+
+  /* the problem — one family turns against the others; the moire never settles */
+  .page .if-a {
+    animation: philo-orbit-ccw 280s linear infinite;
+  }
+  .page .if-b {
+    animation: philo-driftA 110s ease-in-out infinite alternate;
+  }
+  .page .if-c {
+    animation: philo-orbit-cw 430s linear infinite;
+  }
+
+  /* the shift — the points stay put; the flow streams past them,
+     alternate lines travelling in opposite directions */
+  .page .sh-dots {
+    animation: philo-driftB 84s ease-in-out infinite alternate;
+  }
+  .page .st-a {
+    animation: philo-streamFwd 38s linear infinite;
+  }
+  .page .st-b {
+    animation: philo-streamRev 46s linear infinite;
+  }
+  .page .st-c {
+    animation: philo-streamFwd 62s linear infinite;
+  }
+  .page .st-d {
+    animation: philo-streamRev 54s linear infinite;
+  }
+
+  /* the next step — density buckets breathe out of phase */
+  .page .em-g {
+    transform-origin: 74% 62%;
+    animation: philo-breathe 26s ease-in-out infinite alternate;
+  }
+  .page .em-g circle {
+    animation: philo-ignite 34s linear infinite both;
+  }
+  .page .em-1 {
+    animation-delay: -3s;
+  }
+  .page .em-2 {
+    animation-delay: -7s;
+  }
+  .page .em-3 {
+    animation-delay: -11s;
+  }
+  .page .em-4 {
+    animation-delay: -15s;
+  }
+  .page .em-5 {
+    animation-delay: -19s;
+  }
+  .page .em-6 {
+    animation-delay: -23s;
+  }
+  .page .em-7 {
+    animation-delay: -5s;
+  }
+
+  /* hero copy — staggered arrival on load */
+  .page .hero .label {
+    animation: philo-riseIn 1s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .page .hero-lead {
+    animation: philo-riseIn 1.15s 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .page .hero-system {
+    animation: philo-riseIn 1.15s 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .page .hero-cols {
+    animation: philo-riseIn 1.15s 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .page .label::after {
+    transform-origin: left center;
+    animation: philo-ruleGrow 1.4s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @supports (animation-timeline: view()) {
+    .page .sec-problem .inner > *,
+    .page .sec-context .inner > *,
+    .page .sec-approach .label,
+    .page .sec-approach .principle,
+    .page .sec-shift .inner > *,
+    .page .sec-closer .inner > * {
+      animation: philo-riseMove linear both;
+      animation-timeline: view();
+      animation-range: entry 4% entry 58%;
+    }
+    .page .topo-hed {
+      animation: philo-parallaxUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 760px) {
+  .page .nav-links {
+    gap: 1.25rem;
+  }
+  .page .nav-links a:not(.here):not(.sign-in) {
+    display: none;
+  }
+  .page .hero-cols,
+  .page .ctx-split {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .page .principle {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 1rem 1.25rem;
+  }
+  .page .p-desc {
+    grid-column: 2;
+  }
+  .page .topo-wrap {
+    height: clamp(20rem, 52vh, 28rem);
+  }
+  .page .shift-hed .to {
+    padding-left: 1.25rem;
+  }
+}
