@@ -32,10 +32,13 @@ export default async function OnboardingPage() {
       productReactionSeverity: true,
       breakoutPattern: true,
       breakoutAreas: true,
+      rednessPattern: true,
+      rednessAreas: true,
+      flushTriggers: true,
+      flushFadeSpeed: true,
+      melasmaPattern: true,
+      melasmaTriggers: true,
       skinType: true,
-      sensitivityScore: true,
-      goals: true,
-      experienceLevel: true,
     },
   })
 
@@ -56,12 +59,18 @@ export default async function OnboardingPage() {
     },
   })
 
-  // Tools & treatments also live in their own tables (each row is one
-  // selected chip) — unlike experienceLevel, an empty result here is a
-  // legitimate "nothing selected yet" state, no onboardingStep guard needed.
+  // Tools & treatments also live in their own tables (one row per selected
+  // item, each carrying its three follow-up answers). An empty result is a
+  // legitimate "nothing selected yet" state.
   const [homeDevices, professionalTreatments] = await Promise.all([
-    prisma.userHomeDevice.findMany({ where: { userId: session.user.id }, select: { deviceType: true } }),
-    prisma.userProfessionalTreatment.findMany({ where: { userId: session.user.id }, select: { treatmentType: true } }),
+    prisma.userHomeDevice.findMany({
+      where: { userId: session.user.id },
+      select: { deviceType: true, frequency: true, lastUsed: true, faceAreas: true },
+    }),
+    prisma.userProfessionalTreatment.findMany({
+      where: { userId: session.user.id },
+      select: { treatmentType: true, frequency: true, lastUsed: true, faceAreas: true },
+    }),
   ])
 
   return (
@@ -91,21 +100,29 @@ export default async function OnboardingPage() {
               productReactionSeverity: profile.productReactionSeverity,
               breakoutPattern: profile.breakoutPattern,
               breakoutAreas: profile.breakoutAreas,
+              rednessPattern: profile.rednessPattern,
+              rednessAreas: profile.rednessAreas,
+              flushTriggers: profile.flushTriggers,
+              flushFadeSpeed: profile.flushFadeSpeed,
+              melasmaPattern: profile.melasmaPattern,
+              melasmaTriggers: profile.melasmaTriggers,
               skinType: profile.skinType,
-              sensitivityScore: profile.sensitivityScore,
-              goals: profile.goals,
               city: environment?.city,
               countryCode: environment?.countryCode,
               climateZone: environment?.climateZone,
               season: environment?.season,
-              // experienceLevel defaults to BEGINNER in the DB the moment a
-              // UserProfile row exists (schema default), even if the user
-              // never reached this step — only trust it once onboardingStep
-              // shows they've actually answered step 15, otherwise every
-              // first-time visitor would see "New to skincare" pre-selected.
-              experienceLevel: (profile.onboardingStep ?? 0) >= 15 ? profile.experienceLevel : null,
-              homeDevices: homeDevices.map((d) => d.deviceType),
-              professionalTreatments: professionalTreatments.map((t) => t.treatmentType),
+              homeDevices: homeDevices.map((d) => ({
+                type: d.deviceType,
+                frequency: d.frequency,
+                lastUsed: d.lastUsed,
+                faceAreas: d.faceAreas,
+              })),
+              professionalTreatments: professionalTreatments.map((t) => ({
+                type: t.treatmentType,
+                frequency: t.frequency,
+                lastUsed: t.lastUsed,
+                faceAreas: t.faceAreas,
+              })),
             }
           : null
       }

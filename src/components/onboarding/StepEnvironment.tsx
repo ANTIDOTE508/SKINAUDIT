@@ -7,7 +7,7 @@ import { gsap } from 'gsap'
 import { MapPin, Flame, Droplet, Cloud, Snowflake, Flower, Sun, Leaf } from 'lucide-react'
 import { StepFooter } from './StepFooter'
 import { CityAutocomplete } from './CityAutocomplete'
-import { detectSeason, detectClimateZone } from './environmentAutoDetect'
+import { detectSeason, detectClimateZone, reverseGeocode } from './environmentAutoDetect'
 import { saveEnvironment } from '@/app/actions/onboarding'
 import type { ClimateZone, Season } from '@prisma/client'
 
@@ -73,6 +73,19 @@ export function StepEnvironment({
   const [mounted, setMounted] = useState(false)
   const [countryName, setCountryName] = useState('')
 
+  // Two-state screen: 'ask' shows the geolocation permission prompt, 'manual'
+  // shows the city + climate + season form. A resuming user who already has an
+  // answer skips straight to 'manual' so they can review/adjust it.
+  const hasSavedAnswer = Boolean(climateZone || season || city)
+  const [mode, setMode] = useState<'ask' | 'manual'>(hasSavedAnswer ? 'manual' : 'ask')
+  // idle → requesting → (done | denied | error), or 'declined' if the user
+  // taps Decline. Anything other than idle/requesting reveals the "Set
+  // location manually" secondary link.
+  const [geoStatus, setGeoStatus] = useState<
+    'idle' | 'requesting' | 'done' | 'denied' | 'error' | 'declined'
+  >('idle')
+  const geoAbortRef = useRef<AbortController | null>(null)
+
   const climateLabelId = useId()
   const seasonLabelId = useId()
 
@@ -103,6 +116,10 @@ export function StepEnvironment({
   }, [])
 
   useEffect(() => {
+    return () => geoAbortRef.current?.abort()
+  }, [])
+
+  useEffect(() => {
     if (!countryCode) {
       setCountryName('')
       return
@@ -119,6 +136,56 @@ export function StepEnvironment({
 
   const update = (patch: Partial<EnvironmentData>) => {
     onChange({ ...propsRef.current, ...patch })
+  }
+
+  const handleAllowLocation = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGeoStatus('error')
+      return
+    }
+    setError(null)
+    setGeoStatus('requesting')
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+
+        // Season is a pure function of latitude + today's date — set it now.
+        const patch: Partial<EnvironmentData> = { season: detectSeason(lat) }
+
+        const controller = new AbortController()
+        geoAbortRef.current = controller
+
+        Promise.allSettled([
+          detectClimateZone(lat, lng, controller.signal),
+          reverseGeocode(lat, lng, controller.signal),
+        ]).then(([climateRes, geoRes]) => {
+          if (controller.signal.aborted) return
+
+          const zone = climateRes.status === 'fulfilled' ? climateRes.value : null
+          const place = geoRes.status === 'fulfilled' ? geoRes.value : null
+
+          if (zone) patch.climateZone = zone
+          if (place) {
+            patch.city = place.city
+            patch.countryCode = place.countryCode
+          }
+
+          update(patch)
+          setSeasonAutoDetected(true)
+          if (zone) setClimateAutoDetected(true)
+          setGeoStatus('done')
+
+          // Nothing usable came back — hand the user to the manual form.
+          if (!zone && !place) setMode('manual')
+        })
+      },
+      (err) => {
+        setGeoStatus(err.code === err.PERMISSION_DENIED ? 'denied' : 'error')
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 600_000 }
+    )
   }
 
   const handleCitySelect = ({
@@ -259,8 +326,7 @@ export function StepEnvironment({
     cards?.[next]?.focus()
   }
 
-  const handleContinue = () => {
-    if (!canContinue) return
+  const persist = () => {
     setError(null)
     startTransition(async () => {
       try {
@@ -276,6 +342,28 @@ export function StepEnvironment({
       }
     })
   }
+
+  const handleContinue = () => {
+    if (!canContinue) return
+    persist()
+  }
+
+  // Manual form is shown when the user opted into it, or when a geolocation
+  // lookup produced at least one usable field (so it can be reviewed/adjusted).
+  const showManualForm = mode === 'manual' || geoStatus === 'done'
+  const showManualFallbackLink =
+    mode === 'ask' &&
+    (geoStatus === 'denied' || geoStatus === 'error' || geoStatus === 'declined')
+
+  const climateLabel = CLIMATE_ZONES.find((z) => z.value === climateZone)?.label
+  const seasonLabel = SEASONS.find((s) => s.value === season)?.label
+  const detectedSummary = [
+    city && countryName ? `${city}, ${countryName}` : city || null,
+    climateLabel,
+    seasonLabel,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
     <div ref={rootRef}>
@@ -345,15 +433,169 @@ export function StepEnvironment({
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          Where do you live
-          <br />
-          most of the time?
+          SkinAudit reads your climate so you don&apos;t have to think about it.
         </h2>
 
         <p data-reveal style={SUB_COPY}>
-          We factor in environment, season, and climate.
+          Temperature, humidity, and UV index affect how your routine performs.
+          Tap Allow and we&apos;ll handle it automatically — your location is
+          never stored or shared.
         </p>
 
+        {/* ── State A: geolocation permission prompt ── */}
+        {!showManualForm && (
+          <div data-reveal style={{ marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
+              <button
+                type="button"
+                onClick={handleAllowLocation}
+                disabled={geoStatus === 'requesting'}
+                className="btn-primary"
+                style={{
+                  minHeight: '52px',
+                  paddingLeft: '2.5rem',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                {geoStatus === 'requesting' ? 'Detecting…' : 'Allow location access'}
+              </button>
+
+              {geoStatus !== 'requesting' && !showManualFallbackLink && (
+                <button
+                  type="button"
+                  onClick={() => setGeoStatus('declined')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '2px 0',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '12px',
+                    fontWeight: 400,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-alabaster-400)',
+                    transition: 'color 200ms ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
+                  }}
+                  onMouseLeave={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
+                  }}
+                >
+                  Decline
+                </button>
+              )}
+            </div>
+
+            {showManualFallbackLink && (
+              <button
+                type="button"
+                onClick={() => setMode('manual')}
+                style={{
+                  display: 'block',
+                  marginTop: '1rem',
+                  background: 'none',
+                  border: 'none',
+                  padding: '2px 0',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '12px',
+                  fontWeight: 400,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-alabaster-400)',
+                  transition: 'color 200ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
+                }}
+                onMouseLeave={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
+                }}
+              >
+                Set location manually
+              </button>
+            )}
+
+            {(geoStatus === 'denied' || geoStatus === 'declined') && (
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 300,
+                  fontSize: '0.8125rem',
+                  lineHeight: 1.6,
+                  color: 'var(--color-text-muted)',
+                  margin: '0.75rem 0 0',
+                  maxWidth: '28rem',
+                }}
+              >
+                No problem — you can set your location manually instead.
+              </p>
+            )}
+            {geoStatus === 'error' && (
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 300,
+                  fontSize: '0.8125rem',
+                  lineHeight: 1.6,
+                  color: 'var(--color-text-muted)',
+                  margin: '0.75rem 0 0',
+                  maxWidth: '28rem',
+                }}
+              >
+                We couldn&apos;t detect your location. You can set it manually
+                instead.
+              </p>
+            )}
+
+            <StepFooter onContinue={() => {}} onBack={onBack} isLoading={false} continueDisabled />
+          </div>
+        )}
+
+        {/* ── After a successful detection: confirmation banner ── */}
+        {showManualForm && geoStatus === 'done' && detectedSummary && (
+          <div
+            data-reveal
+            style={{
+              marginBottom: '1.5rem',
+              padding: '0.875rem 1rem',
+              borderRadius: 'var(--radius-card)',
+              border: '1px solid rgba(184,134,61,0.28)',
+              backgroundColor: 'var(--color-accent-subtle)',
+            }}
+          >
+            <span
+              style={{
+                display: 'block',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 300,
+                fontSize: '0.8125rem',
+                color: 'var(--color-alabaster-50)',
+              }}
+            >
+              Detected: {detectedSummary}
+            </span>
+            <span
+              style={{
+                display: 'block',
+                marginTop: '0.25rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 300,
+                fontSize: '0.6875rem',
+                color: 'var(--color-text-muted)',
+              }}
+            >
+              Adjust any field below if it looks off.
+            </span>
+          </div>
+        )}
+
+        {/* ── State B: manual city + climate + season form ── */}
+        {showManualForm && (
+        <>
         {/* Location field — city autocomplete, country deduced automatically */}
         <div data-reveal style={{ marginBottom: '2rem' }}>
           <span className="label-caps" style={{ display: 'block', marginBottom: '0.75rem' }}>
@@ -614,6 +856,8 @@ export function StepEnvironment({
           isLoading={isPending}
           continueDisabled={!canContinue}
         />
+        </>
+        )}
       </div>
     </div>
   )

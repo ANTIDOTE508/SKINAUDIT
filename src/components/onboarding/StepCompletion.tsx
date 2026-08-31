@@ -18,6 +18,7 @@ const HEXAGON_CLIP = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 2
 
 type Props = {
   onContinue: () => void
+  onBack: () => void
 }
 
 /**
@@ -26,7 +27,7 @@ type Props = {
  * the resume marker and hands control back to the wizard rather than
  * completing onboarding and redirecting to the Studio.
  */
-export function StepCompletion({ onContinue }: Props) {
+export function StepCompletion({ onContinue, onBack }: Props) {
   const badgeRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLDivElement>(null)
   const bulletsRef = useRef<HTMLUListElement>(null)
@@ -241,6 +242,37 @@ export function StepCompletion({ onContinue }: Props) {
           <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
           {isPending ? 'Loading…' : 'Continue to Dossier'}
           <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={isPending}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: '2px 0',
+            cursor: isPending ? 'default' : 'pointer',
+            fontFamily: 'var(--font-body)',
+            fontSize: '12px',
+            fontWeight: 400,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-alabaster-400)',
+            transition: 'color 200ms ease',
+          }}
+          onMouseEnter={(e) => {
+            if (!isPending) {
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isPending) {
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
+            }
+          }}
+        >
+          ← Back
         </button>
       </div>
     </div>

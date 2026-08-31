@@ -9,13 +9,14 @@ import { acknowledgeDossierIntro } from '@/app/actions/onboarding'
 
 type Props = {
   onContinue: () => void
+  onBack: () => void
 }
 
 /**
  * Opens the dossier-building portion of onboarding. No user input — the CTA
  * only advances the resume marker and moves to the product picker.
  */
-export function StepDossierIntro({ onContinue }: Props) {
+export function StepDossierIntro({ onContinue, onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -182,6 +183,39 @@ export function StepDossierIntro({ onContinue }: Props) {
             <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
             {isPending ? 'Loading…' : 'Fill My Dossier'}
             <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
+          </button>
+
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isPending}
+            style={{
+              display: 'block',
+              marginTop: '1rem',
+              background: 'none',
+              border: 'none',
+              padding: '2px 0',
+              cursor: isPending ? 'default' : 'pointer',
+              fontFamily: 'var(--font-body)',
+              fontSize: '12px',
+              fontWeight: 400,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--color-alabaster-400)',
+              transition: 'color 200ms ease',
+            }}
+            onMouseEnter={(e) => {
+              if (!isPending) {
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isPending) {
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
+              }
+            }}
+          >
+            ← Back
           </button>
         </div>
       </div>

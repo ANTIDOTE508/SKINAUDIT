@@ -5,12 +5,13 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import type {
   SkinType,
-  ExperienceLevel,
   ClimateZone,
   Season,
   GenderIdentity,
   HomeDeviceType,
   ProfessionalTreatmentType,
+  ToolUsageFrequency,
+  ToolLastUsed,
   SkinUndertone,
   PIHFrequency,
   PIHDuration,
@@ -19,6 +20,9 @@ import type {
   InflammatoryHistory,
   ProductReactionSeverity,
   BreakoutPattern,
+  RednessPattern,
+  FlushFadeSpeed,
+  MelasmaPattern,
 } from '@prisma/client'
 import {
   PREFERRED_NAME_MAX_LENGTH,
@@ -33,6 +37,22 @@ async function requireSession() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user?.id) throw new Error('Unauthorized')
   return session.user
+}
+
+// ─── Resume-marker helper ─────────────────────────────────────
+/**
+ * Advances the resume marker to `step`, but only if the user is not already
+ * further along. The wizard supports Back navigation across the whole
+ * questionnaire and re-submits each step on Continue, so an unconditional
+ * write here would let "go Back, then Continue" pull `onboardingStep`
+ * backwards and force the user to redo every step in between on their next
+ * resume. Screens 15+ already guard their marker writes the same way.
+ */
+async function bumpOnboardingStep(userId: string, step: number) {
+  await prisma.userProfile.updateMany({
+    where: { userId, onboardingStep: { lt: step } },
+    data: { onboardingStep: step },
+  })
 }
 
 // ─── Step 1 — About you (name, identity, birth month/year) ─────
@@ -74,14 +94,12 @@ export async function saveIdentity(payload: IdentityPayload) {
     create: {
       userId: user.id,
       ...values,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 1,
     },
-    update: {
-      ...values,
-      onboardingStep: 1,
-    },
+    update: values,
   })
+
+  await bumpOnboardingStep(user.id, 1)
 
   return { ok: true }
 }
@@ -111,14 +129,12 @@ export async function saveSkinTone(payload: SkinTonePayload) {
     create: {
       userId: user.id,
       ...values,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 2,
     },
-    update: {
-      ...values,
-      onboardingStep: 2,
-    },
+    update: values,
   })
+
+  await bumpOnboardingStep(user.id, 2)
 
   return { ok: true }
 }
@@ -138,14 +154,14 @@ export async function saveSkinProfile(payload: SkinProfilePayload) {
     create: {
       userId: user.id,
       skinType: payload.skinType,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 10,
     },
     update: {
       skinType: payload.skinType,
-      onboardingStep: 10,
     },
   })
+
+  await bumpOnboardingStep(user.id, 10)
 
   return { ok: true }
 }
@@ -163,14 +179,14 @@ export async function saveSunResponse(sunResponse: number) {
     create: {
       userId: user.id,
       sunResponse,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 3,
     },
     update: {
       sunResponse,
-      onboardingStep: 3,
     },
   })
+
+  await bumpOnboardingStep(user.id, 3)
 
   return { ok: true }
 }
@@ -185,14 +201,14 @@ export async function saveUndertone(undertone: SkinUndertone | null) {
     create: {
       userId: user.id,
       skinUndertone: undertone,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 4,
     },
     update: {
       skinUndertone: undertone,
-      onboardingStep: 4,
     },
   })
+
+  await bumpOnboardingStep(user.id, 4)
 
   return { ok: true }
 }
@@ -214,15 +230,15 @@ export async function savePihFrequency(pihFrequency: PIHFrequency) {
       userId: user.id,
       pihFrequency,
       pihDuration: skipsDuration ? null : undefined,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 5,
     },
     update: {
       pihFrequency,
       pihDuration: skipsDuration ? null : undefined,
-      onboardingStep: 5,
     },
   })
+
+  await bumpOnboardingStep(user.id, 5)
 
   return { ok: true }
 }
@@ -237,14 +253,14 @@ export async function savePihDuration(pihDuration: PIHDuration | null) {
     create: {
       userId: user.id,
       pihDuration,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 6,
     },
     update: {
       pihDuration,
-      onboardingStep: 6,
     },
   })
+
+  await bumpOnboardingStep(user.id, 6)
 
   return { ok: true }
 }
@@ -260,14 +276,14 @@ export async function saveUnevenPatches(unevenPatches: TanPattern) {
     create: {
       userId: user.id,
       unevenPatches,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 7,
     },
     update: {
       unevenPatches,
-      onboardingStep: 7,
     },
   })
+
+  await bumpOnboardingStep(user.id, 7)
 
   return { ok: true }
 }
@@ -283,14 +299,14 @@ export async function saveProductReactivity(productReactivity: ProductReactivity
     create: {
       userId: user.id,
       productReactivity,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 8,
     },
     update: {
       productReactivity,
-      onboardingStep: 8,
     },
   })
+
+  await bumpOnboardingStep(user.id, 8)
 
   return { ok: true }
 }
@@ -319,14 +335,12 @@ export async function saveReactionHistory(payload: ReactionHistoryPayload) {
     create: {
       userId: user.id,
       ...values,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 9,
     },
-    update: {
-      ...values,
-      onboardingStep: 9,
-    },
+    update: values,
   })
+
+  await bumpOnboardingStep(user.id, 9)
 
   return { ok: true }
 }
@@ -355,62 +369,135 @@ export async function saveBreakouts(payload: BreakoutsPayload) {
       userId: user.id,
       breakoutPattern: payload.breakoutPattern,
       breakoutAreas,
-      experienceLevel: 'BEGINNER',
       onboardingStep: 11,
     },
     update: {
       breakoutPattern: payload.breakoutPattern,
       breakoutAreas,
-      onboardingStep: 11,
     },
   })
+
+  await bumpOnboardingStep(user.id, 11)
 
   return { ok: true }
 }
 
-// ─── Step 12 — Sensitivity score (1–5) ────────────────────────
-export async function saveSensitivity(sensitivityScore: number) {
+// ─── Step 12 — Persistent facial redness (+ inline area follow-up) ──
+export type RednessPayload = {
+  rednessPattern: RednessPattern
+  rednessAreas: string[]
+}
+
+export async function saveRedness(payload: RednessPayload) {
   const user = await requireSession()
+
+  if (!payload.rednessPattern) throw new Error('Redness pattern is required')
+
+  const areas = Array.isArray(payload.rednessAreas) ? payload.rednessAreas : []
+  if (areas.some((a) => typeof a !== 'string' || a.trim().length === 0)) {
+    throw new Error('Invalid redness area selection')
+  }
+  // The area follow-up only applies to the two "Yes" answers.
+  const rednessAreas =
+    payload.rednessPattern === 'PERSISTENT' || payload.rednessPattern === 'INTERMITTENT'
+      ? areas
+      : []
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
-      sensitivityScore,
-      experienceLevel: 'BEGINNER',
+      rednessPattern: payload.rednessPattern,
+      rednessAreas,
       onboardingStep: 12,
     },
     update: {
-      sensitivityScore,
-      onboardingStep: 12,
+      rednessPattern: payload.rednessPattern,
+      rednessAreas,
     },
   })
+
+  await bumpOnboardingStep(user.id, 12)
 
   return { ok: true }
 }
 
-// ─── Step 13 — Skin Goals (max 3) ─────────────────────────────
-export async function saveGoals(goals: string[]) {
+// ─── Step 13 — Flushing triggers + fade speed (conditional) ───
+// Shown only when redness pattern was PERSISTENT or INTERMITTENT.
+export type FlushingPayload = {
+  flushTriggers: string[]
+  flushFadeSpeed: FlushFadeSpeed
+}
+
+export async function saveFlushing(payload: FlushingPayload) {
   const user = await requireSession()
+
+  const triggers = Array.isArray(payload.flushTriggers) ? payload.flushTriggers : []
+  if (triggers.length === 0) throw new Error('At least one flushing trigger is required')
+  if (triggers.some((t) => typeof t !== 'string' || t.trim().length === 0)) {
+    throw new Error('Invalid flushing trigger selection')
+  }
+  if (!payload.flushFadeSpeed) throw new Error('Flush fade speed is required')
+  // "none" is exclusive — normalise a mixed selection down to just "none".
+  const flushTriggers = triggers.includes('none') ? ['none'] : triggers
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
-      goals,
-      experienceLevel: 'BEGINNER',
+      flushTriggers,
+      flushFadeSpeed: payload.flushFadeSpeed,
       onboardingStep: 13,
     },
     update: {
-      goals,
-      onboardingStep: 13,
+      flushTriggers,
+      flushFadeSpeed: payload.flushFadeSpeed,
     },
   })
+
+  await bumpOnboardingStep(user.id, 13)
 
   return { ok: true }
 }
 
-// ─── Step 14 — Environment ────────────────────────────────────
+// ─── Step 14 — Symmetrical hyperpigmentation (+ inline trigger follow-up) ──
+export type MelasmaPayload = {
+  melasmaPattern: MelasmaPattern
+  melasmaTriggers: string[]
+}
+
+export async function saveMelasma(payload: MelasmaPayload) {
+  const user = await requireSession()
+
+  if (!payload.melasmaPattern) throw new Error('Melasma pattern is required')
+
+  const triggers = Array.isArray(payload.melasmaTriggers) ? payload.melasmaTriggers : []
+  if (triggers.some((t) => typeof t !== 'string' || t.trim().length === 0)) {
+    throw new Error('Invalid melasma trigger selection')
+  }
+  // The trigger follow-up only applies to the "symmetrical" answer.
+  const melasmaTriggers = payload.melasmaPattern === 'SYMMETRICAL' ? triggers : []
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      melasmaPattern: payload.melasmaPattern,
+      melasmaTriggers,
+      onboardingStep: 14,
+    },
+    update: {
+      melasmaPattern: payload.melasmaPattern,
+      melasmaTriggers,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 14)
+
+  return { ok: true }
+}
+
+// ─── Step 15 — Environment ────────────────────────────────────
 export type EnvironmentPayload = {
   city?: string
   countryCode?: string
@@ -441,41 +528,46 @@ export async function saveEnvironment(payload: EnvironmentPayload) {
   })
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 14 } },
-    data: { onboardingStep: 14 },
+    where: { userId: user.id, onboardingStep: { lt: 15 } },
+    data: { onboardingStep: 15 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 15 — Experience Level ───────────────────────────────
-export async function saveExperienceLevel(level: ExperienceLevel) {
-  const user = await requireSession()
-
-  await prisma.userProfile.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      experienceLevel: level,
-      onboardingStep: 15,
-    },
-    update: {
-      experienceLevel: level,
-      onboardingStep: 15,
-    },
-  })
-
-  return { ok: true }
+// ─── Step 16 — Tools & Treatments (+ per-item follow-ups) ─────
+export type ToolItem = {
+  frequency: ToolUsageFrequency
+  lastUsed: ToolLastUsed
+  faceAreas: string[]
 }
-
-// ─── Step 16 — Tools & Treatments ────────────────────────────
+export type HomeDeviceItem = ToolItem & { type: HomeDeviceType }
+export type ProfessionalTreatmentItem = ToolItem & { type: ProfessionalTreatmentType }
 export type ToolsPayload = {
-  homeDevices: HomeDeviceType[]
-  professionalTreatments: ProfessionalTreatmentType[]
+  homeDevices: HomeDeviceItem[]
+  professionalTreatments: ProfessionalTreatmentItem[]
+}
+
+function assertItem(item: ToolItem, label: string) {
+  if (!item.frequency) throw new Error(`${label}: usage frequency is required`)
+  if (!item.lastUsed) throw new Error(`${label}: last-used answer is required`)
+  const areas = Array.isArray(item.faceAreas) ? item.faceAreas : []
+  if (areas.length === 0) throw new Error(`${label}: at least one face area is required`)
+  if (areas.some((a) => typeof a !== 'string' || a.trim().length === 0)) {
+    throw new Error(`${label}: invalid face area selection`)
+  }
 }
 
 export async function saveToolsAndTreatments(payload: ToolsPayload) {
   const user = await requireSession()
+
+  const homeDevices = Array.isArray(payload.homeDevices) ? payload.homeDevices : []
+  const professionalTreatments = Array.isArray(payload.professionalTreatments)
+    ? payload.professionalTreatments
+    : []
+
+  for (const d of homeDevices) assertItem(d, `Device "${d.type}"`)
+  for (const t of professionalTreatments) assertItem(t, `Treatment "${t.type}"`)
 
   // Wrapped in a transaction: without it, a failure between the deletes and
   // the recreates (e.g. a transient DB error) would silently wipe the
@@ -483,17 +575,29 @@ export async function saveToolsAndTreatments(payload: ToolsPayload) {
   await prisma.$transaction([
     prisma.userHomeDevice.deleteMany({ where: { userId: user.id } }),
     prisma.userProfessionalTreatment.deleteMany({ where: { userId: user.id } }),
-    ...(payload.homeDevices.length > 0
+    ...(homeDevices.length > 0
       ? [
           prisma.userHomeDevice.createMany({
-            data: payload.homeDevices.map((deviceType) => ({ userId: user.id, deviceType })),
+            data: homeDevices.map((d) => ({
+              userId: user.id,
+              deviceType: d.type,
+              frequency: d.frequency,
+              lastUsed: d.lastUsed,
+              faceAreas: d.faceAreas,
+            })),
           }),
         ]
       : []),
-    ...(payload.professionalTreatments.length > 0
+    ...(professionalTreatments.length > 0
       ? [
           prisma.userProfessionalTreatment.createMany({
-            data: payload.professionalTreatments.map((treatmentType) => ({ userId: user.id, treatmentType })),
+            data: professionalTreatments.map((t) => ({
+              userId: user.id,
+              treatmentType: t.type,
+              frequency: t.frequency,
+              lastUsed: t.lastUsed,
+              faceAreas: t.faceAreas,
+            })),
           }),
         ]
       : []),
@@ -640,7 +744,6 @@ export async function getOnboardingStatus() {
       skinType: true,
       skinToneScale: true,
       vitiligo: true,
-      sensitivityScore: true,
       sunResponse: true,
       skinUndertone: true,
       pihFrequency: true,
@@ -650,8 +753,6 @@ export async function getOnboardingStatus() {
       preferredName: true,
       birthMonth: true,
       birthYear: true,
-      goals: true,
-      experienceLevel: true,
       onboardingStep: true,
       onboardingCompletedAt: true,
     },

@@ -71,3 +71,41 @@ export async function detectClimateZone(
     return null
   }
 }
+
+/** Minimal shape of the BigDataCloud reverse-geocode response we consume. */
+type BigDataCloudReverse = {
+  city?: string
+  locality?: string
+  countryCode?: string
+}
+
+/**
+ * Reverse-geocodes coordinates to a { city, countryCode } pair using
+ * BigDataCloud's free, keyless client endpoint. Used only on the
+ * "allow location" path so the derived city can be shown for confirmation
+ * and saved the same way a manually-picked city is.
+ *
+ * Returns null on any failure (network error, unexpected shape, empty
+ * result) — the caller then still saves the climate/season it derived and
+ * falls back to the manual form for the city.
+ */
+export async function reverseGeocode(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal
+): Promise<{ city: string; countryCode: string } | null> {
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+    const res = await fetch(url, { signal })
+    if (!res.ok) return null
+
+    const data = (await res.json()) as BigDataCloudReverse
+    const city = (data.city || data.locality || '').trim()
+    const countryCode = (data.countryCode || '').trim().toUpperCase()
+    if (!city || !countryCode) return null
+
+    return { city, countryCode }
+  } catch {
+    return null
+  }
+}

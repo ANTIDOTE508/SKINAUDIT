@@ -37,15 +37,6 @@ enum SkinType {
   @@schema("app")
 }
 
-enum ExperienceLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-  ENTHUSIAST
-
-  @@schema("app")
-}
-
 enum SkinUndertone {
   WARM
   COOL
@@ -116,6 +107,32 @@ enum BreakoutPattern {
   @@schema("app")
 }
 
+enum RednessPattern {
+  PERSISTENT
+  INTERMITTENT
+  OCCASIONAL
+  NONE
+
+  @@schema("app")
+}
+
+enum FlushFadeSpeed {
+  MINUTES
+  UP_TO_HOUR
+  HOURS_OR_MORE
+
+  @@schema("app")
+}
+
+enum MelasmaPattern {
+  SYMMETRICAL
+  ASYMMETRICAL
+  FADED
+  NONE
+
+  @@schema("app")
+}
+
 enum GenderIdentity {
   WOMAN
   MAN
@@ -130,21 +147,62 @@ enum HomeDeviceType {
   LED_THERAPY
   MICROCURRENT
   RF_DEVICE
+  MICRONEEDLING
+  CLEANSING_DEVICE
+  DERMAPLANING
+  HIGH_FREQUENCY_WAND
+  ULTRASONIC_DEVICE
+  MICRODERMABRASION
+  PORE_VACUUM
+  FACIAL_STEAMER
+  IPL_LIGHT_DEVICE
   GUA_SHA
   FACIAL_ROLLER
-  DERMA_ROLLER
-  ULTRASONIC_SCRUBBER
-  HIGH_FREQUENCY_WAND
+  OTHER
 
   @@schema("app")
 }
 
 enum ProfessionalTreatmentType {
   FACIALS
-  PEELS
-  INJECTABLES
-  LASERS
+  CHEMICAL_PEELS
+  MICRONEEDLING
+  RF_MICRONEEDLING
+  LASER_RESURFACING
+  IPL_BBL
+  RADIOFREQUENCY
+  ULTRASOUND_HIFU
+  NEUROMODULATORS
+  DERMAL_FILLERS
+  SKIN_BOOSTERS
+  BIOSTIMULATORS
+  PRP_PRF
+  HYDRADERMABRASION
+  MICRODERMABRASION
+  DERMAPLANING
+  LED_PHOTOTHERAPY
+  THREAD_LIFTS
+  SURGERY
   OTHER
+
+  @@schema("app")
+}
+
+enum ToolUsageFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  OCCASIONALLY
+  ONCE
+
+  @@schema("app")
+}
+
+enum ToolLastUsed {
+  WITHIN_WEEK
+  WITHIN_MONTH
+  ONE_TO_SIX_MONTHS
+  OVER_SIX_MONTHS
 
   @@schema("app")
 }
@@ -390,7 +448,6 @@ model UserProfile {
   skinType              SkinType?        @map("skin_type")
   skinToneScale         Int?             @map("skin_tone_scale")
   vitiligo              Boolean?         @map("vitiligo")
-  sensitivityScore      Int?             @map("sensitivity_score")
   sunResponse           Int?             @map("sun_response")
   skinUndertone         SkinUndertone?   @map("skin_undertone")
   pihFrequency          PIHFrequency?    @map("pih_frequency")
@@ -401,8 +458,12 @@ model UserProfile {
   productReactionSeverity ProductReactionSeverity? @map("product_reaction_severity")
   breakoutPattern       BreakoutPattern? @map("breakout_pattern")
   breakoutAreas         String[]         @map("breakout_areas")
-  goals                 String[]
-  experienceLevel       ExperienceLevel  @default(BEGINNER) @map("experience_level")
+  rednessPattern        RednessPattern?  @map("redness_pattern")
+  rednessAreas          String[]         @map("redness_areas")
+  flushTriggers         String[]         @map("flush_triggers")
+  flushFadeSpeed        FlushFadeSpeed?  @map("flush_fade_speed")
+  melasmaPattern        MelasmaPattern?  @map("melasma_pattern")
+  melasmaTriggers       String[]         @map("melasma_triggers")
   onboardingStep        Int              @default(0) @map("onboarding_step")
   onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
   createdAt             DateTime         @default(now()) @map("created_at")
@@ -451,11 +512,14 @@ model UserDevice {
 }
 
 model UserHomeDevice {
-  id         Int            @id @default(autoincrement())
-  userId     String         @map("user_id")
-  deviceType HomeDeviceType @map("device_type")
-  addedAt    DateTime       @default(now()) @map("added_at")
-  createdAt  DateTime       @default(now()) @map("created_at")
+  id         Int             @id @default(autoincrement())
+  userId     String          @map("user_id")
+  deviceType HomeDeviceType      @map("device_type")
+  frequency  ToolUsageFrequency? @map("frequency")
+  lastUsed   ToolLastUsed?       @map("last_used")
+  faceAreas  String[]            @map("face_areas")
+  addedAt    DateTime        @default(now()) @map("added_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -468,6 +532,9 @@ model UserProfessionalTreatment {
   id            Int                       @id @default(autoincrement())
   userId        String                    @map("user_id")
   treatmentType ProfessionalTreatmentType @map("treatment_type")
+  frequency     ToolUsageFrequency?       @map("frequency")
+  lastUsed      ToolLastUsed?             @map("last_used")
+  faceAreas     String[]                  @map("face_areas")
   addedAt       DateTime                  @default(now()) @map("added_at")
   createdAt     DateTime                  @default(now()) @map("created_at")
 
