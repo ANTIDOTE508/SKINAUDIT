@@ -433,13 +433,13 @@ export function StepEnvironment({
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          SkinAudit reads your climate so you don&apos;t have to think about it.
+          SkinAudit uses your general location to understand the environment
+          around your routine.
         </h2>
 
         <p data-reveal style={SUB_COPY}>
-          Temperature, humidity, and UV index affect how your routine performs.
-          Tap Allow and we&apos;ll handle it automatically — your location is
-          never stored or shared.
+          Allow location and we&apos;ll handle the context automatically. We care
+          about the city you&apos;re in, not your home address.
         </p>
 
         {/* ── State A: geolocation permission prompt ── */}

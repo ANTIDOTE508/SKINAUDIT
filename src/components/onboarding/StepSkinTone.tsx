@@ -29,8 +29,6 @@ const SUB_COPY: React.CSSProperties = {
 type Props = {
   value: number | null
   onChange: (v: number) => void
-  vitiligo: boolean
-  onVitiligoChange: (v: boolean) => void
   onContinue: () => void
   onBack: () => void
 }
@@ -38,8 +36,6 @@ type Props = {
 export function StepSkinTone({
   value,
   onChange,
-  vitiligo,
-  onVitiligoChange,
   onContinue,
   onBack,
 }: Props) {
@@ -49,8 +45,6 @@ export function StepSkinTone({
   const [error, setError] = useState<string | null>(null)
 
   const toneLabelId = useId()
-  const vitiligoLabelId = useId()
-  const vitiligoDescId = useId()
 
   useEffect(() => {
     const node = rootRef.current
@@ -98,7 +92,7 @@ export function StepSkinTone({
     setError(null)
     startTransition(async () => {
       try {
-        await saveSkinTone({ skinToneScale: value, vitiligo })
+        await saveSkinTone({ skinToneScale: value })
         onContinue()
       } catch {
         setError('Unable to save. Please try again.')
@@ -252,92 +246,6 @@ export function StepSkinTone({
             </span>
           </div>
         </div>
-      </div>
-
-      {/* ── Vitiligo toggle ── */}
-      <div
-        data-reveal
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1.25rem',
-          border: '1px solid rgba(184,134,61,0.28)',
-          borderRadius: '4px',
-          padding: '1.125rem 1.25rem',
-          marginBottom: '0.5rem',
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span
-            id={vitiligoLabelId}
-            style={{
-              display: 'block',
-              fontFamily: 'var(--font-body)',
-              fontWeight: 300,
-              fontSize: '0.9375rem',
-              color: 'var(--color-alabaster-300)',
-            }}
-          >
-            Do you have vitiligo?
-          </span>
-          <span
-            id={vitiligoDescId}
-            style={{
-              display: 'block',
-              fontFamily: 'var(--font-body)',
-              fontWeight: 300,
-              fontSize: '0.8125rem',
-              lineHeight: 1.5,
-              color: 'var(--color-alabaster-400)',
-              marginTop: '0.25rem',
-            }}
-          >
-            This helps us better interpret sun sensitivity.
-          </span>
-        </div>
-
-        <button
-          type="button"
-          role="switch"
-          aria-checked={vitiligo}
-          aria-labelledby={vitiligoLabelId}
-          aria-describedby={vitiligoDescId}
-          onClick={() => onVitiligoChange(!vitiligo)}
-          style={{
-            position: 'relative',
-            flexShrink: 0,
-            width: '48px',
-            height: '26px',
-            padding: 0,
-            borderRadius: '13px',
-            cursor: 'pointer',
-            outline: 'none',
-            border: vitiligo
-              ? '1px solid var(--color-sienna-400)'
-              : '1px solid rgba(184,134,61,0.28)',
-            backgroundColor: vitiligo ? 'rgba(184,134,61,0.22)' : 'transparent',
-            transition:
-              'background-color var(--duration-micro) var(--ease-luxury), border-color var(--duration-micro) var(--ease-luxury)',
-          }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: vitiligo ? '25px' : '3px',
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              transform: 'translateY(-50%)',
-              backgroundColor: vitiligo
-                ? 'var(--color-sienna-400)'
-                : 'var(--color-alabaster-400)',
-              transition:
-                'left var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
-            }}
-          />
-        </button>
       </div>
 
       {error && (

@@ -34,15 +34,7 @@ export type Interstitial = {
   when?: (state: WizardStateLike) => boolean
 }
 
-export const INTERSTITIALS: Interstitial[] = [
-  {
-    id: 'skins-story',
-    afterStep: 1, // after "Tell us a bit about you."
-    eyebrow: "Your Skin's Story",
-    title: "We're going to ask you about patterns you've noticed —",
-    body: 'what your skin does, not what category it belongs to.',
-  },
-]
+export const INTERSTITIALS: Interstitial[] = []
 
 /**
  * The interstitial (if any) that should appear after `stepJustFinished`,

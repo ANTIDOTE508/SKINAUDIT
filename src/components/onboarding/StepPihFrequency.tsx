@@ -4,8 +4,9 @@ import { useRef, useEffect, useState, useTransition, useId } from 'react'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
 import { RadioPill } from './RadioPill'
+import { DurationPill } from './DurationPill'
 import { savePihFrequency } from '@/app/actions/onboarding'
-import type { PIHFrequency } from '@prisma/client'
+import type { PIHFrequency, PIHDuration } from '@prisma/client'
 
 const OPTIONS: { value: PIHFrequency; title: string; subtitle: string }[] = [
   { value: 'OFTEN', title: 'Yes', subtitle: 'Almost always' },
@@ -22,6 +23,16 @@ const OPTIONS: { value: PIHFrequency; title: string; subtitle: string }[] = [
   { value: 'NEVER', title: 'Never', subtitle: "I don't notice this" },
 ]
 
+// The duration follow-up shows only when marks appear often or sometimes.
+const FOLLOWUP_VALUES: PIHFrequency[] = ['OFTEN', 'SOMETIMES']
+
+const DURATION_OPTIONS: { value: PIHDuration; label: string }[] = [
+  { value: 'LT_1MO', label: 'A few weeks' },
+  { value: 'ONE_3MO', label: 'A month or two' },
+  { value: 'THREE_6MO', label: 'Several months' },
+  { value: 'GT_6MO', label: "They stay for a long time, or don't fully fade" },
+]
+
 const SUB_COPY: React.CSSProperties = {
   fontFamily: 'var(--font-body)',
   fontWeight: 300,
@@ -33,19 +44,31 @@ const SUB_COPY: React.CSSProperties = {
 
 type Props = {
   value: PIHFrequency | null
+  duration: PIHDuration | null
   onChange: (v: PIHFrequency) => void
-  /** Receives the confirmed answer so the wizard can branch on it. */
-  onContinue: (v: PIHFrequency) => void
+  onDurationChange: (v: PIHDuration) => void
+  onContinue: () => void
   onBack: () => void
 }
 
-export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props) {
+export function StepPihFrequency({
+  value,
+  duration,
+  onChange,
+  onDurationChange,
+  onContinue,
+  onBack,
+}: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const durationListRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   const groupLabelId = useId()
+  const durationLabelId = useId()
+
+  const showDuration = value != null && FOLLOWUP_VALUES.includes(value)
 
   useEffect(() => {
     const node = rootRef.current
@@ -70,6 +93,15 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
     return () => ctx.revert()
   }, [])
 
+  const handleFrequencyChange = (v: PIHFrequency) => {
+    onChange(v)
+    // Leaving an "often" / "sometimes" answer makes the duration irrelevant —
+    // clear it so a stale value isn't persisted.
+    if (!FOLLOWUP_VALUES.includes(v) && duration != null) {
+      onDurationChange(null as unknown as PIHDuration)
+    }
+  }
+
   /** Arrow keys move between pills and select as they go, per the WAI-ARIA
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -80,8 +112,21 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + OPTIONS.length) % OPTIONS.length
-    onChange(OPTIONS[next].value)
+    handleFrequencyChange(OPTIONS[next].value)
     const pills = listRef.current?.querySelectorAll<HTMLButtonElement>('[data-radio-pill]')
+    pills?.[next]?.focus()
+  }
+
+  const handleDurationKeyDown = (e: React.KeyboardEvent, index: number) => {
+    const delta =
+      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
+      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
+      : 0
+    if (delta === 0) return
+    e.preventDefault()
+    const next = (index + delta + DURATION_OPTIONS.length) % DURATION_OPTIONS.length
+    onDurationChange(DURATION_OPTIONS[next].value)
+    const pills = durationListRef.current?.querySelectorAll<HTMLButtonElement>('[data-radio-pill]')
     pills?.[next]?.focus()
   }
 
@@ -93,8 +138,12 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
     setError(null)
     startTransition(async () => {
       try {
-        await savePihFrequency(value)
-        onContinue(value)
+        // Duration is optional; only send it when the follow-up applies.
+        await savePihFrequency({
+          pihFrequency: value,
+          pihDuration: showDuration ? duration : null,
+        })
+        onContinue()
       } catch {
         setError('Unable to save. Please try again.')
       }
@@ -124,21 +173,6 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
           This includes: dark spots after a breakout clears, a shadow where a
           scratch was, darkening after waxing or threading, or a patch that stays
           discoloured after any kind of irritation.
-        </p>
-
-        <p
-          data-reveal
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontWeight: 300,
-            fontSize: '0.8125rem',
-            lineHeight: 1.6,
-            color: 'var(--color-alabaster-400)',
-            margin: '0 0 2.25rem',
-            fontStyle: 'italic',
-          }}
-        >
-          These marks are often called Post-Inflammatory Hyperpigmentation (PIH).
         </p>
 
         <span
@@ -177,7 +211,7 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
                   subtitle={option.subtitle}
                   ariaLabel={`${option.title} — ${option.subtitle}`}
                   selected={isSelected}
-                  onChange={(v) => onChange(v as PIHFrequency)}
+                  onChange={(v) => handleFrequencyChange(v as PIHFrequency)}
                   tabIndex={isSelected || (value == null && index === 0) ? 0 : -1}
                   onKeyDown={(e) => handleKeyDown(e, index)}
                 />
@@ -185,6 +219,46 @@ export function StepPihFrequency({ value, onChange, onContinue, onBack }: Props)
             )
           })}
         </div>
+
+        {/* ── Inline follow-up: only for "often" / "sometimes" ── */}
+        {showDuration && (
+          <div style={{ marginTop: '2rem' }}>
+            <span
+              id={durationLabelId}
+              className="label-caps"
+              style={{ display: 'block', marginBottom: '0.875rem' }}
+            >
+              When those marks appear, how long do they typically take to fade?
+            </span>
+
+            <div
+              ref={durationListRef}
+              role="radiogroup"
+              aria-labelledby={durationLabelId}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.625rem',
+              }}
+            >
+              {DURATION_OPTIONS.map((option, index) => {
+                const isSelected = duration === option.value
+                return (
+                  <div key={option.value}>
+                    <DurationPill
+                      value={option.value}
+                      label={option.label}
+                      selected={isSelected}
+                      onChange={(v) => onDurationChange(v as PIHDuration)}
+                      tabIndex={isSelected || (duration == null && index === 0) ? 0 : -1}
+                      onKeyDown={(e) => handleDurationKeyDown(e, index)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {error && (
           <p

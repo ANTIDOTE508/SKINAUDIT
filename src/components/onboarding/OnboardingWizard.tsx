@@ -6,11 +6,14 @@ import { gsap } from 'gsap'
 import { completeOnboarding } from '@/app/actions/onboarding'
 import { StepWelcome } from './StepWelcome'
 import { StepIdentity } from './StepIdentity'
+import { StepSkinTypeSelfId } from './StepSkinTypeSelfId'
+import { StepPrimaryConcerns } from './StepPrimaryConcerns'
+import { StepSkinGoals } from './StepSkinGoals'
+import { StepExperienceLevel } from './StepExperienceLevel'
 import { StepSkinType } from './StepSkinType'
 import { StepSunResponse } from './StepSunResponse'
 import { StepUndertone } from './StepUndertone'
 import { StepPihFrequency } from './StepPihFrequency'
-import { StepPihDuration } from './StepPihDuration'
 import { StepUnevenPatches } from './StepUnevenPatches'
 import { StepSkinTone } from './StepSkinTone'
 import { StepEnvironment } from './StepEnvironment'
@@ -28,12 +31,16 @@ import {
   getInterstitialById,
 } from './interstitials'
 import { StepProductReactivity } from './StepProductReactivity'
-import { StepReactionHistory } from './StepReactionHistory'
+import { StepRecoveryTime } from './StepRecoveryTime'
+import { StepDehydrationCheck } from './StepDehydrationCheck'
 import { StepBreakouts } from './StepBreakouts'
 import { StepRedness } from './StepRedness'
-import { StepFlushing } from './StepFlushing'
-import { StepMelasma } from './StepMelasma'
+import { StepCurrentState } from './StepCurrentState'
+import { StepRecentChange } from './StepRecentChange'
+import { StepDarkerAreas } from './StepDarkerAreas'
 import type {
+  SkinType,
+  SkincareExperience,
   SkinUndertone,
   PIHFrequency,
   PIHDuration,
@@ -44,7 +51,8 @@ import type {
   BreakoutPattern,
   RednessPattern,
   FlushFadeSpeed,
-  MelasmaPattern,
+  RecoveryTime,
+  OilyAndTight,
 } from '@prisma/client'
 
 // ─── Types ────────────────────────────────────────────────────
@@ -67,8 +75,10 @@ type WizardState = {
   birthMonth: string
   birthYear: string
   skinType: string
+  primaryConcerns: string[]
+  goals: string[]
+  skincareExperience: SkincareExperience | null
   skinToneScale: number | null
-  vitiligo: boolean
   sunResponse: number | null
   skinUndertone: SkinUndertone | null
   pihFrequency: PIHFrequency | null
@@ -77,14 +87,20 @@ type WizardState = {
   productReactivity: ProductReactivity | null
   inflammatoryHistory: InflammatoryHistory | null
   productReactionSeverity: ProductReactionSeverity | null
+  recoveryTime: RecoveryTime | null
+  oilyAndTight: OilyAndTight | null
   breakoutPattern: BreakoutPattern | null
   breakoutAreas: string[]
   rednessPattern: RednessPattern | null
   rednessAreas: string[]
   flushTriggers: string[]
   flushFadeSpeed: FlushFadeSpeed | null
-  melasmaPattern: MelasmaPattern | null
-  melasmaTriggers: string[]
+  currentStateNormal: string
+  currentStateDiffs: string[]
+  recentChangeAnswer: string
+  recentChangeDetail: string[]
+  darkerAreas: string
+  darkerAreaTriggers: string[]
   city: string
   countryCode: string
   climateZone: string
@@ -103,8 +119,10 @@ type WizardAction =
   | { type: 'SET_BIRTH_MONTH'; value: string }
   | { type: 'SET_BIRTH_YEAR'; value: string }
   | { type: 'SET_SKIN_TYPE'; value: string }
+  | { type: 'SET_PRIMARY_CONCERNS'; value: string[] }
+  | { type: 'SET_GOALS'; value: string[] }
+  | { type: 'SET_EXPERIENCE'; value: SkincareExperience }
   | { type: 'SET_SKIN_TONE'; value: number }
-  | { type: 'SET_VITILIGO'; value: boolean }
   | { type: 'SET_SUN_RESPONSE'; value: number }
   | { type: 'SET_UNDERTONE'; value: SkinUndertone }
   | { type: 'SET_PIH_FREQUENCY'; value: PIHFrequency }
@@ -113,14 +131,20 @@ type WizardAction =
   | { type: 'SET_PRODUCT_REACTIVITY'; value: ProductReactivity }
   | { type: 'SET_INFLAMMATORY_HISTORY'; value: InflammatoryHistory }
   | { type: 'SET_PRODUCT_REACTION_SEVERITY'; value: ProductReactionSeverity }
+  | { type: 'SET_RECOVERY_TIME'; value: RecoveryTime }
+  | { type: 'SET_OILY_AND_TIGHT'; value: OilyAndTight }
   | { type: 'SET_BREAKOUT_PATTERN'; value: BreakoutPattern }
   | { type: 'SET_BREAKOUT_AREAS'; value: string[] }
   | { type: 'SET_REDNESS_PATTERN'; value: RednessPattern }
   | { type: 'SET_REDNESS_AREAS'; value: string[] }
   | { type: 'SET_FLUSH_TRIGGERS'; value: string[] }
   | { type: 'SET_FLUSH_FADE_SPEED'; value: FlushFadeSpeed }
-  | { type: 'SET_MELASMA_PATTERN'; value: MelasmaPattern }
-  | { type: 'SET_MELASMA_TRIGGERS'; value: string[] }
+  | { type: 'SET_CURRENT_STATE_NORMAL'; value: string }
+  | { type: 'SET_CURRENT_STATE_DIFFS'; value: string[] }
+  | { type: 'SET_RECENT_CHANGE_ANSWER'; value: string }
+  | { type: 'SET_RECENT_CHANGE_DETAIL'; value: string[] }
+  | { type: 'SET_DARKER_AREAS'; value: string }
+  | { type: 'SET_DARKER_AREA_TRIGGERS'; value: string[] }
   | { type: 'SET_ENVIRONMENT'; city: string; countryCode: string; climateZone: string; season: string }
   | { type: 'SET_HOME_DEVICES'; value: ToolItemState[] }
   | { type: 'SET_PRO_TREATMENTS'; value: ToolItemState[] }
@@ -136,8 +160,10 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_BIRTH_MONTH':    return { ...state, birthMonth: action.value }
     case 'SET_BIRTH_YEAR':     return { ...state, birthYear: action.value }
     case 'SET_SKIN_TYPE':      return { ...state, skinType: action.value }
+    case 'SET_PRIMARY_CONCERNS': return { ...state, primaryConcerns: action.value }
+    case 'SET_GOALS':          return { ...state, goals: action.value }
+    case 'SET_EXPERIENCE':     return { ...state, skincareExperience: action.value }
     case 'SET_SKIN_TONE':      return { ...state, skinToneScale: action.value }
-    case 'SET_VITILIGO':       return { ...state, vitiligo: action.value }
     case 'SET_SUN_RESPONSE':   return { ...state, sunResponse: action.value }
     case 'SET_UNDERTONE':      return { ...state, skinUndertone: action.value }
     case 'SET_PIH_FREQUENCY':  return { ...state, pihFrequency: action.value }
@@ -146,14 +172,20 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_PRODUCT_REACTIVITY': return { ...state, productReactivity: action.value }
     case 'SET_INFLAMMATORY_HISTORY': return { ...state, inflammatoryHistory: action.value }
     case 'SET_PRODUCT_REACTION_SEVERITY': return { ...state, productReactionSeverity: action.value }
+    case 'SET_RECOVERY_TIME': return { ...state, recoveryTime: action.value }
+    case 'SET_OILY_AND_TIGHT': return { ...state, oilyAndTight: action.value }
     case 'SET_BREAKOUT_PATTERN': return { ...state, breakoutPattern: action.value }
     case 'SET_BREAKOUT_AREAS': return { ...state, breakoutAreas: action.value }
     case 'SET_REDNESS_PATTERN': return { ...state, rednessPattern: action.value }
     case 'SET_REDNESS_AREAS': return { ...state, rednessAreas: action.value }
     case 'SET_FLUSH_TRIGGERS': return { ...state, flushTriggers: action.value }
     case 'SET_FLUSH_FADE_SPEED': return { ...state, flushFadeSpeed: action.value }
-    case 'SET_MELASMA_PATTERN': return { ...state, melasmaPattern: action.value }
-    case 'SET_MELASMA_TRIGGERS': return { ...state, melasmaTriggers: action.value }
+    case 'SET_CURRENT_STATE_NORMAL': return { ...state, currentStateNormal: action.value }
+    case 'SET_CURRENT_STATE_DIFFS': return { ...state, currentStateDiffs: action.value }
+    case 'SET_RECENT_CHANGE_ANSWER': return { ...state, recentChangeAnswer: action.value }
+    case 'SET_RECENT_CHANGE_DETAIL': return { ...state, recentChangeDetail: action.value }
+    case 'SET_DARKER_AREAS': return { ...state, darkerAreas: action.value }
+    case 'SET_DARKER_AREA_TRIGGERS': return { ...state, darkerAreaTriggers: action.value }
     case 'SET_ENVIRONMENT':    return { ...state, city: action.city, countryCode: action.countryCode, climateZone: action.climateZone, season: action.season }
     case 'SET_HOME_DEVICES':   return { ...state, homeDevices: action.value }
     case 'SET_PRO_TREATMENTS': return { ...state, professionalTreatments: action.value }
@@ -161,57 +193,17 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-// step 0 = welcome, steps 1–20 = wizard steps. Step 20 (product picker) is
+// step 0 = welcome, steps 1–25 = wizard steps. Step 25 (product picker) is
 // the last one and completes onboarding itself, so there is no separate
-// completion step beyond it. TOTAL_STEPS is the count of *possible* screens;
-// the number shown to the user is derived from activeScreens() below, which
-// drops any screen skipped for this user's answers.
-const TOTAL_STEPS = 20
+// completion step beyond it. Every follow-up now lives inline on its
+// master step's screen, so there are no conditionally-skipped screens —
+// the flow is a straight 1…TOTAL_STEPS walk.
+const TOTAL_STEPS = 25
 
-// Screen 6 (PIH duration) is a follow-up shown only when PIH frequency is
-// "often" or "sometimes". Every other screen is always shown.
-const CONDITIONAL_SCREEN_PIH_DURATION = 6
+const ALL_SCREENS: number[] = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1)
 
-// Screen 9 (reaction history) is a follow-up shown only when product
-// reactivity was "frequent stinging" or "mild transient reaction".
-const CONDITIONAL_SCREEN_REACTION_HISTORY = 9
-
-// Screen 13 (flushing triggers + fade speed) is a follow-up shown only when
-// the redness pattern was "persistent" or "intermittent".
-const CONDITIONAL_SCREEN_FLUSHING = 13
-
-/**
- * Ordered list of the wizard screen numbers active for this user's current
- * answers. Skipped conditional screens simply don't appear, so navigating
- * and the progress counter both renumber automatically — add a screen to
- * this filter and nothing else needs to change.
- */
-type ConditionalAnswers = Pick<
-  WizardState,
-  'pihFrequency' | 'productReactivity' | 'rednessPattern'
->
-
-function computeActiveScreens(answers: ConditionalAnswers): number[] {
-  const pihDurationApplies =
-    answers.pihFrequency === 'OFTEN' || answers.pihFrequency === 'SOMETIMES'
-  const reactionHistoryApplies =
-    answers.productReactivity === 'FREQUENT_STING' ||
-    answers.productReactivity === 'MILD_TRANSIENT'
-  const flushingApplies =
-    answers.rednessPattern === 'PERSISTENT' ||
-    answers.rednessPattern === 'INTERMITTENT'
-  const screens: number[] = []
-  for (let n = 1; n <= TOTAL_STEPS; n++) {
-    if (n === CONDITIONAL_SCREEN_PIH_DURATION && !pihDurationApplies) continue
-    if (n === CONDITIONAL_SCREEN_REACTION_HISTORY && !reactionHistoryApplies) continue
-    if (n === CONDITIONAL_SCREEN_FLUSHING && !flushingApplies) continue
-    screens.push(n)
-  }
-  return screens
-}
-
-function activeScreens(state: WizardState): number[] {
-  return computeActiveScreens(state)
+function activeScreens(): number[] {
+  return ALL_SCREENS
 }
 
 /** Answers already saved on the profile, used to repopulate fields on resume. */
@@ -221,7 +213,6 @@ export type WizardInitialProfile = {
   birthMonth?: number | null
   birthYear?: number | null
   skinToneScale?: number | null
-  vitiligo?: boolean | null
   sunResponse?: number | null
   skinUndertone?: SkinUndertone | null
   pihFrequency?: PIHFrequency | null
@@ -230,15 +221,24 @@ export type WizardInitialProfile = {
   productReactivity?: ProductReactivity | null
   inflammatoryHistory?: InflammatoryHistory | null
   productReactionSeverity?: ProductReactionSeverity | null
+  recoveryTime?: RecoveryTime | null
+  oilyAndTight?: OilyAndTight | null
   breakoutPattern?: BreakoutPattern | null
   breakoutAreas?: string[] | null
   rednessPattern?: RednessPattern | null
   rednessAreas?: string[] | null
   flushTriggers?: string[] | null
   flushFadeSpeed?: FlushFadeSpeed | null
-  melasmaPattern?: MelasmaPattern | null
-  melasmaTriggers?: string[] | null
+  currentStateNormal?: string | null
+  currentStateDiffs?: string[] | null
+  recentChange?: boolean | null
+  recentChangeDetail?: string[] | null
+  darkerAreas?: string | null
+  darkerAreaTriggers?: string[] | null
   skinType?: string | null
+  primaryConcerns?: string[] | null
+  goals?: string[] | null
+  skincareExperience?: SkincareExperience | null
   city?: string | null
   countryCode?: string | null
   climateZone?: string | null
@@ -257,22 +257,9 @@ export function OnboardingWizard({
   initialProfile?: WizardInitialProfile | null
 }) {
   const rawResumeStep = initialStep >= 2 ? initialStep + 1 : 1
-  // The stored onboardingStep can land exactly on a conditional screen this
-  // user's answers skip (e.g. leaving right after PIH frequency = "never",
-  // whose stored step is 5, would resume at 6 — the duration follow-up that
-  // branch is meant to skip). Snap forward to the first screen that is
-  // actually active for these answers so the counter and Back button, which
-  // both index into activeScreens(), never see an out-of-list step.
-  const resumeActiveScreens = computeActiveScreens({
-    pihFrequency: initialProfile?.pihFrequency ?? null,
-    productReactivity: initialProfile?.productReactivity ?? null,
-    rednessPattern: initialProfile?.rednessPattern ?? null,
-  })
-  const resumeStep =
-    rawResumeStep <= 1
-      ? 1
-      : resumeActiveScreens.find((n) => n >= rawResumeStep) ??
-        resumeActiveScreens[resumeActiveScreens.length - 1]
+  // Every screen is always shown now (follow-ups are inline), so the resume
+  // step is just the stored position clamped into range.
+  const resumeStep = rawResumeStep <= 1 ? 1 : Math.min(rawResumeStep, TOTAL_STEPS)
 
   const [state, dispatch] = useReducer(wizardReducer, {
     step: resumeStep > TOTAL_STEPS ? TOTAL_STEPS : resumeStep,
@@ -285,9 +272,10 @@ export function OnboardingWizard({
     birthMonth: initialProfile?.birthMonth ? String(initialProfile.birthMonth) : '',
     birthYear: initialProfile?.birthYear ? String(initialProfile.birthYear) : '',
     skinType: initialProfile?.skinType ?? '',
+    primaryConcerns: initialProfile?.primaryConcerns ?? [],
+    goals: initialProfile?.goals ?? [],
+    skincareExperience: initialProfile?.skincareExperience ?? null,
     skinToneScale: initialProfile?.skinToneScale ?? null,
-    // null (never answered) and false both open the toggle in its off state.
-    vitiligo: initialProfile?.vitiligo ?? false,
     sunResponse: initialProfile?.sunResponse ?? null,
     skinUndertone: initialProfile?.skinUndertone ?? null,
     pihFrequency: initialProfile?.pihFrequency ?? null,
@@ -296,14 +284,28 @@ export function OnboardingWizard({
     productReactivity: initialProfile?.productReactivity ?? null,
     inflammatoryHistory: initialProfile?.inflammatoryHistory ?? null,
     productReactionSeverity: initialProfile?.productReactionSeverity ?? null,
+    recoveryTime: initialProfile?.recoveryTime ?? null,
+    oilyAndTight: initialProfile?.oilyAndTight ?? null,
     breakoutPattern: initialProfile?.breakoutPattern ?? null,
     breakoutAreas: initialProfile?.breakoutAreas ?? [],
     rednessPattern: initialProfile?.rednessPattern ?? null,
     rednessAreas: initialProfile?.rednessAreas ?? [],
     flushTriggers: initialProfile?.flushTriggers ?? [],
     flushFadeSpeed: initialProfile?.flushFadeSpeed ?? null,
-    melasmaPattern: initialProfile?.melasmaPattern ?? null,
-    melasmaTriggers: initialProfile?.melasmaTriggers ?? [],
+    currentStateNormal: initialProfile?.currentStateNormal ?? '',
+    currentStateDiffs: initialProfile?.currentStateDiffs ?? [],
+    // `recentChange` is stored as a boolean; the tri-state UI answer isn't
+    // persisted, so on resume the pill is re-derived from the boolean:
+    // true → "yes", false → "no", null → unanswered.
+    recentChangeAnswer:
+      initialProfile?.recentChange == null
+        ? ''
+        : initialProfile.recentChange
+          ? 'yes'
+          : 'no',
+    recentChangeDetail: initialProfile?.recentChangeDetail ?? [],
+    darkerAreas: initialProfile?.darkerAreas ?? '',
+    darkerAreaTriggers: initialProfile?.darkerAreaTriggers ?? [],
     city: initialProfile?.city ?? '',
     countryCode: initialProfile?.countryCode ?? '',
     climateZone: initialProfile?.climateZone ?? '',
@@ -366,12 +368,12 @@ export function OnboardingWizard({
   // Navigation walks the *active* screens for this user, so a skipped
   // conditional screen (e.g. PIH duration after "rarely" / "never") is
   // stepped straight over in both directions with no special-casing.
-  const screens = activeScreens(state)
+  const screens = activeScreens()
 
   const goNext = useCallback(() => {
     // On an interstitial: Continue clears it and advances to the real step.
     if (state.interstitialId) {
-      const list = activeScreens(state)
+      const list = activeScreens()
       const i = list.indexOf(state.step)
       const next = i >= 0 && i < list.length - 1 ? list[i + 1] : state.step + 1
       transitionToStep(next)
@@ -385,7 +387,7 @@ export function OnboardingWizard({
       runTransition(() => dispatch({ type: 'SHOW_INTERSTITIAL', id: pending.id }))
       return
     }
-    const list = activeScreens(state)
+    const list = activeScreens()
     const i = list.indexOf(state.step)
     const next = i >= 0 && i < list.length - 1 ? list[i + 1] : state.step + 1
     transitionToStep(next)
@@ -397,17 +399,10 @@ export function OnboardingWizard({
       runTransition(() => dispatch({ type: 'CLEAR_INTERSTITIAL' }))
       return
     }
-    const list = activeScreens(state)
+    const list = activeScreens()
     const i = list.indexOf(state.step)
     if (i > 0) transitionToStep(list[i - 1])
   }, [state, transitionToStep, runTransition])
-
-  // Screen 07 (PIH frequency, step 5) routing per its spec:
-  //   often | sometimes → Screen 08 (step 6, the duration follow-up)
-  //   rarely | never    → Screen 09 (step 7, skipping the follow-up)
-  // The answer is already in state by the time this fires, so activeScreens()
-  // reflects it and goNext() lands on the right screen on its own.
-  const handlePihContinue = useCallback(() => goNext(), [goNext])
 
   // steps 1–TOTAL_STEPS show the counter (the step 0 welcome screen doesn't);
   // interstitials hide it — they are framing, not a counted step.
@@ -510,23 +505,12 @@ export function OnboardingWizard({
             <StepSkinTone
               value={state.skinToneScale}
               onChange={(v) => dispatch({ type: 'SET_SKIN_TONE', value: v })}
-              vitiligo={state.vitiligo}
-              onVitiligoChange={(v) => dispatch({ type: 'SET_VITILIGO', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
           {state.step === 3 && (
-            <StepSunResponse
-              value={state.sunResponse}
-              onChange={(v) => dispatch({ type: 'SET_SUN_RESPONSE', value: v })}
-              onContinue={goNext}
-              onBack={goBack}
-            />
-          )}
-
-          {state.step === 4 && (
             <StepUndertone
               value={state.skinUndertone}
               onChange={(v) => dispatch({ type: 'SET_UNDERTONE', value: v })}
@@ -535,25 +519,63 @@ export function OnboardingWizard({
             />
           )}
 
+          {state.step === 4 && (
+            <StepSunResponse
+              value={state.sunResponse}
+              onChange={(v) => dispatch({ type: 'SET_SUN_RESPONSE', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
           {state.step === 5 && (
-            <StepPihFrequency
-              value={state.pihFrequency}
-              onChange={(v) => dispatch({ type: 'SET_PIH_FREQUENCY', value: v })}
-              onContinue={handlePihContinue}
+            <StepSkinTypeSelfId
+              value={(state.skinType || null) as SkinType | null}
+              onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
+              onContinue={goNext}
               onBack={goBack}
             />
           )}
 
           {state.step === 6 && (
-            <StepPihDuration
-              value={state.pihDuration}
-              onChange={(v) => dispatch({ type: 'SET_PIH_DURATION', value: v })}
+            <StepPrimaryConcerns
+              value={state.primaryConcerns}
+              onChange={(v) => dispatch({ type: 'SET_PRIMARY_CONCERNS', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
           {state.step === 7 && (
+            <StepSkinGoals
+              value={state.goals}
+              onChange={(v) => dispatch({ type: 'SET_GOALS', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 8 && (
+            <StepExperienceLevel
+              value={state.skincareExperience}
+              onChange={(v) => dispatch({ type: 'SET_EXPERIENCE', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 9 && (
+            <StepPihFrequency
+              value={state.pihFrequency}
+              duration={state.pihDuration}
+              onChange={(v) => dispatch({ type: 'SET_PIH_FREQUENCY', value: v })}
+              onDurationChange={(v) => dispatch({ type: 'SET_PIH_DURATION', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 10 && (
             <StepUnevenPatches
               value={state.unevenPatches}
               onChange={(v) => dispatch({ type: 'SET_UNEVEN_PATCHES', value: v })}
@@ -562,19 +584,12 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 8 && (
+          {state.step === 11 && (
             <StepProductReactivity
               value={state.productReactivity}
-              onChange={(v) => dispatch({ type: 'SET_PRODUCT_REACTIVITY', value: v })}
-              onContinue={goNext}
-              onBack={goBack}
-            />
-          )}
-
-          {state.step === 9 && (
-            <StepReactionHistory
               historyValue={state.inflammatoryHistory}
               severityValue={state.productReactionSeverity}
+              onChange={(v) => dispatch({ type: 'SET_PRODUCT_REACTIVITY', value: v })}
               onHistoryChange={(v) => dispatch({ type: 'SET_INFLAMMATORY_HISTORY', value: v })}
               onSeverityChange={(v) => dispatch({ type: 'SET_PRODUCT_REACTION_SEVERITY', value: v })}
               onContinue={goNext}
@@ -582,7 +597,16 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 10 && (
+          {state.step === 12 && (
+            <StepRecoveryTime
+              value={state.recoveryTime}
+              onChange={(v) => dispatch({ type: 'SET_RECOVERY_TIME', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 13 && (
             <StepSkinType
               value={state.skinType}
               onChange={(v) => dispatch({ type: 'SET_SKIN_TYPE', value: v })}
@@ -591,7 +615,16 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 11 && (
+          {state.step === 14 && (
+            <StepDehydrationCheck
+              value={state.oilyAndTight}
+              onChange={(v) => dispatch({ type: 'SET_OILY_AND_TIGHT', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 15 && (
             <StepBreakouts
               pattern={state.breakoutPattern}
               areas={state.breakoutAreas}
@@ -602,40 +635,55 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 12 && (
+          {state.step === 16 && (
             <StepRedness
               pattern={state.rednessPattern}
               areas={state.rednessAreas}
+              flushTriggers={state.flushTriggers}
+              flushFadeSpeed={state.flushFadeSpeed}
               onPatternChange={(v) => dispatch({ type: 'SET_REDNESS_PATTERN', value: v })}
               onAreasChange={(v) => dispatch({ type: 'SET_REDNESS_AREAS', value: v })}
+              onFlushTriggersChange={(v) => dispatch({ type: 'SET_FLUSH_TRIGGERS', value: v })}
+              onFlushFadeSpeedChange={(v) => dispatch({ type: 'SET_FLUSH_FADE_SPEED', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
-          {state.step === 13 && (
-            <StepFlushing
-              triggers={state.flushTriggers}
-              fadeSpeed={state.flushFadeSpeed}
-              onTriggersChange={(v) => dispatch({ type: 'SET_FLUSH_TRIGGERS', value: v })}
-              onFadeSpeedChange={(v) => dispatch({ type: 'SET_FLUSH_FADE_SPEED', value: v })}
+          {state.step === 17 && (
+            <StepCurrentState
+              normal={state.currentStateNormal}
+              diffs={state.currentStateDiffs}
+              onNormalChange={(v) => dispatch({ type: 'SET_CURRENT_STATE_NORMAL', value: v })}
+              onDiffsChange={(v) => dispatch({ type: 'SET_CURRENT_STATE_DIFFS', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
-          {state.step === 14 && (
-            <StepMelasma
-              pattern={state.melasmaPattern}
-              triggers={state.melasmaTriggers}
-              onPatternChange={(v) => dispatch({ type: 'SET_MELASMA_PATTERN', value: v })}
-              onTriggersChange={(v) => dispatch({ type: 'SET_MELASMA_TRIGGERS', value: v })}
+          {state.step === 18 && (
+            <StepRecentChange
+              answer={state.recentChangeAnswer}
+              detail={state.recentChangeDetail}
+              onAnswerChange={(v) => dispatch({ type: 'SET_RECENT_CHANGE_ANSWER', value: v })}
+              onDetailChange={(v) => dispatch({ type: 'SET_RECENT_CHANGE_DETAIL', value: v })}
               onContinue={goNext}
               onBack={goBack}
             />
           )}
 
-          {state.step === 15 && (
+          {state.step === 19 && (
+            <StepDarkerAreas
+              areas={state.darkerAreas}
+              triggers={state.darkerAreaTriggers}
+              onAreasChange={(v) => dispatch({ type: 'SET_DARKER_AREAS', value: v })}
+              onTriggersChange={(v) => dispatch({ type: 'SET_DARKER_AREA_TRIGGERS', value: v })}
+              onContinue={goNext}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 20 && (
             <StepEnvironment
               city={state.city}
               countryCode={state.countryCode}
@@ -655,7 +703,7 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 16 && (
+          {state.step === 21 && (
             <StepTools
               homeDevices={state.homeDevices}
               professionalTreatments={state.professionalTreatments}
@@ -666,17 +714,17 @@ export function OnboardingWizard({
             />
           )}
 
-          {state.step === 17 && (
+          {state.step === 22 && (
             <StepInterpretation onContinue={goNext} onBack={goBack} />
           )}
 
-          {state.step === 18 && <StepCompletion onContinue={goNext} onBack={goBack} />}
+          {state.step === 23 && <StepCompletion onContinue={goNext} onBack={goBack} />}
 
-          {state.step === 19 && (
+          {state.step === 24 && (
             <StepDossierIntro onContinue={goNext} onBack={goBack} />
           )}
 
-          {state.step === 20 && (
+          {state.step === 25 && (
             <StepProducts onComplete={completeAndEnterStudio} />
           )}
 

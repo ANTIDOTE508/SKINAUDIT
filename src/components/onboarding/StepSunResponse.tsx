@@ -21,15 +21,6 @@ const OPTIONS = [
   "My skin doesn't noticeably change in the sun",
 ].map((label, i) => ({ value: i + 1, label }))
 
-const SUB_COPY: React.CSSProperties = {
-  fontFamily: 'var(--font-body)',
-  fontWeight: 300,
-  fontSize: '0.9375rem',
-  lineHeight: 1.6,
-  color: 'var(--color-alabaster-400)',
-  margin: '0 0 2.25rem',
-}
-
 type Props = {
   value: number | null
   onChange: (v: number) => void
@@ -201,10 +192,6 @@ export function StepSunResponse({ value, onChange, onContinue, onBack }: Props) 
         >
           When you spend time in direct sun without protection, what usually happens to your skin?
         </h2>
-
-        <p data-reveal style={SUB_COPY}>
-          This helps us calibrate your natural sun response.
-        </p>
 
         <span
           id={groupLabelId}

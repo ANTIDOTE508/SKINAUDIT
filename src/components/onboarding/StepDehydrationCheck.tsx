@@ -3,31 +3,32 @@
 import { useRef, useEffect, useState, useTransition, useId } from 'react'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
-import { DurationPill } from './DurationPill'
-import { savePihDuration } from '@/app/actions/onboarding'
-import type { PIHDuration } from '@prisma/client'
+import { RadioPill } from './RadioPill'
+import { saveDehydrationCheck } from '@/app/actions/onboarding'
+import type { OilyAndTight } from '@prisma/client'
 
-const OPTIONS: { value: PIHDuration; label: string }[] = [
-  { value: 'LT_1MO', label: 'A few weeks' },
-  { value: 'ONE_3MO', label: 'A month or two' },
-  { value: 'THREE_6MO', label: 'Several months' },
-  { value: 'GT_6MO', label: "They stay for a long time, or don't fully fade" },
+const OPTIONS: { value: OilyAndTight; title: string }[] = [
+  { value: 'OFTEN', title: 'Often' },
+  { value: 'SOMETIMES', title: 'Sometimes' },
+  { value: 'RARELY', title: 'Rarely' },
+  { value: 'NEVER', title: 'Never' },
+  { value: 'UNSURE', title: "I'm not sure" },
 ]
 
 type Props = {
-  value: PIHDuration | null
-  onChange: (v: PIHDuration) => void
+  value: OilyAndTight | null
+  onChange: (v: OilyAndTight) => void
   onContinue: () => void
   onBack: () => void
 }
 
-export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) {
+export function StepDehydrationCheck({ value, onChange, onContinue, onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  const groupLabelId = useId()
+  const labelId = useId()
 
   useEffect(() => {
     const node = rootRef.current
@@ -67,12 +68,15 @@ export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) 
     pills?.[next]?.focus()
   }
 
-  // Duration is optional — a null answer is valid and stored as-is.
   const handleContinue = () => {
+    if (!value) {
+      setError('Please choose the answer closest to your experience.')
+      return
+    }
     setError(null)
     startTransition(async () => {
       try {
-        await savePihDuration(value)
+        await saveDehydrationCheck(value)
         onContinue()
       } catch {
         setError('Unable to save. Please try again.')
@@ -82,27 +86,7 @@ export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) 
 
   return (
     <div ref={rootRef}>
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '30rem' }}>
-        <span
-          data-reveal
-          aria-hidden="true"
-          style={{
-            display: 'inline-block',
-            padding: '2px 8px',
-            marginBottom: '1rem',
-            borderRadius: 'var(--radius-badge)',
-            border: '1px solid var(--color-sienna-600)',
-            fontFamily: 'var(--font-body)',
-            fontSize: '9px',
-            fontWeight: 500,
-            letterSpacing: '0.12em',
-            color: 'var(--color-sienna-500)',
-            textTransform: 'uppercase',
-          }}
-        >
-          Follow-up
-        </span>
-
+      <div style={{ maxWidth: '30rem' }}>
         <h2
           data-reveal
           style={{
@@ -115,11 +99,12 @@ export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) 
             margin: '0 0 2.25rem',
           }}
         >
-          When those marks appear, how long do they typically take to fade?
+          Does your skin ever feel tight or lacking in comfort even when it looks
+          oily or shiny?
         </h2>
 
         <span
-          id={groupLabelId}
+          id={labelId}
           style={{
             position: 'absolute',
             width: '1px',
@@ -130,29 +115,32 @@ export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) 
             whiteSpace: 'nowrap',
           }}
         >
-          How long dark marks usually last before they fade
+          Whether your skin feels tight or uncomfortable even when it looks oily
         </span>
 
         <div
           ref={listRef}
           role="radiogroup"
-          aria-labelledby={groupLabelId}
+          aria-labelledby={labelId}
+          aria-required="true"
           style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '0.625rem',
+            marginBottom: '2.25rem',
           }}
         >
           {OPTIONS.map((option, index) => {
             const isSelected = value === option.value
             return (
               <div key={option.value} data-reveal>
-                <DurationPill
+                <RadioPill
                   value={option.value}
-                  label={option.label}
+                  title={option.title}
+                  ariaLabel={option.title}
                   selected={isSelected}
-                  onChange={(v) => onChange(v as PIHDuration)}
-                  tabIndex={isSelected || (value == null && index === 0) ? 0 : -1}
+                  onChange={(v) => onChange(v as OilyAndTight)}
+                  tabIndex={isSelected || (!value && index === 0) ? 0 : -1}
                   onKeyDown={(e) => handleKeyDown(e, index)}
                 />
               </div>
@@ -163,23 +151,13 @@ export function StepPihDuration({ value, onChange, onContinue, onBack }: Props) 
         {error && (
           <p
             role="alert"
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.8125rem',
-              color: 'var(--color-blush-500)',
-              marginTop: '1rem',
-              marginBottom: 0,
-            }}
+            style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-blush-500)', marginBottom: '1rem' }}
           >
             {error}
           </p>
         )}
 
-        <StepFooter
-          onContinue={handleContinue}
-          onBack={onBack}
-          isLoading={isPending}
-        />
+        <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={!value} />
       </div>
     </div>
   )

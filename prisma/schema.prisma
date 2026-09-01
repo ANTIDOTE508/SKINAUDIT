@@ -37,6 +37,15 @@ enum SkinType {
   @@schema("app")
 }
 
+enum SkincareExperience {
+  NEW
+  SOMEWHAT_EXPERIENCED
+  EXPERIENCED
+  OBSESSIVE
+
+  @@schema("app")
+}
+
 enum SkinUndertone {
   WARM
   COOL
@@ -83,9 +92,10 @@ enum ProductReactivity {
 }
 
 enum InflammatoryHistory {
-  DIAGNOSED
-  SUSPECTED
-  NO
+  FREQUENTLY
+  OCCASIONALLY
+  RARELY
+  NEVER
 
   @@schema("app")
 }
@@ -94,6 +104,27 @@ enum ProductReactionSeverity {
   REPEATED
   ONCE_OR_TWICE
   NO
+
+  @@schema("app")
+}
+
+enum RecoveryTime {
+  FEW_HOURS
+  NEXT_DAY
+  FEW_DAYS
+  WEEK_OR_LONGER
+  VARIES
+  UNSURE
+
+  @@schema("app")
+}
+
+enum OilyAndTight {
+  OFTEN
+  SOMETIMES
+  RARELY
+  NEVER
+  UNSURE
 
   @@schema("app")
 }
@@ -120,15 +151,6 @@ enum FlushFadeSpeed {
   MINUTES
   UP_TO_HOUR
   HOURS_OR_MORE
-
-  @@schema("app")
-}
-
-enum MelasmaPattern {
-  SYMMETRICAL
-  ASYMMETRICAL
-  FADED
-  NONE
 
   @@schema("app")
 }
@@ -447,7 +469,6 @@ model UserProfile {
   genderIdentity        GenderIdentity?  @map("gender_identity")
   skinType              SkinType?        @map("skin_type")
   skinToneScale         Int?             @map("skin_tone_scale")
-  vitiligo              Boolean?         @map("vitiligo")
   sunResponse           Int?             @map("sun_response")
   skinUndertone         SkinUndertone?   @map("skin_undertone")
   pihFrequency          PIHFrequency?    @map("pih_frequency")
@@ -456,14 +477,23 @@ model UserProfile {
   productReactivity     ProductReactivity? @map("product_reactivity")
   inflammatoryHistory   InflammatoryHistory? @map("inflammatory_history")
   productReactionSeverity ProductReactionSeverity? @map("product_reaction_severity")
+  recoveryTime          RecoveryTime?    @map("recovery_time")
+  oilyAndTight          OilyAndTight?    @map("oily_and_tight")
   breakoutPattern       BreakoutPattern? @map("breakout_pattern")
   breakoutAreas         String[]         @map("breakout_areas")
   rednessPattern        RednessPattern?  @map("redness_pattern")
   rednessAreas          String[]         @map("redness_areas")
   flushTriggers         String[]         @map("flush_triggers")
   flushFadeSpeed        FlushFadeSpeed?  @map("flush_fade_speed")
-  melasmaPattern        MelasmaPattern?  @map("melasma_pattern")
-  melasmaTriggers       String[]         @map("melasma_triggers")
+  darkerAreas           String?          @map("darker_areas")
+  darkerAreaTriggers    String[]         @map("darker_area_triggers")
+  currentStateNormal    String?          @map("current_state_normal")
+  currentStateDiffs     String[]         @map("current_state_diffs")
+  recentChange          Boolean?         @map("recent_change")
+  recentChangeDetail    String[]         @map("recent_change_detail")
+  primaryConcerns       String[]         @map("primary_concerns")
+  goals                 String[]         @map("goals")
+  skincareExperience    SkincareExperience? @map("skincare_experience")
   onboardingStep        Int              @default(0) @map("onboarding_step")
   onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
   createdAt             DateTime         @default(now()) @map("created_at")

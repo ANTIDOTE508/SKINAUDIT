@@ -22,7 +22,9 @@ import type {
   BreakoutPattern,
   RednessPattern,
   FlushFadeSpeed,
-  MelasmaPattern,
+  SkincareExperience,
+  RecoveryTime,
+  OilyAndTight,
 } from '@prisma/client'
 import {
   PREFERRED_NAME_MAX_LENGTH,
@@ -104,10 +106,9 @@ export async function saveIdentity(payload: IdentityPayload) {
   return { ok: true }
 }
 
-// ─── Step 2 — Skin tone & vitiligo ────────────────────────────
+// ─── Step 2 — Skin tone ────────────────────────────────────────
 export type SkinTonePayload = {
   skinToneScale: number
-  vitiligo: boolean
 }
 
 export async function saveSkinTone(payload: SkinTonePayload) {
@@ -115,14 +116,11 @@ export async function saveSkinTone(payload: SkinTonePayload) {
 
   const { skinToneScale } = payload
 
-  // Tone is required to continue; the toggle defaults to off and is always
-  // valid, so it is simply coerced to a boolean.
   if (!isValidSkinToneScale(skinToneScale)) {
     throw new Error('Invalid skin tone selection')
   }
-  const vitiligo = payload.vitiligo === true
 
-  const values = { skinToneScale, vitiligo }
+  const values = { skinToneScale }
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
@@ -139,7 +137,165 @@ export async function saveSkinTone(payload: SkinTonePayload) {
   return { ok: true }
 }
 
-// ─── Step 10 — Skin type (inferred from a behavioural scenario) ─
+// ─── Step 5 — Skin type self-identification (early, pre-behavioural) ─
+/**
+ * First-pass skin type: the user's own read of their skin, asked before any
+ * behavioural question. Writes the same `skinType` column as saveSkinProfile
+ * (Step 12), which can later refine it from a behavioural scenario.
+ */
+const SKIN_TYPE_VALUES: SkinType[] = [
+  'BALANCED',
+  'DRY',
+  'OILY',
+  'COMBINATION',
+  'SENSITIVE',
+  'ACNE_PRONE',
+  'DEHYDRATED',
+]
+
+export async function saveSkinTypeSelfId(skinType: SkinType) {
+  const user = await requireSession()
+
+  if (!skinType || !SKIN_TYPE_VALUES.includes(skinType)) {
+    throw new Error('Invalid skin type selection')
+  }
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      skinType,
+      onboardingStep: 5,
+    },
+    update: {
+      skinType,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 5)
+
+  return { ok: true }
+}
+
+// ─── Step 6 — Primary concerns (multi-select, no maximum) ─────
+const PRIMARY_CONCERN_VALUES = [
+  'acne_breakouts',
+  'aging_fine_lines',
+  'pigmentation_dark_spots',
+  'dryness_dehydration',
+  'sensitivity_reactivity',
+  'redness_rosacea',
+  'uneven_texture_pores',
+  'dullness',
+] as const
+
+export async function savePrimaryConcerns(primaryConcerns: string[]) {
+  const user = await requireSession()
+
+  const list = Array.isArray(primaryConcerns) ? primaryConcerns : []
+  if (list.length === 0) throw new Error('At least one concern is required')
+  if (list.some((c) => !PRIMARY_CONCERN_VALUES.includes(c as never))) {
+    throw new Error('Invalid concern selection')
+  }
+  // De-dupe while preserving the user's selection order.
+  const concerns = [...new Set(list)]
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      primaryConcerns: concerns,
+      onboardingStep: 6,
+    },
+    update: {
+      primaryConcerns: concerns,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 6)
+
+  return { ok: true }
+}
+
+// ─── Step 7 — Skin goals (multi-select, max 3, aspirational) ──
+const GOAL_VALUES = [
+  'lasting_hydration',
+  'barrier_strength',
+  'even_balanced_tone',
+  'reduced_redness',
+  'anti_aging_longevity',
+  'clearer_skin_acne_control',
+  'brighter_radiant_skin',
+  'refined_pores_texture',
+  'firmer_elastic_skin',
+] as const
+
+const MAX_GOALS = 3
+
+export async function saveSkinGoals(goals: string[]) {
+  const user = await requireSession()
+
+  const list = Array.isArray(goals) ? goals : []
+  if (list.length === 0) throw new Error('At least one goal is required')
+  if (list.some((g) => !GOAL_VALUES.includes(g as never))) {
+    throw new Error('Invalid goal selection')
+  }
+  // De-dupe (keeping selection order), then enforce the cap server-side.
+  const deduped = [...new Set(list)]
+  if (deduped.length > MAX_GOALS) {
+    throw new Error(`Choose at most ${MAX_GOALS} goals`)
+  }
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      goals: deduped,
+      onboardingStep: 7,
+    },
+    update: {
+      goals: deduped,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 7)
+
+  return { ok: true }
+}
+
+// ─── Step 8 — Experience level (single select) ────────────────
+const EXPERIENCE_VALUES: SkincareExperience[] = [
+  'NEW',
+  'SOMEWHAT_EXPERIENCED',
+  'EXPERIENCED',
+  'OBSESSIVE',
+]
+
+export async function saveExperienceLevel(skincareExperience: SkincareExperience) {
+  const user = await requireSession()
+
+  if (!skincareExperience || !EXPERIENCE_VALUES.includes(skincareExperience)) {
+    throw new Error('Invalid experience level selection')
+  }
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      skincareExperience,
+      onboardingStep: 8,
+    },
+    update: {
+      skincareExperience,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 8)
+
+  return { ok: true }
+}
+
+// ─── Step 13 — Skin type (inferred from a behavioural scenario) ─
 export type SkinProfilePayload = {
   skinType: SkinType
 }
@@ -154,14 +310,47 @@ export async function saveSkinProfile(payload: SkinProfilePayload) {
     create: {
       userId: user.id,
       skinType: payload.skinType,
-      onboardingStep: 10,
+      onboardingStep: 13,
     },
     update: {
       skinType: payload.skinType,
     },
   })
 
-  await bumpOnboardingStep(user.id, 10)
+  await bumpOnboardingStep(user.id, 13)
+
+  return { ok: true }
+}
+
+// ─── Step 14 — Dehydration check (single select) ──────────────
+const OILY_AND_TIGHT_VALUES: OilyAndTight[] = [
+  'OFTEN',
+  'SOMETIMES',
+  'RARELY',
+  'NEVER',
+  'UNSURE',
+]
+
+export async function saveDehydrationCheck(oilyAndTight: OilyAndTight) {
+  const user = await requireSession()
+
+  if (!oilyAndTight || !OILY_AND_TIGHT_VALUES.includes(oilyAndTight)) {
+    throw new Error('Invalid dehydration-check selection')
+  }
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      oilyAndTight,
+      onboardingStep: 14,
+    },
+    update: {
+      oilyAndTight,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 14)
 
   return { ok: true }
 }
@@ -213,59 +402,45 @@ export async function saveUndertone(undertone: SkinUndertone | null) {
   return { ok: true }
 }
 
-// ─── Step 5 — PIH frequency (dark marks after healing) ───────
-export async function savePihFrequency(pihFrequency: PIHFrequency) {
+// ─── Step 9 — PIH frequency (+ inline duration follow-up) ─────
+// The duration follow-up is shown on the same screen when marks appear
+// "often" or "sometimes"; for "rarely" / "never" it is skipped and any
+// previously-saved duration is cleared.
+export type PihFrequencyPayload = {
+  pihFrequency: PIHFrequency
+  pihDuration: PIHDuration | null
+}
+
+export async function savePihFrequency(payload: PihFrequencyPayload) {
   const user = await requireSession()
 
-  if (!pihFrequency) throw new Error('PIH frequency is required')
+  if (!payload.pihFrequency) throw new Error('PIH frequency is required')
 
-  // "rarely" / "never" skip the follow-up duration screen (Screen 08), so
-  // any previously-saved duration must be cleared. "often" / "sometimes"
-  // leave it untouched (undefined) — the user is about to land on Screen 08.
-  const skipsDuration = pihFrequency === 'RARELY' || pihFrequency === 'NEVER'
+  const followUp =
+    payload.pihFrequency === 'OFTEN' || payload.pihFrequency === 'SOMETIMES'
+  // Duration is optional even when the follow-up applies.
+  const pihDuration = followUp ? payload.pihDuration : null
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
-      pihFrequency,
-      pihDuration: skipsDuration ? null : undefined,
-      onboardingStep: 5,
-    },
-    update: {
-      pihFrequency,
-      pihDuration: skipsDuration ? null : undefined,
-    },
-  })
-
-  await bumpOnboardingStep(user.id, 5)
-
-  return { ok: true }
-}
-
-// ─── Step 6 — PIH duration (follow-up; only after often / sometimes) ──
-export async function savePihDuration(pihDuration: PIHDuration | null) {
-  const user = await requireSession()
-
-  // Optional — a null answer is valid and stored as-is.
-  await prisma.userProfile.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
+      pihFrequency: payload.pihFrequency,
       pihDuration,
-      onboardingStep: 6,
+      onboardingStep: 9,
     },
     update: {
+      pihFrequency: payload.pihFrequency,
       pihDuration,
     },
   })
 
-  await bumpOnboardingStep(user.id, 6)
+  await bumpOnboardingStep(user.id, 9)
 
   return { ok: true }
 }
 
-// ─── Step 7 — Tan pattern (even tan vs. uneven patches) ──────
+// ─── Step 10 — Tan pattern (even tan vs. uneven patches) ──────
 export async function saveUnevenPatches(unevenPatches: TanPattern) {
   const user = await requireSession()
 
@@ -276,58 +451,48 @@ export async function saveUnevenPatches(unevenPatches: TanPattern) {
     create: {
       userId: user.id,
       unevenPatches,
-      onboardingStep: 7,
+      onboardingStep: 10,
     },
     update: {
       unevenPatches,
     },
   })
 
-  await bumpOnboardingStep(user.id, 7)
+  await bumpOnboardingStep(user.id, 10)
 
   return { ok: true }
 }
 
-// ─── Step 8 — Product reactivity (stinging on new actives) ────
-export async function saveProductReactivity(productReactivity: ProductReactivity) {
-  const user = await requireSession()
-
-  if (!productReactivity) throw new Error('Product reactivity answer is required')
-
-  await prisma.userProfile.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      productReactivity,
-      onboardingStep: 8,
-    },
-    update: {
-      productReactivity,
-    },
-  })
-
-  await bumpOnboardingStep(user.id, 8)
-
-  return { ok: true }
+// ─── Step 11 — Product reactivity (+ inline reaction-history follow-up) ──
+// The two-question reaction-history follow-up is shown on the same screen
+// when the answer is FREQUENT_STING or MILD_TRANSIENT; otherwise it is
+// skipped and any previously-saved answers are cleared.
+export type ProductReactivityPayload = {
+  productReactivity: ProductReactivity
+  inflammatoryHistory: InflammatoryHistory | null
+  productReactionSeverity: ProductReactionSeverity | null
 }
 
-// ─── Step 9 — Reaction history (conditional; two questions) ───
-// Shown only when product reactivity was FREQUENT_STING or MILD_TRANSIENT.
-export type ReactionHistoryPayload = {
-  inflammatoryHistory: InflammatoryHistory
-  productReactionSeverity: ProductReactionSeverity
-}
-
-export async function saveReactionHistory(payload: ReactionHistoryPayload) {
+export async function saveProductReactivity(payload: ProductReactivityPayload) {
   const user = await requireSession()
 
-  if (!payload.inflammatoryHistory || !payload.productReactionSeverity) {
-    throw new Error('Both reaction-history answers are required')
+  if (!payload.productReactivity) {
+    throw new Error('Product reactivity answer is required')
   }
 
+  const followUp =
+    payload.productReactivity === 'FREQUENT_STING' ||
+    payload.productReactivity === 'MILD_TRANSIENT'
+  if (followUp && (!payload.inflammatoryHistory || !payload.productReactionSeverity)) {
+    throw new Error('Both follow-up answers are required')
+  }
+  const inflammatoryHistory = followUp ? payload.inflammatoryHistory : null
+  const productReactionSeverity = followUp ? payload.productReactionSeverity : null
+
   const values = {
-    inflammatoryHistory: payload.inflammatoryHistory,
-    productReactionSeverity: payload.productReactionSeverity,
+    productReactivity: payload.productReactivity,
+    inflammatoryHistory,
+    productReactionSeverity,
   }
 
   await prisma.userProfile.upsert({
@@ -335,17 +500,51 @@ export async function saveReactionHistory(payload: ReactionHistoryPayload) {
     create: {
       userId: user.id,
       ...values,
-      onboardingStep: 9,
+      onboardingStep: 11,
     },
     update: values,
   })
 
-  await bumpOnboardingStep(user.id, 9)
+  await bumpOnboardingStep(user.id, 11)
 
   return { ok: true }
 }
 
-// ─── Step 11 — Recurring breakouts (+ inline area follow-up) ──
+// ─── Step 12 — Recovery time (single select) ───────────────────
+const RECOVERY_TIME_VALUES: RecoveryTime[] = [
+  'FEW_HOURS',
+  'NEXT_DAY',
+  'FEW_DAYS',
+  'WEEK_OR_LONGER',
+  'VARIES',
+  'UNSURE',
+]
+
+export async function saveRecoveryTime(recoveryTime: RecoveryTime) {
+  const user = await requireSession()
+
+  if (!recoveryTime || !RECOVERY_TIME_VALUES.includes(recoveryTime)) {
+    throw new Error('Invalid recovery time selection')
+  }
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      recoveryTime,
+      onboardingStep: 12,
+    },
+    update: {
+      recoveryTime,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 12)
+
+  return { ok: true }
+}
+
+// ─── Step 15 — Recurring breakouts (+ inline area follow-up) ──
 export type BreakoutsPayload = {
   breakoutPattern: BreakoutPattern
   breakoutAreas: string[]
@@ -369,7 +568,7 @@ export async function saveBreakouts(payload: BreakoutsPayload) {
       userId: user.id,
       breakoutPattern: payload.breakoutPattern,
       breakoutAreas,
-      onboardingStep: 11,
+      onboardingStep: 15,
     },
     update: {
       breakoutPattern: payload.breakoutPattern,
@@ -377,15 +576,20 @@ export async function saveBreakouts(payload: BreakoutsPayload) {
     },
   })
 
-  await bumpOnboardingStep(user.id, 11)
+  await bumpOnboardingStep(user.id, 15)
 
   return { ok: true }
 }
 
-// ─── Step 12 — Persistent facial redness (+ inline area follow-up) ──
+// ─── Step 16 — Persistent facial redness (+ inline follow-up) ──
+// When redness is PERSISTENT or INTERMITTENT, the same screen also asks for
+// the affected areas, the flushing triggers, and how quickly redness fades.
+// For OCCASIONAL / NONE all of that is skipped and cleared.
 export type RednessPayload = {
   rednessPattern: RednessPattern
   rednessAreas: string[]
+  flushTriggers: string[]
+  flushFadeSpeed: FlushFadeSpeed | null
 }
 
 export async function saveRedness(payload: RednessPayload) {
@@ -393,111 +597,239 @@ export async function saveRedness(payload: RednessPayload) {
 
   if (!payload.rednessPattern) throw new Error('Redness pattern is required')
 
+  const followUp =
+    payload.rednessPattern === 'PERSISTENT' ||
+    payload.rednessPattern === 'INTERMITTENT'
+
   const areas = Array.isArray(payload.rednessAreas) ? payload.rednessAreas : []
   if (areas.some((a) => typeof a !== 'string' || a.trim().length === 0)) {
     throw new Error('Invalid redness area selection')
   }
-  // The area follow-up only applies to the two "Yes" answers.
-  const rednessAreas =
-    payload.rednessPattern === 'PERSISTENT' || payload.rednessPattern === 'INTERMITTENT'
-      ? areas
-      : []
-
-  await prisma.userProfile.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      rednessPattern: payload.rednessPattern,
-      rednessAreas,
-      onboardingStep: 12,
-    },
-    update: {
-      rednessPattern: payload.rednessPattern,
-      rednessAreas,
-    },
-  })
-
-  await bumpOnboardingStep(user.id, 12)
-
-  return { ok: true }
-}
-
-// ─── Step 13 — Flushing triggers + fade speed (conditional) ───
-// Shown only when redness pattern was PERSISTENT or INTERMITTENT.
-export type FlushingPayload = {
-  flushTriggers: string[]
-  flushFadeSpeed: FlushFadeSpeed
-}
-
-export async function saveFlushing(payload: FlushingPayload) {
-  const user = await requireSession()
-
-  const triggers = Array.isArray(payload.flushTriggers) ? payload.flushTriggers : []
-  if (triggers.length === 0) throw new Error('At least one flushing trigger is required')
-  if (triggers.some((t) => typeof t !== 'string' || t.trim().length === 0)) {
+  const rawTriggers = Array.isArray(payload.flushTriggers) ? payload.flushTriggers : []
+  if (rawTriggers.some((t) => typeof t !== 'string' || t.trim().length === 0)) {
     throw new Error('Invalid flushing trigger selection')
   }
-  if (!payload.flushFadeSpeed) throw new Error('Flush fade speed is required')
+
+  if (followUp) {
+    if (areas.length === 0) throw new Error('At least one redness area is required')
+    if (rawTriggers.length === 0) {
+      throw new Error('At least one flushing trigger is required')
+    }
+    if (!payload.flushFadeSpeed) throw new Error('Flush fade speed is required')
+  }
+
+  const rednessAreas = followUp ? areas : []
   // "none" is exclusive — normalise a mixed selection down to just "none".
-  const flushTriggers = triggers.includes('none') ? ['none'] : triggers
+  const flushTriggers = followUp
+    ? rawTriggers.includes('none')
+      ? ['none']
+      : rawTriggers
+    : []
+  const flushFadeSpeed = followUp ? payload.flushFadeSpeed : null
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
+      rednessPattern: payload.rednessPattern,
+      rednessAreas,
       flushTriggers,
-      flushFadeSpeed: payload.flushFadeSpeed,
-      onboardingStep: 13,
+      flushFadeSpeed,
+      onboardingStep: 16,
     },
     update: {
+      rednessPattern: payload.rednessPattern,
+      rednessAreas,
       flushTriggers,
-      flushFadeSpeed: payload.flushFadeSpeed,
+      flushFadeSpeed,
     },
   })
 
-  await bumpOnboardingStep(user.id, 13)
+  await bumpOnboardingStep(user.id, 16)
 
   return { ok: true }
 }
 
-// ─── Step 14 — Symmetrical hyperpigmentation (+ inline trigger follow-up) ──
-export type MelasmaPayload = {
-  melasmaPattern: MelasmaPattern
-  melasmaTriggers: string[]
+// ─── Step 17 — Current state (single select + inline follow-up) ─
+// Prevents a temporary state (a flare, hormonal shift, stress) from being
+// recorded as the permanent profile. `currentStateDiffs` is only kept when
+// the answer is "mostly" or "no_different".
+const CURRENT_STATE_NORMAL_VALUES = new Set([
+  'yes_typical',
+  'mostly',
+  'no_different',
+  'unsure',
+])
+const CURRENT_STATE_DIFF_VALUES = new Set([
+  'breakouts_congestion',
+  'dryness_tightness',
+  'oiliness',
+  'redness_irritation',
+  'dark_marks_uneven_tone',
+  'something_else',
+])
+const CURRENT_STATE_FOLLOWUP = new Set(['mostly', 'no_different'])
+
+export type CurrentStatePayload = {
+  currentStateNormal: string
+  currentStateDiffs: string[]
 }
 
-export async function saveMelasma(payload: MelasmaPayload) {
+export async function saveCurrentState(payload: CurrentStatePayload) {
   const user = await requireSession()
 
-  if (!payload.melasmaPattern) throw new Error('Melasma pattern is required')
-
-  const triggers = Array.isArray(payload.melasmaTriggers) ? payload.melasmaTriggers : []
-  if (triggers.some((t) => typeof t !== 'string' || t.trim().length === 0)) {
-    throw new Error('Invalid melasma trigger selection')
+  if (!CURRENT_STATE_NORMAL_VALUES.has(payload.currentStateNormal)) {
+    throw new Error('Invalid current-state selection')
   }
-  // The trigger follow-up only applies to the "symmetrical" answer.
-  const melasmaTriggers = payload.melasmaPattern === 'SYMMETRICAL' ? triggers : []
+  const rawDiffs = Array.isArray(payload.currentStateDiffs) ? payload.currentStateDiffs : []
+  if (rawDiffs.some((d) => !CURRENT_STATE_DIFF_VALUES.has(d))) {
+    throw new Error('Invalid current-state difference selection')
+  }
+  const followUp = CURRENT_STATE_FOLLOWUP.has(payload.currentStateNormal)
+  if (followUp && rawDiffs.length === 0) {
+    throw new Error('Please select what has been different lately')
+  }
+  const currentStateDiffs = followUp ? [...new Set(rawDiffs)] : []
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
-      melasmaPattern: payload.melasmaPattern,
-      melasmaTriggers,
-      onboardingStep: 14,
+      currentStateNormal: payload.currentStateNormal,
+      currentStateDiffs,
+      onboardingStep: 17,
     },
     update: {
-      melasmaPattern: payload.melasmaPattern,
-      melasmaTriggers,
+      currentStateNormal: payload.currentStateNormal,
+      currentStateDiffs,
     },
   })
 
-  await bumpOnboardingStep(user.id, 14)
+  await bumpOnboardingStep(user.id, 17)
 
   return { ok: true }
 }
 
-// ─── Step 15 — Environment ────────────────────────────────────
+// ─── Step 18 — Recent change (single select + inline follow-up) ─
+// Captures regimen/environment context: a behavioural shift alongside a
+// routine or environment change is exactly what the audit investigates.
+// `recentChange` stores the boolean; `recentChangeDetail` is kept only when
+// the answer is "yes" or "a_little".
+const RECENT_CHANGE_ANSWER_VALUES = new Set(['yes', 'a_little', 'no', 'unsure'])
+const RECENT_CHANGE_DETAIL_VALUES = new Set([
+  'breakouts_congestion',
+  'dryness_dehydration',
+  'sensitivity_redness',
+  'oiliness',
+  'routine_changed',
+  'environment_diet_changed',
+  'something_else',
+])
+const RECENT_CHANGE_FOLLOWUP = new Set(['yes', 'a_little'])
+
+export type RecentChangePayload = {
+  answer: string
+  recentChangeDetail: string[]
+}
+
+export async function saveRecentChange(payload: RecentChangePayload) {
+  const user = await requireSession()
+
+  if (!RECENT_CHANGE_ANSWER_VALUES.has(payload.answer)) {
+    throw new Error('Invalid recent-change selection')
+  }
+  const rawDetail = Array.isArray(payload.recentChangeDetail) ? payload.recentChangeDetail : []
+  if (rawDetail.some((d) => !RECENT_CHANGE_DETAIL_VALUES.has(d))) {
+    throw new Error('Invalid recent-change detail selection')
+  }
+  const followUp = RECENT_CHANGE_FOLLOWUP.has(payload.answer)
+  if (followUp && rawDetail.length === 0) {
+    throw new Error('Please select what changed')
+  }
+  const recentChangeDetail = followUp ? [...new Set(rawDetail)] : []
+  // "yes" / "a_little" both mean the skin's behaviour has shifted.
+  const recentChange = followUp
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      recentChange,
+      recentChangeDetail,
+      onboardingStep: 18,
+    },
+    update: {
+      recentChange,
+      recentChangeDetail,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 18)
+
+  return { ok: true }
+}
+
+// ─── Step 19 — Darker areas (broad hyperpigmentation, + inline follow-up) ──
+// Captures PIH, sun damage, and post-breakout marks through observable
+// experience only. `darkerAreaTriggers` is kept only when Q1 was a "Yes".
+const DARKER_AREAS_VALUES = new Set([
+  'several_areas',
+  'one_area',
+  'faded',
+  'no',
+])
+const DARKER_AREA_TRIGGER_VALUES = new Set([
+  'sun',
+  'irritation',
+  'breakouts',
+  'no_pattern',
+  'not_applicable',
+])
+const DARKER_AREAS_FOLLOWUP = new Set(['several_areas', 'one_area'])
+
+export type DarkerAreasPayload = {
+  darkerAreas: string
+  darkerAreaTriggers: string[]
+}
+
+export async function saveDarkerAreas(payload: DarkerAreasPayload) {
+  const user = await requireSession()
+
+  if (!DARKER_AREAS_VALUES.has(payload.darkerAreas)) {
+    throw new Error('Invalid darker-areas selection')
+  }
+  const rawTriggers = Array.isArray(payload.darkerAreaTriggers)
+    ? payload.darkerAreaTriggers
+    : []
+  if (rawTriggers.some((t) => !DARKER_AREA_TRIGGER_VALUES.has(t))) {
+    throw new Error('Invalid darker-area trigger selection')
+  }
+  const followUp = DARKER_AREAS_FOLLOWUP.has(payload.darkerAreas)
+  if (followUp && rawTriggers.length === 0) {
+    throw new Error('Please select at least one option')
+  }
+  const darkerAreaTriggers = followUp ? [...new Set(rawTriggers)] : []
+
+  await prisma.userProfile.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      darkerAreas: payload.darkerAreas,
+      darkerAreaTriggers,
+      onboardingStep: 19,
+    },
+    update: {
+      darkerAreas: payload.darkerAreas,
+      darkerAreaTriggers,
+    },
+  })
+
+  await bumpOnboardingStep(user.id, 19)
+
+  return { ok: true }
+}
+
+// ─── Step 20 — Environment ────────────────────────────────────
 export type EnvironmentPayload = {
   city?: string
   countryCode?: string
@@ -528,14 +860,14 @@ export async function saveEnvironment(payload: EnvironmentPayload) {
   })
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 15 } },
-    data: { onboardingStep: 15 },
+    where: { userId: user.id, onboardingStep: { lt: 20 } },
+    data: { onboardingStep: 20 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 16 — Tools & Treatments (+ per-item follow-ups) ─────
+// ─── Step 21 — Tools & Treatments (+ per-item follow-ups) ─────
 export type ToolItem = {
   frequency: ToolUsageFrequency
   lastUsed: ToolLastUsed
@@ -602,33 +934,33 @@ export async function saveToolsAndTreatments(payload: ToolsPayload) {
         ]
       : []),
     prisma.userProfile.updateMany({
-      where: { userId: user.id, onboardingStep: { lt: 16 } },
-      data: { onboardingStep: 16 },
+      where: { userId: user.id, onboardingStep: { lt: 21 } },
+      data: { onboardingStep: 21 },
     }),
   ])
 
   return { ok: true }
 }
 
-// ─── Step 17 — Interpretation notice ──────────────────────────
+// ─── Step 22 — Interpretation notice ──────────────────────────
 /**
  * The interpretation/scope screen carries no user input — acknowledging it
  * only advances the resume marker so returning users land past it instead
- * of re-reading it. `lt: 17` keeps a further-along user from being pulled
+ * of re-reading it. `lt: 22` keeps a further-along user from being pulled
  * backwards if they navigate back to this screen and continue again.
  */
 export async function acknowledgeInterpretation() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 17 } },
-    data: { onboardingStep: 17 },
+    where: { userId: user.id, onboardingStep: { lt: 22 } },
+    data: { onboardingStep: 22 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 18 — "All set" transition ───────────────────────────
+// ─── Step 23 — "All set" transition ───────────────────────────
 /**
  * The "All set" screen is a milestone marker, not the end of onboarding —
  * it sits between the questionnaire and the dossier-building steps.
@@ -638,14 +970,14 @@ export async function acknowledgeAllSet() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 18 } },
-    data: { onboardingStep: 18 },
+    where: { userId: user.id, onboardingStep: { lt: 23 } },
+    data: { onboardingStep: 23 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 19 — Dossier intro ──────────────────────────────────
+// ─── Step 24 — Dossier intro ──────────────────────────────────
 /**
  * Like the interpretation screen, this one carries no user input —
  * acknowledging it only advances the resume marker so returning users land
@@ -655,14 +987,14 @@ export async function acknowledgeDossierIntro() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 19 } },
-    data: { onboardingStep: 19 },
+    where: { userId: user.id, onboardingStep: { lt: 24 } },
+    data: { onboardingStep: 24 },
   })
 
   return { ok: true }
 }
 
-// ─── Step 20 — Product search & add ──────────────────────────
+// ─── Step 25 — Product search & add ──────────────────────────
 export async function searchProducts(query: string) {
   await requireSession()
   if (!query.trim() || query.length < 2) return []
@@ -706,7 +1038,7 @@ export async function completeOnboarding() {
   await prisma.userProfile.updateMany({
     where: { userId: user.id },
     data: {
-      onboardingStep: 20,
+      onboardingStep: 25,
       onboardingCompletedAt: new Date(),
     },
   })
@@ -743,7 +1075,6 @@ export async function getOnboardingStatus() {
     select: {
       skinType: true,
       skinToneScale: true,
-      vitiligo: true,
       sunResponse: true,
       skinUndertone: true,
       pihFrequency: true,

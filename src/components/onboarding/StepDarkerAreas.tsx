@@ -4,42 +4,46 @@ import { useRef, useEffect, useState, useTransition, useId } from 'react'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
 import { RadioPill } from './RadioPill'
-import { saveMelasma } from '@/app/actions/onboarding'
-import type { MelasmaPattern } from '@prisma/client'
+import { saveDarkerAreas } from '@/app/actions/onboarding'
 
-const PATTERN_OPTIONS: { value: MelasmaPattern; title: string }[] = [
-  { value: 'SYMMETRICAL', title: 'Yes — I have symmetrical darker patches' },
-  { value: 'ASYMMETRICAL', title: "I have darker patches, but they're not symmetrical" },
-  { value: 'FADED', title: "I had them at some point but they've faded" },
-  { value: 'NONE', title: 'No' },
+// Single-select — the option list is a UI concern, so no enum. Captures a
+// broad range of hyperpigmentation (PIH, sun damage, post-breakout marks)
+// through observable experience only.
+const AREA_OPTIONS: { value: string; title: string }[] = [
+  { value: 'several_areas', title: 'Yes — in several areas' },
+  { value: 'one_area', title: 'Yes — in one specific area' },
+  { value: 'faded', title: "I have in the past, but they've faded" },
+  { value: 'no', title: 'No' },
 ]
 
-// Free-form multi-select — the option list is a UI concern, so no enum.
-// "none" and "unsure" are exclusive of each other and of the rest.
+// The follow-up (Q2) shows only when the answer is one of the two "Yes".
+const FOLLOWUP_VALUES = new Set(['several_areas', 'one_area'])
+
+// Multi-select. "no_pattern" and "not_applicable" are exclusive of the rest
+// and of each other.
 const TRIGGER_OPTIONS: { value: string; label: string }[] = [
-  { value: 'sun', label: 'Sun exposure' },
-  { value: 'pregnancy', label: 'Pregnancy or postpartum period' },
-  { value: 'hormonal_contraception', label: 'Hormonal contraception — pill, patch, IUD' },
-  { value: 'hrt', label: 'Hormone replacement therapy' },
-  { value: 'none', label: 'None of the above' },
-  { value: 'unsure', label: "I'm not sure" },
+  { value: 'sun', label: 'Time in the sun' },
+  { value: 'irritation', label: 'Skin irritation' },
+  { value: 'breakouts', label: 'Breakouts or blemishes' },
+  { value: 'no_pattern', label: "I haven't noticed a pattern" },
+  { value: 'not_applicable', label: 'Not applicable' },
 ]
 
-const EXCLUSIVE_TRIGGERS = ['none', 'unsure']
+const EXCLUSIVE_TRIGGERS = ['no_pattern', 'not_applicable']
 
 type Props = {
-  pattern: MelasmaPattern | null
+  areas: string
   triggers: string[]
-  onPatternChange: (v: MelasmaPattern) => void
+  onAreasChange: (v: string) => void
   onTriggersChange: (v: string[]) => void
   onContinue: () => void
   onBack: () => void
 }
 
-export function StepMelasma({
-  pattern,
+export function StepDarkerAreas({
+  areas,
   triggers,
-  onPatternChange,
+  onAreasChange,
   onTriggersChange,
   onContinue,
   onBack,
@@ -49,12 +53,11 @@ export function StepMelasma({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  const patternLabelId = useId()
+  const areaLabelId = useId()
   const triggersLabelId = useId()
 
-  const showTriggers = pattern === 'SYMMETRICAL'
-  // When the inline follow-up is shown, at least one option must be chosen.
-  const canContinue = pattern != null && (!showTriggers || triggers.length > 0)
+  const showTriggers = FOLLOWUP_VALUES.has(areas)
+  const canContinue = areas !== '' && (!showTriggers || triggers.length > 0)
 
   useEffect(() => {
     const node = rootRef.current
@@ -79,10 +82,10 @@ export function StepMelasma({
     return () => ctx.revert()
   }, [])
 
-  const handlePatternChange = (v: MelasmaPattern) => {
-    onPatternChange(v)
-    // Leaving the "symmetrical" answer makes the trigger list irrelevant.
-    if (v !== 'SYMMETRICAL' && triggers.length > 0) onTriggersChange([])
+  const handleAreasChange = (v: string) => {
+    onAreasChange(v)
+    // Leaving a "Yes" answer makes the trigger list irrelevant.
+    if (!FOLLOWUP_VALUES.has(v) && triggers.length > 0) onTriggersChange([])
   }
 
   /** Arrow keys move between pills and select as they go, per the WAI-ARIA
@@ -94,8 +97,8 @@ export function StepMelasma({
       : 0
     if (delta === 0) return
     e.preventDefault()
-    const next = (index + delta + PATTERN_OPTIONS.length) % PATTERN_OPTIONS.length
-    handlePatternChange(PATTERN_OPTIONS[next].value)
+    const next = (index + delta + AREA_OPTIONS.length) % AREA_OPTIONS.length
+    handleAreasChange(AREA_OPTIONS[next].value)
     const pills = listRef.current?.querySelectorAll<HTMLButtonElement>('[data-radio-pill]')
     pills?.[next]?.focus()
   }
@@ -121,20 +124,20 @@ export function StepMelasma({
   }
 
   const handleContinue = () => {
-    if (pattern == null) {
+    if (areas === '') {
       setError('Please choose the answer closest to your experience.')
       return
     }
     if (showTriggers && triggers.length === 0) {
-      setError('Please choose at least one option (or “None of the above”).')
+      setError('Please select at least one option.')
       return
     }
     setError(null)
     startTransition(async () => {
       try {
-        await saveMelasma({
-          melasmaPattern: pattern,
-          melasmaTriggers: showTriggers ? triggers : [],
+        await saveDarkerAreas({
+          darkerAreas: areas,
+          darkerAreaTriggers: showTriggers ? triggers : [],
         })
         onContinue()
       } catch {
@@ -147,6 +150,7 @@ export function StepMelasma({
     <div ref={rootRef}>
       <div style={{ maxWidth: '30rem' }}>
         <h2
+          id={areaLabelId}
           data-reveal
           style={{
             fontFamily: 'var(--font-heading)',
@@ -155,49 +159,17 @@ export function StepMelasma({
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
             color: 'var(--color-alabaster-50)',
-            margin: '0 0 1rem',
-          }}
-        >
-          Do you have darker patches on your face that appear symmetrically —
-          meaning both sides of your face in the same location?
-        </h2>
-
-        <p
-          data-reveal
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontWeight: 300,
-            fontSize: '0.9375rem',
-            lineHeight: 1.6,
-            color: 'var(--color-alabaster-400)',
             margin: '0 0 2.25rem',
           }}
         >
-          Common locations: both cheeks in the same area, the upper lip, the
-          centre of the forehead, or the bridge of the nose. These patches often
-          look brownish or greyish, and may be more noticeable after sun exposure
-          or certain hormonal changes.
-        </p>
-
-        <span
-          id={patternLabelId}
-          style={{
-            position: 'absolute',
-            width: '1px',
-            height: '1px',
-            overflow: 'hidden',
-            clip: 'rect(0 0 0 0)',
-            clipPath: 'inset(50%)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Whether you have symmetrical darker patches on your face
-        </span>
+          Do you notice areas of your skin that are consistently darker than the
+          surrounding skin?
+        </h2>
 
         <div
           ref={listRef}
           role="radiogroup"
-          aria-labelledby={patternLabelId}
+          aria-labelledby={areaLabelId}
           aria-required="true"
           style={{
             display: 'flex',
@@ -205,8 +177,8 @@ export function StepMelasma({
             gap: '0.625rem',
           }}
         >
-          {PATTERN_OPTIONS.map((option, index) => {
-            const isSelected = pattern === option.value
+          {AREA_OPTIONS.map((option, index) => {
+            const isSelected = areas === option.value
             return (
               <div key={option.value} data-reveal>
                 <RadioPill
@@ -214,8 +186,8 @@ export function StepMelasma({
                   title={option.title}
                   ariaLabel={option.title}
                   selected={isSelected}
-                  onChange={(v) => handlePatternChange(v as MelasmaPattern)}
-                  tabIndex={isSelected || (pattern == null && index === 0) ? 0 : -1}
+                  onChange={(v) => handleAreasChange(v)}
+                  tabIndex={isSelected || (areas === '' && index === 0) ? 0 : -1}
                   onKeyDown={(e) => handleKeyDown(e, index)}
                 />
               </div>
@@ -223,7 +195,7 @@ export function StepMelasma({
           })}
         </div>
 
-        {/* ── Inline follow-up: only for "symmetrical darker patches" ── */}
+        {/* ── Inline follow-up (Q2): only for the two "Yes" answers ── */}
         {showTriggers && (
           <div style={{ marginTop: '2rem' }}>
             <span
@@ -231,7 +203,7 @@ export function StepMelasma({
               className="label-caps"
               style={{ display: 'block', marginBottom: '0.875rem' }}
             >
-              Have you noticed these patches worsen with any of the following? —
+              When darker areas appear, what tends to make them more noticeable? —
               select all that apply
             </span>
 
