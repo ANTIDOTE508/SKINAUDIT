@@ -404,8 +404,8 @@ export async function saveUndertone(undertone: SkinUndertone | null) {
 
 // ─── Step 9 — PIH frequency (+ inline duration follow-up) ─────
 // The duration follow-up is shown on the same screen when marks appear
-// "often" or "sometimes"; for "rarely" / "never" it is skipped and any
-// previously-saved duration is cleared.
+// "often" or "sometimes" and must be answered; for "rarely" / "never" it is
+// skipped and any previously-saved duration is cleared.
 export type PihFrequencyPayload = {
   pihFrequency: PIHFrequency
   pihDuration: PIHDuration | null
@@ -418,7 +418,9 @@ export async function savePihFrequency(payload: PihFrequencyPayload) {
 
   const followUp =
     payload.pihFrequency === 'OFTEN' || payload.pihFrequency === 'SOMETIMES'
-  // Duration is optional even when the follow-up applies.
+  if (followUp && !payload.pihDuration) {
+    throw new Error('Mark duration is required')
+  }
   const pihDuration = followUp ? payload.pihDuration : null
 
   await prisma.userProfile.upsert({

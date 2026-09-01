@@ -69,6 +69,8 @@ export function StepPihFrequency({
   const durationLabelId = useId()
 
   const showDuration = value != null && FOLLOWUP_VALUES.includes(value)
+  // When the duration follow-up is shown, it must be answered before Continue.
+  const canContinue = value != null && (!showDuration || duration != null)
 
   useEffect(() => {
     const node = rootRef.current
@@ -135,10 +137,13 @@ export function StepPihFrequency({
       setError('Please choose the answer closest to your experience.')
       return
     }
+    if (showDuration && duration == null) {
+      setError('Please choose how long those marks take to fade.')
+      return
+    }
     setError(null)
     startTransition(async () => {
       try {
-        // Duration is optional; only send it when the follow-up applies.
         await savePihFrequency({
           pihFrequency: value,
           pihDuration: showDuration ? duration : null,
@@ -279,7 +284,7 @@ export function StepPihFrequency({
           onContinue={handleContinue}
           onBack={onBack}
           isLoading={isPending}
-          continueDisabled={value == null}
+          continueDisabled={!canContinue}
         />
       </div>
     </div>
