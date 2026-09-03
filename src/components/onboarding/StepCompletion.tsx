@@ -82,20 +82,43 @@ export function StepCompletion({ onContinue, onBack }: Props) {
         createPortal(
           <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', backgroundColor: 'var(--color-obsidian-950)' }}>
             <Image
-              src="/images/onboarding/allset/bg-all-set.webp"
+              src="/images/onboarding/stepCompletion/onboarding-completion-clarity.webp"
               alt=""
               fill
               priority
               sizes="100vw"
-              style={{ objectFit: 'cover', objectPosition: 'center center' }}
+              className="step23-completion-image"
             />
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(90deg, rgba(6,5,5,0.92) 0%, rgba(6,5,5,0.75) 35%, rgba(6,5,5,0.3) 65%, rgba(6,5,5,0.05) 100%)',
-              }}
-            />
+            <div className="step23-completion-scrim" />
+            <style>{`
+              .step23-completion-image {
+                object-fit: cover;
+                object-position: center center;
+                /* A slow ambient drift on the photograph — keeps the
+                   background from feeling pinned. 22s for one full
+                   inhale/exhale; the motion itself is below the
+                   threshold of conscious perception. */
+                animation: step23-completion-drift 22s ease-in-out infinite;
+              }
+              @keyframes step23-completion-drift {
+                0%, 100% { transform: scale(1.015) translate(-0.3%, 0.2%); }
+                50%      { transform: scale(1.025) translate( 0.3%,-0.2%); }
+              }
+              @media (prefers-reduced-motion: reduce) {
+                .step23-completion-image { animation: none; }
+              }
+              .step23-completion-scrim {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(
+                  90deg,
+                  rgba(6,5,5,0.92) 0%,
+                  rgba(6,5,5,0.75) 35%,
+                  rgba(6,5,5,0.30) 65%,
+                  rgba(6,5,5,0.05) 100%
+                );
+              }
+            `}</style>
           </div>,
           document.body
         )}
