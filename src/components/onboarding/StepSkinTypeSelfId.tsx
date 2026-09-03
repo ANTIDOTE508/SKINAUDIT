@@ -24,37 +24,37 @@ const SKIN_TYPES: {
     value: 'BALANCED',
     label: 'Normal',
     description: 'Balanced, minimal dryness or oiliness',
-    image: '/images/onboarding/skintype/balanced_skin.avif',
+    image: '/images/onboarding/skintype/new/skin-normal.webp',
   },
   {
     value: 'DRY',
     label: 'Dry',
     description: 'Often feels tight, may flake or appear dull',
-    image: '/images/onboarding/skintype/dry_skin.avif',
+    image: '/images/onboarding/skintype/new/skin-dry.webp',
   },
   {
     value: 'OILY',
     label: 'Oily',
     description: 'Prone to shine, enlarged pores, and congestion',
-    image: '/images/onboarding/skintype/oily_skin.jpg',
+    image: '/images/onboarding/skintype/new/skin-oily.webp',
   },
   {
     value: 'COMBINATION',
     label: 'Combination',
     description: 'Oily T-zone, drier on cheeks',
-    image: '/images/onboarding/skintype/combination_skin.jpg',
+    image: '/images/onboarding/skintype/new/skin-combination.webp',
   },
   {
     value: 'SENSITIVE',
     label: 'Sensitive',
     description: 'Prone to redness, irritation, or stinging',
-    image: '/images/onboarding/skintype/sensitive_skin.jpg',
+    image: '/images/onboarding/skintype/new/skin-sensitive.webp',
   },
   {
     value: 'ACNE_PRONE',
     label: 'Acne-prone',
     description: 'Prone to breakouts, clogged pores, and inflammation',
-    image: '/images/onboarding/skintype/acnee_skin.avif',
+    image: '/images/onboarding/skintype/new/skin-acne-prone.webp',
   },
 ]
 
