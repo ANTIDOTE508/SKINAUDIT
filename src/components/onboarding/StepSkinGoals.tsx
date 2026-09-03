@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useEffect, useState, useTransition, useId } from 'react'
+import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
 import { saveSkinGoals } from '@/app/actions/onboarding'
@@ -43,11 +45,17 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
   const [error, setError] = useState<string | null>(null)
   // Briefly flags that the cap was hit, so the limit indicator can pulse.
   const [limitHit, setLimitHit] = useState(false)
+  // createPortal needs a real <body> — only available after mount.
+  const [mounted, setMounted] = useState(false)
 
   const labelId = useId()
   const limitId = useId()
 
   const atLimit = value.length >= MAX_GOALS
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const node = rootRef.current
@@ -118,7 +126,99 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
 
   return (
     <div ref={rootRef}>
-      <div style={{ maxWidth: '32rem' }}>
+      {/* Full-bleed background — a glass refracting golden light into
+          caustics. The bright refracted lines sit on the right, so the scrim
+          is heaviest on the left under the copy and fades to nearly nothing
+          on the right so the caustics read through. A second bottom-up veil
+          keeps the footer legible. Same portal pattern as StepSunResponse /
+          StepBaselineTransition — escape the 680px content column's transform. */}
+      {mounted &&
+        createPortal(
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 0,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+              backgroundColor: 'var(--color-obsidian-950)',
+            }}
+          >
+            <Image
+              src="/images/onboarding/stepGoals/onboarding-goals-refraction.webp"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="step7-goals-image"
+            />
+            <div className="step7-goals-scrim" />
+
+            <style>{`
+              .step7-goals-image {
+                object-fit: cover;
+                object-position: 72% center;
+                /* A barely-there breathing on the refraction — keeps the
+                   photograph from feeling like a still image stuck under glass.
+                   18s for one full inhale/exhale; the user never notices the
+                   motion itself, only that the page feels alive. */
+                animation: step7-goals-drift 18s ease-in-out infinite;
+              }
+              @keyframes step7-goals-drift {
+                0%, 100% { transform: scale(1.015) translate(-0.4%, 0.2%); }
+                50%      { transform: scale(1.025) translate( 0.4%,-0.2%); }
+              }
+              @media (prefers-reduced-motion: reduce) {
+                .step7-goals-image { animation: none; }
+              }
+              @media (min-width: 1024px) {
+                .step7-goals-image {
+                  object-position: 58% center;
+                }
+              }
+              .step7-goals-scrim {
+                position: absolute;
+                inset: 0;
+                background:
+                  linear-gradient(
+                    to bottom,
+                    rgba(6,5,5,0.50) 0%,
+                    rgba(6,5,5,0.12) 28%,
+                    rgba(6,5,5,0.28) 68%,
+                    rgba(6,5,5,0.82) 100%
+                  ),
+                  linear-gradient(
+                    to right,
+                    rgba(6,5,5,0.94) 0%,
+                    rgba(6,5,5,0.86) 32%,
+                    rgba(6,5,5,0.55) 56%,
+                    rgba(6,5,5,0.18) 80%,
+                    rgba(6,5,5,0.06) 100%
+                  );
+              }
+              /* Below the two-column breakpoint the copy sits over the whole
+                 frame, so the horizontal falloff would leave text on light.
+                 Flatten to an even veil and let the caustics read through. */
+              @media (max-width: 1023px) {
+                .step7-goals-scrim {
+                  background:
+                    linear-gradient(
+                      to bottom,
+                      rgba(6,5,5,0.86) 0%,
+                      rgba(6,5,5,0.74) 45%,
+                      rgba(6,5,5,0.88) 100%
+                    );
+                }
+              }
+            `}</style>
+          </div>,
+          document.body,
+        )}
+
+      {/* One width for the whole step — heading, rows and footer share it, so
+          the footer's Back/Next align with the option rows above them. */}
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: '30rem' }}>
         <h2
           data-reveal
           style={{
@@ -129,12 +229,16 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
             letterSpacing: '-0.01em',
             color: 'var(--color-alabaster-50)',
             margin: '0 0 1rem',
+            textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
           What do you want your routine to work toward?
         </h2>
 
-        <p data-reveal style={SUB_COPY}>
+        <p
+          data-reveal
+          style={{ ...SUB_COPY, textShadow: '0 1px 12px rgba(6,5,5,0.7)' }}
+        >
           Select up to 3. These can go beyond your current concerns.
         </p>
 
@@ -212,8 +316,12 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
                     ? '1.5px solid var(--color-sienna-400)'
                     : '1px solid rgba(184,134,61,0.28)',
                   backgroundColor: isSelected
-                    ? 'rgba(184,134,61,0.14)'
-                    : 'rgba(6,5,5,0.42)',
+                    ? 'rgba(184,134,61,0.22)'
+                    : 'rgba(6,5,5,0.66)',
+                  // Slight frosted-glass — picks up the warm caustics from
+                  // behind without letting them compete with the label.
+                  backdropFilter: 'blur(6px)',
+                  WebkitBackdropFilter: 'blur(6px)',
                   transition:
                     'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
                 }}
@@ -256,6 +364,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
                     color: isSelected
                       ? 'var(--color-alabaster-50)'
                       : 'var(--color-alabaster-300)',
+                    textShadow: '0 1px 8px rgba(6,5,5,0.7)',
                     transition: 'color var(--duration-micro) ease',
                   }}
                 >
