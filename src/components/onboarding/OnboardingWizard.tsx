@@ -316,7 +316,16 @@ export function OnboardingWizard({
 
   const contentRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // Guards the anti-double-click lock so it always releases even if a GSAP
+  // callback never fires (tab backgrounded, reduced-motion, unmount mid-tween).
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
+
+  useEffect(() => () => {
+    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+    gsap.killTweensOf(contentRef.current)
+  }, [])
 
   // The product picker is the final step, so it — not a trailing completion
   // screen — is what marks onboarding complete and hands the user to the
@@ -336,27 +345,58 @@ export function OnboardingWizard({
 
   // Shared fade-out → apply → fade-in choreography. `applyChange` dispatches
   // whatever swaps the visible screen (a step change, or showing/clearing an
-  // interstitial); the animation around it is identical either way.
+  // interstitial).
+  //
+  // The state change is dispatched SYNCHRONOUSLY — never from a GSAP callback.
+  // If it lived in `onComplete`, any environment where the tween doesn't
+  // complete (tab backgrounded so rAF is frozen, `prefers-reduced-motion`,
+  // component unmounted mid-transition) would leave `step` — and therefore the
+  // header counter — frozen at its initial value. GSAP now only does the
+  // cosmetic fade around a change that has already happened.
   const runTransition = useCallback((applyChange: () => void) => {
-    const node = contentRef.current
-    if (state.isTransitioning || !node) {
+    // A fade-in from a previous transition may still be running on the shared
+    // content node — kill it so it doesn't finish animating the new screen.
+    gsap.killTweensOf(contentRef.current)
+    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+
+    if (state.isTransitioning) {
       applyChange()
+      dispatch({ type: 'SET_TRANSITIONING', value: false })
       return
     }
+
+    // 1. Advance the wizard state immediately. The counter and the rendered
+    //    step both derive from this and update on the next render regardless
+    //    of what GSAP does next.
+    applyChange()
+    // New screen is about to mount — reset the scroll container so the user
+    // starts the next step at its header, not wherever the last one scrolled.
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+
+    const node = contentRef.current
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+    if (!node || prefersReducedMotion) {
+      // No element to animate, or the user opted out of motion: the state
+      // change above is all that's needed.
+      return
+    }
+
+    // 2. Cosmetic fade of the new screen in. `isTransitioning` is only an
+    //    anti-double-click lock now, released by a guaranteed timer so it
+    //    can never get stuck even if `onComplete` never fires.
     dispatch({ type: 'SET_TRANSITIONING', value: true })
-    gsap.to(node, {
-      opacity: 0,
-      y: -12,
-      duration: 0.35,
-      ease: 'power2.in',
+    transitionTimer.current = setTimeout(() => {
+      dispatch({ type: 'SET_TRANSITIONING', value: false })
+    }, 650)
+
+    gsap.fromTo(node, { opacity: 0, y: 12 }, {
+      opacity: 1, y: 0, duration: 0.5, ease: 'power3.out',
       onComplete: () => {
-        applyChange()
-        const target = contentRef.current
-        if (!target) { dispatch({ type: 'SET_TRANSITIONING', value: false }); return }
-        gsap.fromTo(target, { opacity: 0, y: 18 }, {
-          opacity: 1, y: 0, duration: 0.55, ease: 'power3.out',
-          onComplete: () => dispatch({ type: 'SET_TRANSITIONING', value: false }),
-        })
+        if (transitionTimer.current) clearTimeout(transitionTimer.current)
+        dispatch({ type: 'SET_TRANSITIONING', value: false })
       },
     })
   }, [state.isTransitioning])
@@ -466,6 +506,7 @@ export function OnboardingWizard({
 
       {/* Main content */}
       <main
+        ref={scrollRef}
         style={{
           position: 'relative', zIndex: 10, flex: 1,
           display: 'flex', alignItems: 'safe center', justifyContent: 'center',
