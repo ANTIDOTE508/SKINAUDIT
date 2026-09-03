@@ -34,7 +34,39 @@ export type Interstitial = {
   when?: (state: WizardStateLike) => boolean
 }
 
-export const INTERSTITIALS: Interstitial[] = []
+/**
+ * Id of the interstitial shown right after step 1. The wizard renders it with
+ * the full-bleed <StepBaselineTransition> visual (same as step 0) rather than
+ * the generic <InterstitialScreen>; its eyebrow/title/body below are the
+ * fallback copy and are not used while that special-casing stands.
+ */
+export const BASELINE_AFTER_IDENTITY_ID = 'baseline-after-identity'
+
+/**
+ * Id of the interstitial shown right after step 8 (experience level). The
+ * wizard renders it with the full-bleed <StepBaselineTransition> visual (same
+ * as step 0 and the baseline interstitial) rather than the generic
+ * <InterstitialScreen>; its eyebrow/title/body below are the fallback copy
+ * and are not used while that special-casing stands.
+ */
+export const PATTERNS_AFTER_EXPERIENCE_ID = 'patterns-after-experience'
+
+export const INTERSTITIALS: Interstitial[] = [
+  {
+    id: BASELINE_AFTER_IDENTITY_ID,
+    afterStep: 1,
+    eyebrow: 'Your skin',
+    title: "Let’s start with what’s yours.",
+    body: "We’ll begin with a few things that help us understand your skin’s baseline.",
+  },
+  {
+    id: PATTERNS_AFTER_EXPERIENCE_ID,
+    afterStep: 8,
+    eyebrow: 'Your patterns',
+    title: 'Your skin has patterns.',
+    body: "Now we'll look at the patterns you've noticed — how your skin responds, changes and recovers over time.",
+  },
+]
 
 /**
  * The interstitial (if any) that should appear after `stepJustFinished`,

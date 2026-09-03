@@ -55,6 +55,7 @@ type Props = {
   birthYear: string
   onBirthYearChange: (v: string) => void
   onContinue: () => void
+  onBack?: () => void
 }
 
 export function StepIdentity({
@@ -67,6 +68,7 @@ export function StepIdentity({
   birthYear,
   onBirthYearChange,
   onContinue,
+  onBack,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
@@ -302,9 +304,10 @@ export function StepIdentity({
         </p>
       )}
 
-      {/* No Back action: this is the first step of the wizard. */}
+      {/* Back returns to the step 0 transition screen. */}
       <StepFooter
         onContinue={handleContinue}
+        onBack={onBack}
         isLoading={isPending}
         continueDisabled={!canContinue}
       />

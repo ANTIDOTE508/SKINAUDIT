@@ -4,7 +4,7 @@ import { useReducer, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
 import { completeOnboarding } from '@/app/actions/onboarding'
-import { StepWelcome } from './StepWelcome'
+import { StepBaselineTransition } from './StepBaselineTransition'
 import { StepIdentity } from './StepIdentity'
 import { StepSkinTypeSelfId } from './StepSkinTypeSelfId'
 import { StepPrimaryConcerns } from './StepPrimaryConcerns'
@@ -29,6 +29,8 @@ import {
   InterstitialScreen,
   findInterstitialAfter,
   getInterstitialById,
+  BASELINE_AFTER_IDENTITY_ID,
+  PATTERNS_AFTER_EXPERIENCE_ID,
 } from './interstitials'
 import { StepProductReactivity } from './StepProductReactivity'
 import { StepRecoveryTime } from './StepRecoveryTime'
@@ -63,6 +65,10 @@ export type WizardUser = {
 }
 
 type WizardState = {
+  // step 0 = the full-bleed baseline transition screen; steps 1–25 = the
+  // numbered wizard steps. Step 0 is a real navigation position: a new user
+  // starts there, and Back from step 1 returns to it. It is not counted by
+  // StepCounter and never appears in activeScreens().
   step: number
   // When non-null, the wizard shows this transition screen *instead of* the
   // step content. `step` still points at the step just finished, so the
@@ -193,7 +199,8 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-// step 0 = welcome, steps 1–25 = wizard steps. Step 25 (product picker) is
+// step 0 = full-bleed baseline transition screen (not counted); steps 1–25 =
+// the numbered wizard steps. Step 25 (product picker) is
 // the last one and completes onboarding itself, so there is no separate
 // completion step beyond it. Every follow-up now lives inline on its
 // master step's screen, so there are no conditionally-skipped screens —
@@ -248,21 +255,29 @@ export type WizardInitialProfile = {
 }
 
 export function OnboardingWizard({
-  user,
   initialStep = 0,
   initialProfile,
 }: {
-  user: WizardUser
+  // Kept in the prop contract (page.tsx supplies it) though no screen reads it
+  // any more since the personalised welcome step was removed.
+  user?: WizardUser
   initialStep?: number
   initialProfile?: WizardInitialProfile | null
 }) {
-  const rawResumeStep = initialStep >= 2 ? initialStep + 1 : 1
-  // Every screen is always shown now (follow-ups are inline), so the resume
-  // step is just the stored position clamped into range.
-  const resumeStep = rawResumeStep <= 1 ? 1 : Math.min(rawResumeStep, TOTAL_STEPS)
+  // `initialStep` is the stored resume marker: 0 = nothing saved yet, N = step
+  // N was completed. A brand-new user (0) opens on the step 0 transition
+  // screen; anyone who has completed at least step 1 resumes on a numbered
+  // step. Steps 2+ resume one past the marker (existing rule); step 1 stays on
+  // step 1.
+  const resumeStep =
+    initialStep <= 0
+      ? 0
+      : initialStep === 1
+        ? 1
+        : Math.min(initialStep + 1, TOTAL_STEPS)
 
   const [state, dispatch] = useReducer(wizardReducer, {
-    step: resumeStep > TOTAL_STEPS ? TOTAL_STEPS : resumeStep,
+    step: resumeStep,
     // Interstitials never persist — a resuming user simply doesn't see the
     // one that would have followed the step they left off on.
     interstitialId: null,
@@ -411,6 +426,11 @@ export function OnboardingWizard({
   const screens = activeScreens()
 
   const goNext = useCallback(() => {
+    // Step 0 is the full-bleed transition screen — Continue just enters step 1.
+    if (state.step === 0) {
+      transitionToStep(1)
+      return
+    }
     // On an interstitial: Continue clears it and advances to the real step.
     if (state.interstitialId) {
       const list = activeScreens()
@@ -441,10 +461,16 @@ export function OnboardingWizard({
     }
     const list = activeScreens()
     const i = list.indexOf(state.step)
-    if (i > 0) transitionToStep(list[i - 1])
+    if (i > 0) {
+      transitionToStep(list[i - 1])
+    } else if (state.step === 1) {
+      // Back from the first numbered step returns to the step 0 transition
+      // screen, so it stays reachable by walking backwards through the wizard.
+      transitionToStep(0)
+    }
   }, [state, transitionToStep, runTransition])
 
-  // steps 1–TOTAL_STEPS show the counter (the step 0 welcome screen doesn't);
+  // steps 1–TOTAL_STEPS show the counter (the step 0 transition screen doesn't);
   // interstitials hide it — they are framing, not a counted step.
   const showCounter =
     state.step >= 1 && state.step <= TOTAL_STEPS && !state.interstitialId
@@ -518,15 +544,45 @@ export function OnboardingWizard({
         <div ref={contentRef} style={{ width: '100%', maxWidth: '680px' }}>
 
           {activeInterstitial ? (
-            <InterstitialScreen
-              interstitial={activeInterstitial}
-              onContinue={goNext}
-              onBack={goBack}
-            />
+            activeInterstitial.id === BASELINE_AFTER_IDENTITY_ID ? (
+              // Same full-bleed visual as step 0, single "Continue" CTA, no Back.
+              <StepBaselineTransition
+                onContinue={goNext}
+                imageSrc="/images/onboarding/transistions/1/transition1.webp"
+                eyebrow={activeInterstitial.eyebrow}
+                titleLines={['Let’s start with', 'what’s yours.']}
+                body={activeInterstitial.body}
+                ctaLabel="Continue"
+              />
+            ) : activeInterstitial.id === PATTERNS_AFTER_EXPERIENCE_ID ? (
+              // Same full-bleed visual — different image, different copy.
+              <StepBaselineTransition
+                onContinue={goNext}
+                imageSrc="/images/onboarding/transistions/2/transition2.webp"
+                eyebrow={activeInterstitial.eyebrow}
+                titleLines={['Your skin has', 'patterns.']}
+                body={activeInterstitial.body}
+                ctaLabel="Continue"
+              />
+            ) : (
+              <InterstitialScreen
+                interstitial={activeInterstitial}
+                onContinue={goNext}
+                onBack={goBack}
+              />
+            )
           ) : (
           <>
 
-          {state.step === 0 && <StepWelcome user={user} onContinue={goNext} />}
+          {state.step === 0 && (
+            <StepBaselineTransition
+              onContinue={goNext}
+              imageSrc="/images/onboarding/transistions/opening/opening.webp"
+              eyebrow="SkinAudit"
+              titleLines={["This isn't a quiz.", "It's a read of your skin."]}
+              ctaLabel="Begin"
+            />
+          )}
 
           {state.step === 1 && (
             <StepIdentity
@@ -539,6 +595,7 @@ export function OnboardingWizard({
               birthYear={state.birthYear}
               onBirthYearChange={(v) => dispatch({ type: 'SET_BIRTH_YEAR', value: v })}
               onContinue={goNext}
+              onBack={goBack}
             />
           )}
 
