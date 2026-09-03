@@ -21,6 +21,7 @@ export default function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [backHovered, setBackHovered] = useState(false)
 
   const dotsRef = useRef<HTMLSpanElement>(null)
   const dotsTimeline = useRef<gsap.core.Timeline | null>(null)
@@ -82,6 +83,50 @@ export default function SignInPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
+      <Link
+        href="/"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          marginBottom: '1.75rem',
+          fontFamily: 'var(--font-body)',
+          fontWeight: 300,
+          fontSize: '0.75rem',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: backHovered
+            ? 'var(--color-alabaster-100)'
+            : 'var(--color-alabaster-500)',
+          textDecoration: 'none',
+          transition: 'color 200ms ease',
+        }}
+        onMouseEnter={() => setBackHovered(true)}
+        onMouseLeave={() => setBackHovered(false)}
+        onFocus={() => setBackHovered(true)}
+        onBlur={() => setBackHovered(false)}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          style={{
+            transform: backHovered ? 'translateX(-3px)' : 'translateX(0)',
+            transition: 'transform 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          }}
+        >
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        Back to home
+      </Link>
+
       <h2
         style={{
           fontFamily: 'var(--font-heading)',
