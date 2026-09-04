@@ -7,6 +7,7 @@ import { TopographySection } from './_components/TopographySection'
 import { ApproachSection } from './_components/ApproachSection'
 import { ShiftSection } from './_components/ShiftSection'
 import { CloserSection } from './_components/CloserSection'
+import { PhilosophyMotion } from './_components/PhilosophyMotion'
 import './philosophy.css'
 
 export const metadata: Metadata = {
@@ -17,14 +18,16 @@ export const metadata: Metadata = {
 
 /**
  * The Philosophy page. A single scroll of six sections, each with its own
- * generative backdrop. Fully static — every animation is CSS-driven, so
- * this stays a Server Component. `jost.variable` puts `--font-jost` in
- * scope (Cormorant is already global via the root layout); philosophy.css
- * is namespaced under `.page`.
+ * generative backdrop. Stays a Server Component; scroll-driven motion is
+ * added by the <PhilosophyMotion /> client island (GSAP + ScrollTrigger),
+ * which seeds its own from-state so copy is never stranded if it fails to
+ * run. `jost.variable` puts `--font-jost` in scope (Cormorant is already
+ * global via the root layout); philosophy.css is namespaced under `.page`.
  */
 export default function PhilosophyPage() {
   return (
     <div className={`${jost.variable} page`}>
+      <PhilosophyMotion />
       <PhilosophyNav />
       <HeroSection />
       <ProblemSection />

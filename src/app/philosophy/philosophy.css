@@ -589,22 +589,6 @@
     transform: translateY(0);
   }
 }
-@keyframes philo-riseMove {
-  from {
-    transform: translateY(34px);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-@keyframes philo-parallaxUp {
-  from {
-    transform: translateY(48px);
-  }
-  to {
-    transform: translateY(-48px);
-  }
-}
 @keyframes philo-streamFwd {
   from {
     transform: translateX(-1440px);
@@ -734,23 +718,9 @@
     animation: philo-ruleGrow 1.4s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  @supports (animation-timeline: view()) {
-    .page .sec-problem .inner > *,
-    .page .sec-context .inner > *,
-    .page .sec-approach .label,
-    .page .sec-approach .principle,
-    .page .sec-shift .inner > *,
-    .page .sec-closer .inner > * {
-      animation: philo-riseMove linear both;
-      animation-timeline: view();
-      animation-range: entry 4% entry 58%;
-    }
-    .page .topo-hed {
-      animation: philo-parallaxUp linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
-    }
-  }
+  /* Section reveals and the topo parallax are driven by <PhilosophyMotion />
+     (GSAP + ScrollTrigger) — the old `animation-timeline: view()` block that
+     lived here only ran on Chromium. */
 }
 
 /* ── RESPONSIVE ── */
