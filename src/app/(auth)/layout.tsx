@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import Image from 'next/image'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
+import LoginBackground from '@/components/features/LoginBackground'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const headlineRef = useRef<HTMLDivElement>(null)
@@ -38,15 +38,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex">
       {/* ── Left panel — full-bleed photo ── */}
       <div className="hidden lg:block lg:w-[55%] relative overflow-hidden">
-        <Image
-          src="/images/signin/bg-login-shadow-wall.webp"
-          alt=""
-          aria-hidden
-          fill
-          priority
-          sizes="55vw"
-          style={{ objectFit: 'cover', objectPosition: 'center center' }}
-        />
+        <LoginBackground />
 
         {/* Overlay 1 — radial vignette: darkens corners and edges, preserves centre */}
         <div
