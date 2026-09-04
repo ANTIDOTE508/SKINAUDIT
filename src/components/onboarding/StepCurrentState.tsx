@@ -179,7 +179,7 @@ export function StepCurrentState({
             }}
           >
             <Image
-              src="/images/onboarding/stepCurrentState/onboarding-current-state-pattern.webp"
+              src="/images/onboarding/stepSkinUsual/onboarding-skin-response-macro.webp"
               alt=""
               fill
               priority

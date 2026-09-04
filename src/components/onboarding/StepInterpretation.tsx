@@ -88,40 +88,71 @@ export function StepInterpretation({ onContinue, onBack }: Props) {
     <div ref={rootRef}>
       {/* Background scene — portaled to body so GSAP's transform on ancestor
           content doesn't trap this fixed layer inside the wizard's 680px
-          column. The ribbon artwork carries its light on the right edge and
-          is already near-black on the left, so the scrim mainly deepens the
-          left/centre where the copy sits and leaves the ribbon readable. */}
+          column. The collage sits in a right-anchored band (its full grid
+          visible, height-fitted, never blown up to fill an ultrawide
+          viewport); a mask fades its left edge into the near-black panel
+          that carries the copy. */}
       {mounted &&
         createPortal(
           <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', backgroundColor: 'var(--color-obsidian-950)' }}>
-            <Image
-              src="/images/onboarding/step10/bg-interpretation-ribbon.webp"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="step10-bg-image"
-            />
-            <div className="step10-bg-scrim" />
+            <div className="step22-bg-band">
+              <Image
+                src="/images/onboarding/stepInterpretation/onboarding-disclaimer-diverse-skin-collage.webp"
+                alt=""
+                fill
+                priority
+                sizes="(min-width: 1024px) 62vw, 100vw"
+                className="step22-bg-image"
+              />
+            </div>
+            <div className="step22-bg-scrim" />
 
             <style>{`
-              .step10-bg-image {
-                object-fit: cover;
-                object-position: 70% center;
-              }
-              @media (min-width: 1024px) {
-                .step10-bg-image { object-position: center center; }
-              }
-              .step10-bg-scrim {
+              /* Right-anchored band. On mobile it spans the viewport; from
+                 lg up it occupies the right ~62% so the collage grid reads
+                 whole instead of being cropped to two giant faces. */
+              .step22-bg-band {
                 position: absolute;
                 inset: 0;
-                background: linear-gradient(
-                  90deg,
-                  rgba(6,5,5,0.92) 0%,
-                  rgba(6,5,5,0.82) 40%,
-                  rgba(6,5,5,0.45) 70%,
-                  rgba(6,5,5,0.15) 100%
-                );
+              }
+              @media (min-width: 1024px) {
+                .step22-bg-band {
+                  left: auto;
+                  right: 0;
+                  width: 62vw;
+                }
+              }
+              @media (min-width: 1600px) {
+                .step22-bg-band { width: 55vw; max-width: 1100px; }
+              }
+              .step22-bg-image {
+                object-fit: cover;
+                object-position: center center;
+                /* Feather the left edge of the band into the dark panel so
+                   there is no vertical seam. */
+                -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.6) 12%, #000 34%);
+                mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.6) 12%, #000 34%);
+              }
+              /* Full-width scrim — deepest under the headline on the left,
+                 gently tinting the collage on the right for text-free
+                 breathing room. Multiple close stops avoid banding. */
+              .step22-bg-scrim {
+                position: absolute;
+                inset: 0;
+                background:
+                  linear-gradient(90deg,
+                    rgba(6,5,5,0.97) 0%,
+                    rgba(6,5,5,0.94) 28%,
+                    rgba(6,5,5,0.72) 46%,
+                    rgba(6,5,5,0.40) 62%,
+                    rgba(6,5,5,0.24) 100%
+                  ),
+                  linear-gradient(180deg,
+                    rgba(6,5,5,0.45) 0%,
+                    rgba(6,5,5,0) 20%,
+                    rgba(6,5,5,0) 74%,
+                    rgba(6,5,5,0.50) 100%
+                  );
               }
             `}</style>
           </div>,
