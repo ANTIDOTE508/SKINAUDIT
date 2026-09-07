@@ -68,46 +68,9 @@
   z-index: 2;
 }
 
-/* ── NAV ── */
-.page .nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.625rem var(--gap-x);
-  border-bottom: 1px solid var(--rule);
-  position: relative;
-  z-index: 20;
-  background: rgba(9, 8, 10, 0.6);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-.page .nav-brand {
-  font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.5em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-.page .nav-links {
-  display: flex;
-  gap: 2.5rem;
-  align-items: center;
-}
-.page .nav-links a {
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--mid);
-}
-.page .nav-links a.here {
-  color: var(--accent);
-}
-.page .nav-links a.sign-in {
-  color: var(--ink);
-  border-bottom: 1px solid rgba(234, 226, 216, 0.22);
-  padding-bottom: 1px;
-}
+/* The top nav is the shared <SiteNav /> component
+   (src/components/site-nav/site-nav.css) — it reads --ink / --mid /
+   --accent / --rule / --gap-x from this `.page` wrapper. */
 
 /* ── SHARED TYPE ── */
 .page .label {
@@ -149,13 +112,25 @@
 
 /* ══ HERO — overlapping fields ══ */
 .page .hero {
-  padding: clamp(5rem, 14vh, 10rem) var(--gap-x) clamp(5rem, 13vh, 9rem);
+  /* top padding matches .home-page .hero so the gap under the shared
+     fixed nav is identical across pages */
+  padding: clamp(5.5rem, 11vh, 8rem) var(--gap-x) clamp(5rem, 13vh, 9rem);
   background: #09080a;
 }
 .page .hero .art-veil {
   background:
-    radial-gradient(85% 68% at 10% 32%, rgba(9, 8, 10, 0.82) 0%, rgba(9, 8, 10, 0.34) 46%, rgba(9, 8, 10, 0) 100%),
-    linear-gradient(to bottom, rgba(9, 8, 10, 0.42) 0%, rgba(9, 8, 10, 0.02) 42%, rgba(9, 8, 10, 0.62) 100%);
+    radial-gradient(
+      85% 68% at 10% 32%,
+      rgba(9, 8, 10, 0.82) 0%,
+      rgba(9, 8, 10, 0.34) 46%,
+      rgba(9, 8, 10, 0) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(9, 8, 10, 0.42) 0%,
+      rgba(9, 8, 10, 0.02) 42%,
+      rgba(9, 8, 10, 0.62) 100%
+    );
 }
 .page .hero-inner {
   display: flex;
@@ -210,8 +185,19 @@
 }
 .page .sec-problem .art-veil {
   background:
-    linear-gradient(105deg, rgba(10, 10, 13, 0.9) 0%, rgba(10, 10, 13, 0.58) 40%, rgba(10, 10, 13, 0.06) 74%, rgba(10, 10, 13, 0.4) 100%),
-    linear-gradient(to bottom, rgba(10, 10, 13, 0.5) 0%, rgba(10, 10, 13, 0.04) 38%, rgba(10, 10, 13, 0.62) 100%);
+    linear-gradient(
+      105deg,
+      rgba(10, 10, 13, 0.9) 0%,
+      rgba(10, 10, 13, 0.58) 40%,
+      rgba(10, 10, 13, 0.06) 74%,
+      rgba(10, 10, 13, 0.4) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(10, 10, 13, 0.5) 0%,
+      rgba(10, 10, 13, 0.04) 38%,
+      rgba(10, 10, 13, 0.62) 100%
+    );
 }
 .page .q-stack {
   display: flex;
@@ -278,8 +264,19 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(125% 95% at 20% 40%, rgba(6, 5, 8, 0) 0%, rgba(6, 5, 8, 0.42) 64%, rgba(9, 8, 10, 0.86) 100%),
-    linear-gradient(to bottom, rgba(9, 8, 10, 0.6) 0%, rgba(9, 8, 10, 0) 32%, rgba(9, 8, 10, 0.04) 62%, rgba(9, 8, 10, 0.8) 100%);
+    radial-gradient(
+      125% 95% at 20% 40%,
+      rgba(6, 5, 8, 0) 0%,
+      rgba(6, 5, 8, 0.42) 64%,
+      rgba(9, 8, 10, 0.86) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(9, 8, 10, 0.6) 0%,
+      rgba(9, 8, 10, 0) 32%,
+      rgba(9, 8, 10, 0.04) 62%,
+      rgba(9, 8, 10, 0.8) 100%
+    );
 }
 .page .topo-copy {
   position: absolute;
@@ -392,8 +389,18 @@
 }
 .page .sec-shift .art-veil {
   background:
-    linear-gradient(to right, rgba(13, 10, 9, 0.88) 0%, rgba(13, 10, 9, 0.5) 42%, rgba(13, 10, 9, 0.06) 100%),
-    linear-gradient(to bottom, rgba(13, 10, 9, 0.5) 0%, rgba(13, 10, 9, 0) 44%, rgba(13, 10, 9, 0.6) 100%);
+    linear-gradient(
+      to right,
+      rgba(13, 10, 9, 0.88) 0%,
+      rgba(13, 10, 9, 0.5) 42%,
+      rgba(13, 10, 9, 0.06) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(13, 10, 9, 0.5) 0%,
+      rgba(13, 10, 9, 0) 44%,
+      rgba(13, 10, 9, 0.6) 100%
+    );
 }
 .page .shift-hed {
   font-family: var(--font-cormorant), Georgia, serif;
@@ -443,7 +450,12 @@
 .page .sec-closer .art-veil {
   background:
     radial-gradient(78% 88% at 76% 66%, rgba(196, 176, 154, 0.09) 0%, rgba(10, 9, 12, 0) 64%),
-    linear-gradient(to bottom, rgba(10, 9, 12, 0.62) 0%, rgba(10, 9, 12, 0.06) 46%, rgba(10, 9, 12, 0.42) 100%);
+    linear-gradient(
+      to bottom,
+      rgba(10, 9, 12, 0.62) 0%,
+      rgba(10, 9, 12, 0.06) 46%,
+      rgba(10, 9, 12, 0.42) 100%
+    );
 }
 .page .closer-hl {
   font-family: var(--font-cormorant), Georgia, serif;
@@ -725,12 +737,6 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 760px) {
-  .page .nav-links {
-    gap: 1.25rem;
-  }
-  .page .nav-links a:not(.here):not(.sign-in) {
-    display: none;
-  }
   .page .hero-cols,
   .page .ctx-split {
     grid-template-columns: 1fr;

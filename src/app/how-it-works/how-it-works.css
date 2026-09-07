@@ -1,0 +1,612 @@
+/*
+  Scoped styles for the /how-it-works route. Everything is namespaced under
+  `.page` (the route's outer wrapper) so it cannot leak into the rest of
+  the app, which uses Tailwind + the landing CSS.
+
+  This is the comp's <style> block (templates/how_it_works.html) with three
+  deliberate changes, identical to what /philosophy already does:
+    1. every selector namespaced under `.page`;
+    2. font-family swapped to the app's CSS vars — 'Jost' → var(--font-jost)
+       (from `jost.variable` on the wrapper), 'Cormorant Garamond' →
+       var(--font-cormorant), 'JetBrains Mono' → var(--font-dm-mono) (both
+       loaded globally in app/layout.tsx);
+    3. the Chromium-only `@supports (animation-timeline: view())` scroll
+       blocks are dropped — <HowItWorksMotion /> (GSAP + ScrollTrigger)
+       drives those reveals everywhere. The `.wi` at-rest default and the
+       perpetual ambient animations are kept.
+*/
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.page a {
+  color: #c4b09a;
+  text-decoration: none;
+}
+.page a:hover {
+  color: #d4c2ae;
+}
+
+.page {
+  --accent: #c4b09a;
+  --bg: #07080b;
+  --ink: #eae2d8;
+  --mid: #9a9088;
+  --dim: #5a5350;
+  --accent-br: #d4c2ae;
+  --rule: rgba(234, 226, 216, 0.07);
+  --rule-md: rgba(234, 226, 216, 0.13);
+  --gap-x: clamp(1.5rem, 6vw, 6rem);
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-jost), 'Helvetica Neue', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── ART LAYERING ── */
+.page .section,
+.page .hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+/* The raw-SVG host is the full-bleed backdrop layer (the comp put these
+   dimensions on the <svg class="art"> itself; here the host carries them
+   and the injected SVG simply fills it, so <HowItWorksMotion /> has a real
+   box to parallax). */
+.page .art-host {
+  position: absolute;
+  inset: -6%;
+  z-index: 0;
+  width: 112%;
+  height: 112%;
+  display: block;
+}
+.page .art-host .art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.page .art-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.page .inner {
+  position: relative;
+  z-index: 2;
+}
+
+/* The top nav is the shared <SiteNav /> component
+   (src/components/site-nav/site-nav.css) — it reads --ink / --mid /
+   --accent / --rule / --gap-x from this `.page` wrapper. */
+
+/* ── SHARED ── */
+.page .label {
+  font-family: var(--font-dm-mono), 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.page .label::after {
+  content: '';
+  width: 3.5rem;
+  height: 1px;
+  background: rgba(196, 176, 154, 0.3);
+}
+
+.page .section {
+  padding: clamp(4.5rem, 12vh, 9rem) var(--gap-x);
+  border-top: 1px solid var(--rule);
+}
+
+.page .body-copy {
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  line-height: 2.05;
+  color: var(--mid);
+  max-width: 34em;
+}
+
+/* ══ HERO ══ */
+.page .hero {
+  /* top padding matches .home-page .hero so the gap under the shared
+     fixed nav is identical across pages */
+  padding: clamp(5.5rem, 11vh, 8rem) var(--gap-x) clamp(4.5rem, 11vh, 8rem);
+  background: #07080b;
+}
+.page .hero .art-veil {
+  background:
+    radial-gradient(
+      84% 66% at 10% 32%,
+      rgba(7, 8, 11, 0.82) 0%,
+      rgba(7, 8, 11, 0.26) 50%,
+      rgba(7, 8, 11, 0) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(7, 8, 11, 0.36) 0%,
+      rgba(7, 8, 11, 0) 42%,
+      rgba(7, 8, 11, 0.52) 100%
+    );
+}
+.page .hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 5vh, 3.5rem);
+}
+.page .hero-lead {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(2.25rem, 5.6vw, 5.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  max-width: 16ch;
+  text-wrap: balance;
+}
+.page .hero-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: end;
+  padding-top: clamp(1rem, 3vh, 2.25rem);
+  border-top: 1px solid var(--rule);
+}
+.page .hero-claim {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.page .hero-claim p {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
+  font-weight: 300;
+  line-height: 1.35;
+  color: var(--dim);
+  letter-spacing: -0.01em;
+}
+.page .hero-claim p.hi {
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* ══ STEPS ══ */
+.page .step .art-veil {
+  background:
+    linear-gradient(
+      100deg,
+      rgba(9, 10, 14, 0.9) 0%,
+      rgba(9, 10, 14, 0.5) 44%,
+      rgba(9, 10, 14, 0) 82%,
+      rgba(9, 10, 14, 0.18) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(9, 10, 14, 0.45) 0%,
+      rgba(9, 10, 14, 0) 40%,
+      rgba(9, 10, 14, 0.5) 100%
+    );
+}
+.page .step.right .art-veil {
+  background:
+    linear-gradient(
+      260deg,
+      rgba(9, 10, 14, 0.9) 0%,
+      rgba(9, 10, 14, 0.5) 44%,
+      rgba(9, 10, 14, 0) 82%,
+      rgba(9, 10, 14, 0.18) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(9, 10, 14, 0.45) 0%,
+      rgba(9, 10, 14, 0) 40%,
+      rgba(9, 10, 14, 0.5) 100%
+    );
+}
+.page .step .inner {
+  max-width: 40rem;
+}
+.page .step.right .inner {
+  margin-left: auto;
+}
+
+.page .step-head {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: clamp(1.25rem, 3vh, 2rem);
+}
+.page .step-num {
+  font-family: var(--font-dm-mono), 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+.page .step-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(196, 176, 154, 0.42), rgba(196, 176, 154, 0));
+}
+
+.page .step-title {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(1.875rem, 4vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 0.9rem;
+}
+.page .step-lead {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.125rem, 1.9vw, 1.625rem);
+  line-height: 1.4;
+  color: var(--accent);
+  margin-bottom: 1.75rem;
+}
+.page .step-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 1.9rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--rule);
+}
+.page .step-note p {
+  font-family: var(--font-dm-mono), 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1.9;
+  color: var(--dim);
+}
+.page .step-note p.hi {
+  color: var(--accent);
+}
+
+/* section grounds — cool, so the page reads digital next to Philosophy's warm blacks */
+.page .s-1 {
+  background: #090a0e;
+}
+.page .s-2 {
+  background: #0b0c11;
+}
+.page .s-3 {
+  background: #08090d;
+}
+.page .s-4 {
+  background: #0c0e13;
+}
+.page .s-5 {
+  background: #090b10;
+}
+
+/* ══ THE PRINCIPLE ══ */
+.page .sec-principle {
+  background: #0a0c11;
+}
+.page .sec-principle .art-veil {
+  background:
+    linear-gradient(
+      to right,
+      rgba(10, 12, 17, 0.86) 0%,
+      rgba(10, 12, 17, 0.44) 40%,
+      rgba(10, 12, 17, 0) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(10, 12, 17, 0.46) 0%,
+      rgba(10, 12, 17, 0) 44%,
+      rgba(10, 12, 17, 0.58) 100%
+    );
+}
+.page .pr-hed {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(2.25rem, 6vw, 5.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin: clamp(1.75rem, 4vh, 2.75rem) 0 clamp(2rem, 5vh, 3rem);
+  max-width: 15ch;
+  text-wrap: balance;
+}
+.page .pr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  max-width: 40em;
+}
+.page .pr-body p {
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  line-height: 2.05;
+  color: var(--mid);
+}
+.page .pr-body p.close {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.25rem, 2.1vw, 1.875rem);
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--accent);
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--rule);
+}
+
+/* ══ CLOSER ══ */
+.page .sec-closer {
+  background: #07080b;
+}
+.page .closer-hl {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(1.875rem, 4.6vw, 4.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: clamp(1.5rem, 4vh, 2.5rem) 0 clamp(2.25rem, 5vh, 3.25rem);
+  max-width: 18ch;
+  text-wrap: balance;
+}
+.page .closer-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  flex-wrap: wrap;
+}
+.page .cta {
+  display: inline-block;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #07080b;
+  background: var(--accent);
+  padding: 0.9em 1.8em;
+  white-space: nowrap;
+}
+.page .cta:hover {
+  background: var(--accent-br);
+  color: #07080b;
+}
+.page .link-2 {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mid);
+  border-bottom: 1px solid var(--rule-md);
+  padding-bottom: 3px;
+}
+.page .link-2:hover {
+  color: var(--ink);
+}
+
+.page .foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 2.5rem var(--gap-x);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-dm-mono), 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: #06070a;
+}
+
+/* ── MASKED WORD REVEAL ──
+   Each word sits in an overflow-hidden wrapper with its inner span able to
+   be pushed fully below it, so the word rises out from behind an edge.
+   padding-bottom keeps descenders clear of the mask edge. The `.wi`
+   renders at rest by default; <HowItWorksMotion /> seeds and plays the
+   rise. */
+.page .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
+}
+.page .wi {
+  display: block;
+}
+
+/* ══════════ MOTION ══════════
+   Data visibly moving along the wires. Ambient (perpetual) animation only;
+   scroll-linked reveals are driven by <HowItWorksMotion /> (GSAP). */
+
+@keyframes hiw-dashFlow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+@keyframes hiw-dashFlowR {
+  to {
+    stroke-dashoffset: 32;
+  }
+}
+@keyframes hiw-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hiw-fillIn {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes hiw-spinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes hiw-spinBack {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes hiw-streamX {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-1440px);
+  }
+}
+@keyframes hiw-drawLine {
+  from {
+    stroke-dashoffset: 4200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes hiw-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hiw-hiPulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page .art g {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+  }
+
+  /* hero — signal routing through the lattice */
+  .page .lat-flow {
+    stroke-dasharray: 5 11;
+    animation: hiw-dashFlow 2.6s linear infinite;
+  }
+  .page .lat-node {
+    animation: hiw-pulse 5.5s ease-in-out infinite;
+  }
+
+  /* 01 — records filling in, one after another */
+  .page .rec-fill rect,
+  .page .rec-bar rect {
+    animation: hiw-fillIn 20s linear infinite both;
+  }
+
+  /* 02 — the ritual sequence, read in order */
+  .page .trk-link {
+    stroke-dasharray: 4 9;
+    animation: hiw-dashFlow 2.2s linear infinite;
+  }
+  .page .trk-node {
+    animation: hiw-pulse 4.4s ease-in-out infinite;
+  }
+
+  /* 03 — context circling, feeding inward */
+  .page .ctx-ring {
+    animation: hiw-spinSlow 260s linear infinite;
+  }
+  .page .ctx-spoke {
+    stroke-dasharray: 3 8;
+    animation: hiw-dashFlowR 3.1s linear infinite;
+  }
+  .page .ctx-sat {
+    animation: hiw-spinBack 320s linear infinite;
+  }
+
+  /* 04 — relationships lighting up across the graph */
+  .page .gr-hot {
+    stroke-dasharray: 6 12;
+    animation: hiw-dashFlow 2.9s linear infinite;
+  }
+  .page .gr-node circle {
+    animation: hiw-shimmer 6s ease-in-out infinite both;
+  }
+
+  /* 05 — the record moving past, over time */
+  .page .tr-line,
+  .page .tr-mark {
+    animation: hiw-streamX 52s linear infinite;
+  }
+
+  /* principle — noise settling, the clean line drawing itself */
+  .page .res-dust {
+    animation: hiw-pulse 9s ease-in-out infinite;
+  }
+  .page .res-line polyline {
+    stroke-dasharray: 4200;
+    animation: hiw-drawLine 9s cubic-bezier(0.4, 0, 0.2, 1) infinite both;
+  }
+
+  /* ambient: perpetual, so nothing is ever fully still.
+     NB: .step-num / .step-rule / .step-lead are driven by <HowItWorksMotion />
+     (GSAP writes inline `transform` on scroll). A perpetual CSS keyframe
+     animation on `transform` would win over those inline writes and silently
+     kill the scroll motion, so the ambient float on those three elements is
+     GSAP's job, not CSS's. Only opacity-based ambient pulses remain here. */
+  .page .step-note p.hi,
+  .page .hero-claim p.hi {
+    animation: hiw-hiPulse 8s ease-in-out infinite;
+  }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .page .step .inner,
+  .page .step.right .inner {
+    max-width: none;
+    margin-left: 0;
+  }
+}
+@media (max-width: 760px) {
+  .page .hero-cols {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+}

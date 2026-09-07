@@ -17,7 +17,7 @@ export function CloserSection() {
           <Link className="cta" href="/signin">
             Start Your Audit &nbsp;→
           </Link>
-          <Link className="link-2" href="/#how-it-works">
+          <Link className="link-2" href="/how-it-works">
             See How It Works
           </Link>
         </div>

@@ -5,10 +5,9 @@
    --f-fin) and the "Finally." treatment are aligned to the latest
    spec: "Finally." renders at the same size as the headline. Selectors are scoped under
    `.home-page` because the template authored them as page-global
-   (bare `nav`, `.hero`, `.stats`, etc). The nav's mobile menu-toggle
-   button and mobile-nav-panel are portaled to <body> (see
-   LandingNav.tsx) to escape `.hero`'s `overflow: clip`, so those two
-   selectors are intentionally left unscoped below.
+   (bare `nav`, `.hero`, `.stats`, etc). The top nav now lives in the
+   shared <SiteNav /> component (src/components/site-nav/), styled by
+   its own site-nav.css.
    ====================================================== */
 
 .home-page {
@@ -74,149 +73,10 @@ html:has(.home-page) {
 }
 
 /* ------------------------------------------------------
-   NAV
+   NAV — moved to src/components/site-nav/site-nav.css
+   (shared <SiteNav /> component). The mobile menu-toggle
+   and panel are portaled to <body>; see that file.
    ------------------------------------------------------ */
-
-.home-page .site-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.625rem var(--gap-x);
-  transition:
-    background 0.5s,
-    border-color 0.5s;
-  border-bottom: 1px solid transparent;
-}
-
-.home-page .site-header--scrolled {
-  background: rgba(9, 8, 10, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom-color: var(--rule);
-}
-
-.home-page .nav-brand {
-  font-family: var(--font-jost), 'Jost', sans-serif;
-  font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.5em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-
-.home-page .nav-links {
-  display: flex;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.home-page .nav-links a {
-  font-size: var(--f-label);
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--mid);
-  transition: color 0.2s;
-}
-
-.home-page .nav-links a:hover {
-  color: var(--ink);
-}
-
-.home-page .nav-links a.sign-in {
-  color: var(--ink);
-  border-bottom: 1px solid rgba(234, 226, 216, 0.22);
-  padding-bottom: 1px;
-}
-
-/* ------------------------------------------------------
-   MOBILE MENU — portaled to <body>, intentionally unscoped
-   ------------------------------------------------------ */
-
-.menu-toggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--ink, #eae2d8);
-  cursor: pointer;
-}
-
-.mobile-nav-panel {
-  display: none;
-}
-
-@media (max-width: 860px) {
-  .menu-toggle {
-    display: flex;
-
-    /*
-      position: fixed (not relative) so this button escapes .site-header's
-      stacking context — otherwise the portaled .mobile-nav-panel (appended
-      to <body>, its own root-level stacking context) would paint above it
-      and swallow clicks meant for the toggle once the panel is open.
-    */
-    position: fixed;
-    top: 1.25rem;
-    right: clamp(1.25rem, 5vw, 2rem);
-    z-index: 310;
-  }
-
-  .mobile-nav-panel {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 305;
-    background: rgba(9, 8, 10, 0.98);
-    backdrop-filter: blur(12px);
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity 0.25s ease,
-      visibility 0.25s ease;
-  }
-
-  .mobile-nav-panel--open {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .mobile-nav-links {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 2rem;
-  }
-
-  .mobile-nav-links a {
-    font-family: 'Jost', 'Helvetica Neue', sans-serif;
-    font-size: 0.9375rem;
-    font-weight: 400;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: rgba(234, 226, 216, 0.88);
-    transition: color 0.2s ease;
-  }
-
-  .mobile-nav-links a:hover {
-    color: #ffffff;
-  }
-
-  .home-page .nav-links {
-    display: none;
-  }
-}
 
 /* ------------------------------------------------------
    HERO
@@ -243,7 +103,7 @@ html:has(.home-page) {
   position: absolute;
   inset: -6%; /* overscan — zoom never reveals an edge */
   z-index: -2;
-  background-image: url('/images/landing/skinaudit-hero.jpg');
+  background-image: url('/images/landing/tsa-homepage-skincare-hero.webp');
   background-size: cover;
   background-position: center 20%;
   background-repeat: no-repeat;
@@ -490,7 +350,10 @@ html:has(.home-page) {
      desktop sizes, fuses the "h" into the "T" crossbar — "The" reads as
      "Tea". Disable common ligatures on the quote only. */
   font-variant-ligatures: none;
-  font-feature-settings: 'liga' 0, 'clig' 0, 'dlig' 0;
+  font-feature-settings:
+    'liga' 0,
+    'clig' 0,
+    'dlig' 0;
 }
 
 .home-page .q-text .word {
@@ -890,10 +753,6 @@ html:has(.home-page) {
 
 /* Tablet (≤ 860px) */
 @media (max-width: 860px) {
-  .home-page .nav-links a:not(.sign-in):not(:last-of-type) {
-    display: none;
-  }
-
   .home-page {
     --f-disp: min(clamp(3rem, 18vw, 22rem), 26svh);
     --f-fin: min(clamp(3rem, 18vw, 22rem), 26svh);
@@ -977,9 +836,6 @@ html:has(.home-page) {
   .home-page {
     --f-disp: min(clamp(2.5rem, 17vw, 6rem), 22svh);
     --f-fin: min(clamp(2.5rem, 17vw, 6rem), 22svh);
-  }
-  .home-page .site-header {
-    padding-inline: 1.25rem;
   }
 }
 

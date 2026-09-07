@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { jost } from '@/components/landing/fonts'
-import { PhilosophyNav } from './_components/PhilosophyNav'
+import { SiteNav } from '@/components/site-nav/SiteNav'
 import { HeroSection } from './_components/HeroSection'
 import { ProblemSection } from './_components/ProblemSection'
 import { TopographySection } from './_components/TopographySection'
@@ -13,7 +13,7 @@ import './philosophy.css'
 export const metadata: Metadata = {
   title: 'Philosophy — SkinAudit',
   description:
-    "Skincare was never just a list of products. Your skin experiences a routine as a system.",
+    'Skincare was never just a list of products. Your skin experiences a routine as a system.',
 }
 
 /**
@@ -28,7 +28,7 @@ export default function PhilosophyPage() {
   return (
     <div className={`${jost.variable} page`}>
       <PhilosophyMotion />
-      <PhilosophyNav />
+      <SiteNav current="philosophy" />
       <HeroSection />
       <ProblemSection />
       <TopographySection />

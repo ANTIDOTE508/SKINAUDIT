@@ -1,0 +1,179 @@
+/* ======================================================
+   SITE NAV — shared top navigation (<SiteNav />)
+   Used by the landing page and the marketing routes
+   (/philosophy, /how-it-works). Ported verbatim from the
+   landing nav these styles were authored against; the only
+   change is that the `.site-header` / `.nav-*` selectors are
+   no longer scoped under `.home-page`, since the markup now
+   lives in one shared component. The mobile `.menu-toggle` /
+   `.mobile-nav-panel` are portaled to <body> and were already
+   unscoped.
+
+   Palette tokens (--ink / --mid / --accent / --rule / --gap-x /
+   --font-jost) resolve from whichever wrapper hosts the nav —
+   `.home-page` and `.page` both define the same values — with a
+   literal fallback so the nav is never unstyled.
+   ====================================================== */
+
+/* `.site-header.site-header` — a deliberate specificity bump (0,2,0). The
+   marketing routes (/philosophy, /how-it-works) wrap the page in `.page`
+   and reset every descendant with `.page * { margin:0; padding:0 }`
+   (specificity 0,1,1). Since <SiteNav /> renders *inside* that wrapper, a
+   plain `.site-header` rule (0,1,1) ties with the reset and can lose on
+   cascade order, zeroing the nav's gutter. The double class wins cleanly
+   on every page. */
+.site-header.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Gutter fixed here rather than inherited from each wrapper's --gap-x
+     (which differs: .home-page bottoms out at 2rem, the .page routes at
+     1.5rem). Value = the landing --gap-x, so the brand and links sit in
+     the same spot on the landing page and the marketing routes. */
+  padding: 1.625rem clamp(2rem, 6vw, 6rem);
+  transition:
+    background 0.5s,
+    border-color 0.5s;
+  border-bottom: 1px solid transparent;
+}
+
+.site-header--scrolled {
+  background: rgba(9, 8, 10, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom-color: var(--rule, rgba(234, 226, 216, 0.07));
+}
+
+.site-header .nav-brand {
+  font-family: var(--font-jost), 'Jost', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--ink, #eae2d8);
+}
+
+.site-header .nav-links {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.site-header .nav-links a {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mid, #9a9088);
+  transition: color 0.2s;
+}
+
+.site-header .nav-links a:hover {
+  color: var(--ink, #eae2d8);
+}
+
+.site-header .nav-links a.here {
+  color: var(--accent, #c4b09a);
+}
+
+.site-header .nav-links a.sign-in {
+  color: var(--ink, #eae2d8);
+  border-bottom: 1px solid rgba(234, 226, 216, 0.22);
+  padding-bottom: 1px;
+}
+
+/* ------------------------------------------------------
+   MOBILE MENU — portaled to <body>, intentionally unscoped
+   ------------------------------------------------------ */
+
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink, #eae2d8);
+  cursor: pointer;
+}
+
+.mobile-nav-panel {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .menu-toggle {
+    display: flex;
+
+    /*
+      position: fixed (not relative) so this button escapes .site-header's
+      stacking context — otherwise the portaled .mobile-nav-panel (appended
+      to <body>, its own root-level stacking context) would paint above it
+      and swallow clicks meant for the toggle once the panel is open.
+    */
+    position: fixed;
+    top: 1.25rem;
+    right: clamp(1.25rem, 5vw, 2rem);
+    z-index: 310;
+  }
+
+  .mobile-nav-panel {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 305;
+    background: rgba(9, 8, 10, 0.98);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.25s ease,
+      visibility 0.25s ease;
+  }
+
+  .mobile-nav-panel--open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 2rem;
+  }
+
+  .mobile-nav-links a {
+    font-family: var(--font-jost), 'Jost', 'Helvetica Neue', sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgba(234, 226, 216, 0.88);
+    transition: color 0.2s ease;
+  }
+
+  .mobile-nav-links a:hover {
+    color: #ffffff;
+  }
+
+  .site-header .nav-links {
+    display: none;
+  }
+}
+
+/* Small phone — tighten the header gutter (was `.home-page .site-header`) */
+@media (max-width: 400px) {
+  .site-header.site-header {
+    padding-inline: 1.25rem;
+  }
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import LandingNav from './LandingNav'
+import { SiteNav } from '@/components/site-nav/SiteNav'
 import { useHeroParallax } from './useHeroParallax'
 
 export default function LandingHero() {
@@ -9,7 +9,7 @@ export default function LandingHero() {
 
   return (
     <section className="hero" id="hero">
-      <LandingNav />
+      <SiteNav />
 
       <div className="hero-overlay" aria-hidden="true" />
 

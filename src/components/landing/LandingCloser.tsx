@@ -30,9 +30,9 @@ export default function LandingCloser() {
         <Link className="cta" href="/onboarding">
           Start Your Audit <span aria-hidden="true">→</span>
         </Link>
-        <a className="link" href="#how-it-works">
+        <Link className="link" href="/how-it-works">
           Learn how it works
-        </a>
+        </Link>
       </div>
     </section>
   )
