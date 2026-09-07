@@ -103,7 +103,7 @@ html:has(.home-page) {
   position: absolute;
   inset: -6%; /* overscan — zoom never reveals an edge */
   z-index: -2;
-  background-image: url('/images/landing/tsa-homepage-skincare-hero.webp');
+  background-image: url('/images/landing/tsa-homepage-skincare-pile-032c-hires.webp');
   background-size: cover;
   background-position: center 20%;
   background-repeat: no-repeat;

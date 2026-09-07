@@ -824,3 +824,49 @@ body {
     0 0 0 2px var(--color-obsidian-950),
     0 0 0 4px var(--color-sienna-400);
 }
+
+/* ================================================================
+   PATTERNS TRANSITION SCRIM — StepBaselineTransition variant="template-t2"
+   Two layers, from templates/transition_t2.html. The vertical layer is
+   the base and works at any aspect ratio. The horizontal layer darkens
+   the left, where the copy sits and the ribbon does not — it only earns
+   its place once the viewport is wide enough for that separation, so it
+   starts at zero strength and is dialled up at tablet, then full at
+   desktop, via --scrim-x.
+   ================================================================ */
+
+.baseline-transition-scrim-t2 {
+  --scrim-x: 0; /* horizontal layer strength, 0–1 */
+
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(4, 3, 2, calc(0.56 * var(--scrim-x))) 0%,
+      rgba(4, 3, 2, calc(0.28 * var(--scrim-x))) 40%,
+      rgba(4, 3, 2, calc(0.04 * var(--scrim-x))) 72%,
+      rgba(4, 3, 2, calc(0.08 * var(--scrim-x))) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(4, 3, 2, 0.46) 0%,
+      rgba(4, 3, 2, 0.24) 34%,
+      rgba(4, 3, 2, 0.06) 62%,
+      rgba(4, 3, 2, 0.3) 100%
+    );
+}
+
+@media (min-width: 48rem) {
+  .baseline-transition-scrim-t2 {
+    --scrim-x: 0.7;
+  }
+}
+
+@media (min-width: 64rem) {
+  .baseline-transition-scrim-t2 {
+    --scrim-x: 1;
+  }
+}

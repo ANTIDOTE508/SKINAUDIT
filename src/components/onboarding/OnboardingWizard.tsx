@@ -548,6 +548,7 @@ export function OnboardingWizard({
               // Same full-bleed visual as step 0, single "Continue" CTA, no Back.
               <StepBaselineTransition
                 onContinue={goNext}
+                variant="template"
                 imageSrc="/images/onboarding/transistions/1/transition1.webp"
                 eyebrow={activeInterstitial.eyebrow}
                 titleLines={['Let’s start with', 'what’s yours.']}
@@ -555,11 +556,12 @@ export function OnboardingWizard({
                 ctaLabel="Continue"
               />
             ) : activeInterstitial.id === PATTERNS_AFTER_EXPERIENCE_ID ? (
-              // Same full-bleed visual — different image, different copy.
+              // Full-bleed "patterns" transition — matches transition_t2.html.
               <StepBaselineTransition
                 onContinue={goNext}
+                variant="template-t2"
                 imageSrc="/images/onboarding/transistions/2/transition2.webp"
-                eyebrow={activeInterstitial.eyebrow}
+                eyebrow="Your skin"
                 titleLines={['Your skin has', 'patterns.']}
                 body={activeInterstitial.body}
                 ctaLabel="Continue"
