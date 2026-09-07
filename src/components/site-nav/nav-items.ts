@@ -16,7 +16,7 @@ export type NavItem = {
   label: string
   href: string
   kind: 'route' | 'anchor' | 'external'
-  section?: 'philosophy' | 'how-it-works'
+  section?: 'philosophy' | 'how-it-works' | 'about'
   /** Rendered with the `.sign-in` treatment (underlined, brighter). */
   cta?: boolean
 }
@@ -25,7 +25,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Philosophy', href: '/philosophy', kind: 'route', section: 'philosophy' },
   { label: 'How It Works', href: '/how-it-works', kind: 'route', section: 'how-it-works' },
   { label: 'Features', href: '/#features', kind: 'anchor' },
-  { label: 'About', href: '/#about', kind: 'anchor' },
+  { label: 'About', href: '/about', kind: 'route', section: 'about' },
   { label: 'Journal', href: 'https://theskinaudit.substack.com/', kind: 'external' },
   { label: 'Sign In', href: '/signin', kind: 'route', cta: true },
 ]

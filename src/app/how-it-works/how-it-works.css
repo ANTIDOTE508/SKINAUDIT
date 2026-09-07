@@ -368,7 +368,10 @@
 }
 .page .closer-actions {
   display: flex;
-  align-items: center;
+  /* align on the text baseline so "Start Your Audit" and "Read the
+     Philosophy" sit on the same line, despite the CTA being a padded
+     button and the link being bare text */
+  align-items: baseline;
   gap: clamp(1.5rem, 4vw, 3rem);
   flex-wrap: wrap;
 }
