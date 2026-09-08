@@ -48,6 +48,34 @@ export function PhilosophyMotion() {
       })
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
+        // ── hero copy: staggered arrival on load ──
+        // Was a CSS `animation: philo-riseIn … both` in philosophy.css; moved
+        // here because on a soft route change that stylesheet can land a frame
+        // after the hero has painted, and a late `both`-filled animation then
+        // yanked the visible headline back to its offset/faded `from` state
+        // (the "scrambled, off-center until refresh" the page showed). Seeding
+        // the from-state with gsap.set() at mount happens before first paint.
+        const heroBits = [
+          '.hero .label',
+          '.hero-lead',
+          '.hero-system',
+          '.hero-cols',
+        ]
+          .map((s) => root.querySelector<HTMLElement>(s))
+          .filter((el): el is HTMLElement => el !== null)
+
+        if (heroBits.length) {
+          gsap.set(heroBits, { y: 32, autoAlpha: 0 })
+          gsap.to(heroBits, {
+            y: 0,
+            autoAlpha: 1,
+            duration: 1.15,
+            ease: 'expo.out',
+            stagger: 0.16,
+            delay: 0.05,
+          })
+        }
+
         // ── section content reveals ──
         REVEAL_GROUPS.forEach((selector) => {
           const items = gsap.utils.toArray<HTMLElement>(selector)

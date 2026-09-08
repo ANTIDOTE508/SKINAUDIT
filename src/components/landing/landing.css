@@ -103,13 +103,52 @@ html:has(.home-page) {
   position: absolute;
   inset: -6%; /* overscan — zoom never reveals an edge */
   z-index: -2;
-  background-image: url('/images/landing/tsa-homepage-skincare-pile-032c-hires.webp');
+  background-image: url('/images/landing/skin-audit-homepage-hero.webp');
   background-size: cover;
   background-position: center 20%;
   background-repeat: no-repeat;
   animation: hero-zoom 16s ease-in-out infinite alternate;
   animation-play-state: var(--hero-zoom-play-state, running);
   will-change: transform;
+}
+
+/* Desktop: the hero source is near-square, but the hero band is short and wide,
+   so `cover` is width-driven — it fills 100vw and the image's height overflows,
+   leaving only a narrow horizontal slice through the centre visible. That is
+   the CEO's "too zoomed in — I want more products, more chaos".
+   Fix: show the whole pile with a height-fitted (`auto 100%`) sharp layer, and
+   fill the left/right gutters it leaves with a blurred, darkened blow-up of the
+   same photo on `::after` — so the frame still reads edge to edge with no bare
+   bands, and every product in the shot is on screen. */
+@media (min-width: 768px) {
+  .home-page .hero::before {
+    background-size: auto 106%;
+    background-position: center center;
+    inset: -1.5%;
+    animation-name: hero-zoom-desktop;
+  }
+
+  .home-page .hero::after {
+    content: '';
+    position: absolute;
+    inset: -6%;
+    z-index: -3;
+    background-image: url('/images/landing/skin-audit-homepage-hero.webp');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    filter: blur(28px) brightness(0.42) saturate(0.85);
+    transform: scale(1.12); /* hide the blur's soft edge */
+    will-change: transform;
+  }
+}
+
+/* Wide monitors: the sharp layer can afford to fill more width — a little
+   crop top/bottom is fine and the blurred gutters stay narrow. */
+@media (min-width: 1600px) {
+  .home-page .hero::before {
+    background-size: auto 122%;
+  }
 }
 
 .home-page .hero-overlay {
@@ -694,6 +733,20 @@ html:has(.home-page) {
   }
   100% {
     transform: scale(1.05) translateX(1%) translateY(0.5%);
+  }
+}
+
+/* Desktop Ken Burns — same cinematic drift, gentler zoom span so the framing
+   never crops back in to the "too zoomed in" centre the CEO flagged. */
+@keyframes hero-zoom-desktop {
+  0% {
+    transform: scale(1) translateX(0) translateY(0);
+  }
+  50% {
+    transform: scale(1.03) translateX(-0.6%) translateY(-0.4%);
+  }
+  100% {
+    transform: scale(1.02) translateX(0.6%) translateY(0.3%);
   }
 }
 

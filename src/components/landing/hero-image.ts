@@ -5,4 +5,4 @@
  * two in sync when changing the asset.
  */
 export const HERO_IMAGE_SRC =
-  '/images/landing/tsa-homepage-skincare-pile-032c-hires.webp'
+  '/images/landing/skin-audit-homepage-hero.webp'

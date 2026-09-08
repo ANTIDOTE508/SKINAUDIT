@@ -387,6 +387,14 @@
 .page .sec-shift {
   background: #0d0a09;
 }
+/* The shift backdrop is injected as a raw SVG string, so it needs a wrapper
+   div (dangerouslySetInnerHTML). `display: contents` removes that div from
+   the box tree so the `<svg class="art">` inside resolves its `height: 112%`
+   against `.sec-shift` — exactly like the JSX art in every other section.
+   Without this the wrapper collapses to height:0 and the art never paints. */
+.page .shift-art-host {
+  display: contents;
+}
 .page .sec-shift .art-veil {
   background:
     linear-gradient(
@@ -711,28 +719,21 @@
     animation-delay: -5s;
   }
 
-  /* hero copy — staggered arrival on load */
-  .page .hero .label {
-    animation: philo-riseIn 1s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .page .hero-lead {
-    animation: philo-riseIn 1.15s 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .page .hero-system {
-    animation: philo-riseIn 1.15s 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .page .hero-cols {
-    animation: philo-riseIn 1.15s 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
   .page .label::after {
     transform-origin: left center;
     animation: philo-ruleGrow 1.4s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  /* Section reveals and the topo parallax are driven by <PhilosophyMotion />
-     (GSAP + ScrollTrigger) — the old `animation-timeline: view()` block that
-     lived here only ran on Chromium. */
+  /* The hero copy's staggered arrival is driven by <PhilosophyMotion />
+     (GSAP), not a CSS `animation … both` here. On a client-side route change
+     this stylesheet can apply a frame *after* the hero has already painted;
+     a `both`-filled load animation applied that late snapped the already-
+     visible headline back to its `from` state (offset + faded), so the block
+     looked shifted and "scrambled" until a refresh. GSAP seeds the from-state
+     at mount instead, before first paint, so the first visit matches a
+     refresh. Section reveals and the topo parallax are GSAP-driven too — the
+     old `animation-timeline: view()` block that lived here only ran on
+     Chromium. */
 }
 
 /* ── RESPONSIVE ── */
