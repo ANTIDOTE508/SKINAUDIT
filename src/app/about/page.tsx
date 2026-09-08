@@ -34,7 +34,7 @@ export const metadata: Metadata = {
  */
 export default function AboutPage() {
   return (
-    <div className={`${jost.variable} page`}>
+    <div className={`${jost.variable} page about-page`}>
       <AboutMotion />
       <AboutField />
       <div className="field-veil" />

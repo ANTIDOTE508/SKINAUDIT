@@ -1,11 +1,11 @@
 /*
   Scoped styles for the /about route. Everything is namespaced under
-  `.page` (the route's outer wrapper) so it cannot leak into the rest of
+  `.about-page` (the route's outer wrapper) so it cannot leak into the rest of
   the app, which uses Tailwind + the landing CSS.
 
   This is the comp's <style> block (templates/about.html) with three
   deliberate changes, identical to what /philosophy and /how-it-works do:
-    1. every selector namespaced under `.page`;
+    1. every selector namespaced under `.about-page`;
     2. font-family swapped to the app's CSS vars — 'Jost' → var(--font-jost)
        (from `jost.variable` on the wrapper), 'Cormorant Garamond' →
        var(--font-cormorant) (loaded globally in app/layout.tsx);
@@ -19,22 +19,22 @@
   (src/components/site-nav/site-nav.css) — this file no longer styles it.
 */
 
-.page *,
-.page *::before,
-.page *::after {
+.about-page *,
+.about-page *::before,
+.about-page *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
-.page a {
+.about-page a {
   color: #c4b09a;
   text-decoration: none;
 }
-.page a:hover {
+.about-page a:hover {
   color: #d4c2ae;
 }
 
-.page {
+.about-page {
   --bg: #09080a;
   --ink: #eae2d8;
   --mid: #9a9088;
@@ -60,14 +60,14 @@
    merging at junctions and resolving row by row into a single solution at
    the foot. The SVG covers the page with `slice` rather than being
    stretched, so the glyphs and right angles stay true at every viewport. */
-.page .field-wrap {
+.about-page .field-wrap {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
 }
-.page .field {
+.about-page .field {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -77,7 +77,7 @@
 
 /* the reading column is darkened, so the line work stays quiet behind the
    text and keeps its full weight out at the margins */
-.page .field-veil {
+.about-page .field-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -102,13 +102,13 @@
     );
 }
 
-.page .shell {
+.about-page .shell {
   position: relative;
   z-index: 2;
 }
 
 /* ── TYPE ── */
-.page .label {
+.about-page .label {
   font-size: 0.625rem;
   font-weight: 500;
   letter-spacing: 0.42em;
@@ -120,14 +120,14 @@
   gap: 1.1rem;
   margin-bottom: clamp(1.75rem, 4vh, 2.75rem);
 }
-.page .label::before,
-.page .label::after {
+.about-page .label::before,
+.about-page .label::after {
   content: '';
   width: 2.25rem;
   height: 1px;
   background: rgba(196, 176, 154, 0.32);
 }
-.page .disp {
+.about-page .disp {
   font-family: var(--font-cormorant), Georgia, serif;
   font-weight: 300;
   letter-spacing: -0.025em;
@@ -135,18 +135,18 @@
   color: var(--ink);
   text-wrap: balance;
 }
-.page .body-copy {
+.about-page .body-copy {
   font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
   line-height: 2.05;
   color: var(--mid);
 }
-.page .stack {
+.about-page .stack {
   display: flex;
   flex-direction: column;
   gap: 1.6rem;
 }
 
-.page .section {
+.about-page .section {
   position: relative;
   padding: clamp(5rem, 15vh, 11rem) var(--gap-x);
 }
@@ -154,40 +154,40 @@
    its scrim, hiding the derivation draw-in in the first screen. It still needs
    the section padding, and `.hero .inner` centres itself with its own margin,
    so it does not need to be a positioned ancestor. */
-.page .hero {
+.about-page .hero {
   padding: clamp(5rem, 15vh, 11rem) var(--gap-x);
   padding-top: clamp(5.5rem, 16vh, 11rem);
 }
-.page .inner {
+.about-page .inner {
   max-width: var(--measure);
   margin: 0 auto;
   text-align: center;
 }
 
-.page .hero-lead {
+.about-page .hero-lead {
   font-size: clamp(2.25rem, 5vw, 4.5rem);
   margin-bottom: clamp(2.25rem, 5vh, 3.25rem);
 }
-.page .sec-hed {
+.about-page .sec-hed {
   font-size: clamp(1.875rem, 4vw, 3.25rem);
   margin-bottom: clamp(2rem, 5vh, 3rem);
 }
 
 /* the accumulation — each line one more thing added */
-.page .accrue {
+.about-page .accrue {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   margin-top: clamp(2.25rem, 5vh, 3rem);
 }
-.page .accrue p {
+.about-page .accrue p {
   font-family: var(--font-cormorant), Georgia, serif;
   font-weight: 300;
   font-size: clamp(1.125rem, 2vw, 1.6875rem);
   line-height: 1.45;
   color: var(--dim);
 }
-.page .accrue p.turn {
+.about-page .accrue p.turn {
   color: var(--accent);
   font-style: italic;
   margin-top: 1.1rem;
@@ -195,7 +195,7 @@
   border-top: 1px solid var(--rule);
 }
 
-.page .claim {
+.about-page .claim {
   font-family: var(--font-cormorant), Georgia, serif;
   font-weight: 300;
   font-style: italic;
@@ -206,13 +206,13 @@
   padding-top: clamp(1.75rem, 4vh, 2.5rem);
   border-top: 1px solid var(--rule);
 }
-.page .claim .quiet {
+.about-page .claim .quiet {
   display: block;
   color: var(--dim);
   font-style: normal;
 }
 
-.page .journal-name {
+.about-page .journal-name {
   font-family: var(--font-cormorant), Georgia, serif;
   font-style: italic;
   font-weight: 400;
@@ -220,7 +220,7 @@
   color: var(--ink);
   margin: clamp(1.5rem, 3vh, 2rem) 0;
 }
-.page .cta {
+.about-page .cta {
   display: inline-block;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.6875rem;
@@ -233,12 +233,12 @@
   white-space: nowrap;
   margin-top: clamp(2rem, 5vh, 3rem);
 }
-.page .cta:hover {
+.about-page .cta:hover {
   background: var(--accent-br);
   color: #09080a;
 }
 
-.page .foot {
+.about-page .foot {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -257,14 +257,14 @@
    Each word sits in an overflow-hidden wrapper with its inner span able to
    be pushed fully below it. The `.wi` renders at rest by default;
    <AboutMotion /> seeds and plays the rise. */
-.page .w {
+.about-page .w {
   display: inline-block;
   overflow: hidden;
   vertical-align: bottom;
   padding-bottom: 0.16em;
   margin-bottom: -0.16em;
 }
-.page .wi {
+.about-page .wi {
   display: block;
 }
 
@@ -300,15 +300,15 @@
 @media (prefers-reduced-motion: no-preference) {
   /* ONE pulse per route, not a chain. Every route carries pathLength="1",
      so this dash is a fraction of that route: 4% lit, 96% dark. */
-  .page .pulse {
+  .about-page .pulse {
     stroke-dasharray: 0.04 0.96;
     animation: about-signal 13s linear infinite;
   }
-  .page .join circle {
+  .about-page .join circle {
     animation: about-joinPulse 6s ease-in-out infinite;
   }
   /* the solution breathes — the one thing on the page that resolves */
-  .page .solve {
+  .about-page .solve {
     transform-box: fill-box;
     transform-origin: 50% 50%;
     animation: about-solveRing 11s ease-in-out infinite;
@@ -317,16 +317,16 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 760px) {
-  .page .inner {
+  .about-page .inner {
     text-align: left;
   }
-  .page .label {
+  .about-page .label {
     justify-content: flex-start;
   }
-  .page .label::before {
+  .about-page .label::before {
     display: none;
   }
-  .page .field-veil {
+  .about-page .field-veil {
     background:
       linear-gradient(
         to right,

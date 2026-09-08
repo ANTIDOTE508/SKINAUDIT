@@ -24,7 +24,7 @@ gsap.registerPlugin(ScrollTrigger)
  */
 export function AboutMotion() {
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>('.page')
+    const root = document.querySelector<HTMLElement>('.about-page')
     if (!root) return
 
     // The field SVG is ~4200 user-units tall and injected as a raw string;
