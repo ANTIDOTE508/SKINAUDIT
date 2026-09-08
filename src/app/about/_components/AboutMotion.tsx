@@ -27,6 +27,15 @@ export function AboutMotion() {
     const root = document.querySelector<HTMLElement>('.page')
     if (!root) return
 
+    // The field SVG is ~4200 user-units tall and injected as a raw string;
+    // fonts, the poster and images also settle after mount. Each changes the
+    // document height *after* ScrollTrigger first measures it, which left the
+    // section reveals firing at the wrong scroll positions on a warm load.
+    // Re-measure once everything has loaded and once webfonts have swapped.
+    const refresh = () => ScrollTrigger.refresh()
+    window.addEventListener('load', refresh)
+    document.fonts?.ready.then(refresh).catch(() => {})
+
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia()
 
@@ -109,66 +118,41 @@ export function AboutMotion() {
           )
         }
 
-        // ── the derivation draws itself out down the page as it is read ──
+        // ── the derivation draws itself out, top to bottom, on load ──
         // Ports the comp's `@supports (animation-timeline: scroll(root block))`
-        // block (dropped from about.css): each numbered band's tracks — then,
-        // slightly later, the terms they reach — stroke on as the page scrolls,
-        // so the field is visibly in motion from the hero onward, not a still.
-        // One timeline scrubbed over the whole page; each band tween is placed
-        // at the comp's `animation-range` fractions via the position parameter.
+        // block (dropped from about.css). The comp keyed the draw-in to page
+        // scroll, so at scroll 0 the hero's tracks sat undrawn and *nothing*
+        // moved there until you scrolled — a cache-cold reload (which refreshes
+        // ScrollTrigger late, mid-scroll) was the only time the hero showed
+        // any of it. Running it as a one-shot on load instead gives the hero
+        // the same living, drawing-in field as the sections lower down, on the
+        // first paint. The staggered order still reads top-to-bottom, and the
+        // perpetual `.pulse` / `.join` / `.solve` CSS keeps it alive after.
         if (field) {
-          // [bandSuffix, startPct, endPct] — the comp's animation-range values.
-          // Tracks in the markup run b-1…b-10; glyphs b-0…b-10.
-          const TRACK_BANDS: [number, number, number][] = [
-            [1, 0, 16], [2, 0, 25], [3, 0, 33], [4, 0, 41], [5, 0, 50],
-            [6, 0, 58], [7, 0, 66], [8, 0, 75], [9, 0, 83], [10, 0, 91],
-          ]
-          const GLYPH_BANDS: [number, number, number][] = [
-            [0, 3, 11], [1, 7, 19], [2, 11, 28], [3, 15, 36], [4, 19, 45], [5, 24, 53],
-            [6, 28, 62], [7, 32, 70], [8, 36, 79], [9, 40, 87], [10, 44, 95],
-          ]
-
-          const draw = gsap.timeline({
-            defaults: { ease: 'none' },
-            scrollTrigger: {
-              trigger: root,
-              start: 'top top',
-              end: 'bottom bottom',
-              scrub: true,
-            },
-          })
-
-          const addBand = (
-            selector: string,
-            startPct: number,
-            endPct: number
-          ) => {
-            const els = gsap.utils.toArray<Element>(selector)
-            if (!els.length) return
-            gsap.set(els, { strokeDasharray: 1, strokeDashoffset: 1 })
-            // timeline spans 100 "seconds"; 1s == 1% of page scroll.
-            draw.to(
-              els,
-              { strokeDashoffset: 0, duration: Math.max(endPct - startPct, 0.001) },
-              startPct
+          const strokes = gsap.utils.toArray<Element>(
+            '.field .trk path, .field .gly path, .field .gly circle, .field .gly rect, .field .gly polygon'
+          )
+          if (strokes.length) {
+            gsap.set(strokes, { strokeDasharray: 1 })
+            gsap.fromTo(
+              strokes,
+              { strokeDashoffset: 1 },
+              {
+                strokeDashoffset: 0,
+                ease: 'none',
+                duration: 1.8,
+                stagger: { each: 2 / strokes.length, from: 'start' },
+              }
             )
           }
-
-          TRACK_BANDS.forEach(([n, s, e]) =>
-            addBand(`.field .trk.b-${n} path`, s, e)
-          )
-          GLYPH_BANDS.forEach(([n, s, e]) =>
-            addBand(
-              `.field .gly.b-${n} path, .field .gly.b-${n} circle, .field .gly.b-${n} rect, .field .gly.b-${n} polygon`,
-              s,
-              e
-            )
-          )
         }
       })
     }, root)
 
-    return () => ctx.revert()
+    return () => {
+      window.removeEventListener('load', refresh)
+      ctx.revert()
+    }
   }, [])
 
   return null

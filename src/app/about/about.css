@@ -146,12 +146,16 @@
   gap: 1.6rem;
 }
 
-.page .section,
-.page .hero {
+.page .section {
   position: relative;
   padding: clamp(5rem, 15vh, 11rem) var(--gap-x);
 }
+/* No `position` on `.hero`: it sat above the page-spanning `.field` layer and
+   its scrim, hiding the derivation draw-in in the first screen. It still needs
+   the section padding, and `.hero .inner` centres itself with its own margin,
+   so it does not need to be a positioned ancestor. */
 .page .hero {
+  padding: clamp(5rem, 15vh, 11rem) var(--gap-x);
   padding-top: clamp(5.5rem, 16vh, 11rem);
 }
 .page .inner {
