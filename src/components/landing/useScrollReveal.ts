@@ -33,6 +33,9 @@ export function useScrollReveal<T extends HTMLElement>(): RefObject<T | null> {
     }
 
     let done = false
+    // Declared up-front: reveal() may run during the synchronous on-mount
+    // in-view check below, before the setTimeout that assigns this.
+    let fallbackId = 0
 
     const reveal = () => {
       if (done) return
@@ -76,7 +79,7 @@ export function useScrollReveal<T extends HTMLElement>(): RefObject<T | null> {
     }
 
     // Last-resort: never leave a section invisible.
-    const fallbackId = window.setTimeout(() => {
+    fallbackId = window.setTimeout(() => {
       if (isInView()) reveal()
     }, 1200)
 
