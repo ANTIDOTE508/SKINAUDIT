@@ -549,7 +549,7 @@ export function OnboardingWizard({
               <StepBaselineTransition
                 onContinue={goNext}
                 variant="template"
-                imageSrc="/images/onboarding/transistions/1/transition1.webp"
+                imageSrc="/images/onboarding/transistions/1/transition1-v2.webp"
                 eyebrow={activeInterstitial.eyebrow}
                 titleLines={['Let’s start with', 'what’s yours.']}
                 body={activeInterstitial.body}
@@ -579,9 +579,11 @@ export function OnboardingWizard({
           {state.step === 0 && (
             <StepBaselineTransition
               onContinue={goNext}
+              variant="template"
               imageSrc="/images/onboarding/transistions/opening/opening.webp"
-              eyebrow="SkinAudit"
-              titleLines={["This isn't a quiz.", "It's a read of your skin."]}
+              eyebrow=""
+              titleLines={["Let's understand", 'your skin.']}
+              body="Understand how your routine actually works."
               ctaLabel="Begin"
             />
           )}

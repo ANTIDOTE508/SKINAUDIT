@@ -1,20 +1,61 @@
 'use client'
 
 import { useRef, useEffect, useState, useTransition } from 'react'
-import { createPortal } from 'react-dom'
-import Image from 'next/image'
 import { gsap } from 'gsap'
-import { Check, Activity, CloudSun, TrendingUp, Lock, ArrowRight } from 'lucide-react'
+import { Check, ArrowRight } from 'lucide-react'
 import { acknowledgeAllSet } from '@/app/actions/onboarding'
 
-const BULLETS = [
-  { icon: Activity, text: 'Your regimen will be analyzed continuously' },
-  { icon: CloudSun, text: 'Environmental context will be factored in' },
-  { icon: TrendingUp, text: 'Your understanding will grow over time' },
-  { icon: Lock, text: 'You stay in control' },
+/**
+ * The four assurance icons are the hairline SVGs from templates/allSet.html —
+ * a spectral trace over a baseline, a graduated meter, a plotted curve with
+ * observations, and an aperture. 1px round-capped strokes, no fills, no badge.
+ */
+const BULLETS: { text: string; icon: React.ReactNode }[] = [
+  {
+    text: 'Your regimen will be analyzed continuously',
+    icon: (
+      <>
+        <path d="M2 20.5h20" opacity="0.5" />
+        <path d="M2.5 17.5h2.5l1.5-4.5 1.5 4.5h1l2-11.5 2 11.5h1.5l1.5-6 1.5 6h3" />
+      </>
+    ),
+  },
+  {
+    text: 'Environmental context will be factored in',
+    icon: (
+      <>
+        <path d="M3.6 17.5a8.4 8.4 0 0 1 16.8 0" />
+        <path
+          d="M2 17.5h1.7M5.1 10.5l1.2 1.2M12 7.4V9.1M18.9 10.5l-1.2 1.2M20.4 17.5H22"
+          opacity="0.65"
+        />
+        <path d="M12 17.5l4-5" />
+        <circle cx="12" cy="17.5" r="1.1" fill="currentColor" stroke="none" />
+      </>
+    ),
+  },
+  {
+    text: 'Your understanding will grow over time',
+    icon: (
+      <>
+        <path d="M3.5 3v18h18" opacity="0.5" />
+        <path d="M6 18c2.5 0 4-4.5 6-8s4-4.8 7-5.2" />
+        <circle cx="8.6" cy="16.2" r="1.15" fill="currentColor" stroke="none" />
+        <circle cx="13.2" cy="8.9" r="1.15" fill="currentColor" stroke="none" />
+        <circle cx="19" cy="4.9" r="1.15" fill="currentColor" stroke="none" />
+      </>
+    ),
+  },
+  {
+    text: 'You stay in control',
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 4 7.5 11.8M20 12H10.9M16.5 19.1 12 11.3" />
+      </>
+    ),
+  },
 ]
-
-const HEXAGON_CLIP = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
 
 type Props = {
   onContinue: () => void
@@ -34,11 +75,6 @@ export function StepCompletion({ onContinue, onBack }: Props) {
   const btnRef = useRef<HTMLButtonElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     const badge = badgeRef.current
@@ -72,57 +108,8 @@ export function StepCompletion({ onContinue, onBack }: Props) {
 
   return (
     <div>
-      {/* Background scene — portaled to body so GSAP's transform on ancestor
-          content doesn't trap this fixed layer inside the wizard's 680px
-          column. The reference image is dark and content-heavy on its left
-          side already, so the scrim only needs to reinforce the left edge
-          where the text sits and can stay light on the right where the
-          image's own dark tones already carry it. */}
-      {mounted &&
-        createPortal(
-          <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', backgroundColor: 'var(--color-obsidian-950)' }}>
-            <Image
-              src="/images/onboarding/stepCompletion/onboarding-completion-clarity.webp"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="step23-completion-image"
-            />
-            <div className="step23-completion-scrim" />
-            <style>{`
-              .step23-completion-image {
-                object-fit: cover;
-                object-position: center center;
-                /* A slow ambient drift on the photograph — keeps the
-                   background from feeling pinned. 22s for one full
-                   inhale/exhale; the motion itself is below the
-                   threshold of conscious perception. */
-                animation: step23-completion-drift 22s ease-in-out infinite;
-              }
-              @keyframes step23-completion-drift {
-                0%, 100% { transform: scale(1.015) translate(-0.3%, 0.2%); }
-                50%      { transform: scale(1.025) translate( 0.3%,-0.2%); }
-              }
-              @media (prefers-reduced-motion: reduce) {
-                .step23-completion-image { animation: none; }
-              }
-              .step23-completion-scrim {
-                position: absolute;
-                inset: 0;
-                background: linear-gradient(
-                  90deg,
-                  rgba(6,5,5,0.92) 0%,
-                  rgba(6,5,5,0.75) 35%,
-                  rgba(6,5,5,0.30) 65%,
-                  rgba(6,5,5,0.05) 100%
-                );
-              }
-            `}</style>
-          </div>,
-          document.body
-        )}
-
+      {/* No background image on this screen — templates/allSet.html carries the
+          warmth in the ground itself (a warm near-black). */}
       <div
         style={{
           position: 'relative',
@@ -196,34 +183,33 @@ export function StepCompletion({ onContinue, onBack }: Props) {
             textAlign: 'left',
           }}
         >
-          {BULLETS.map(({ icon: Icon, text }) => (
+          {BULLETS.map(({ icon, text }) => (
             <li
               key={text}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1rem',
+                gap: '1.25rem',
                 fontFamily: 'var(--font-body)',
                 fontWeight: 300,
                 fontSize: '0.9375rem',
                 color: 'var(--color-alabaster-300)',
               }}
             >
-              <span
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  flexShrink: 0,
-                  clipPath: HEXAGON_CLIP,
-                  backgroundColor: 'var(--color-accent-subtle)',
-                  border: '1px solid var(--color-accent-border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+              <svg
+                viewBox="0 0 24 24"
+                width="30"
+                height="30"
+                fill="none"
+                stroke="var(--color-sienna-400)"
+                strokeWidth={1.1}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                style={{ flexShrink: 0 }}
               >
-                <Icon size={16} strokeWidth={1.5} color="var(--color-sienna-400)" />
-              </span>
+                {icon}
+              </svg>
               {text}
             </li>
           ))}
