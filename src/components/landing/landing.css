@@ -447,7 +447,10 @@ html:has(.home-page) {
 
 .home-page .feat-header {
   padding: clamp(4rem, 8vh, 7rem) var(--gap-x) clamp(3rem, 5vh, 5rem);
-  border-bottom: 1px solid var(--rule-md);
+  /* No border-bottom here: .feat-header is capped at 52rem, so its rule
+     stopped short of the viewport edge while the rule under cards 03/04
+     (on .features) runs full-width. The divider above 01/02 is drawn by
+     those cards' border-top instead, which spans the whole grid. */
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -508,6 +511,14 @@ html:has(.home-page) {
 
 .home-page .feat-card:nth-child(2n) {
   border-right: none;
+}
+
+/* First row (cards 01/02): full-width var(--rule-md) top line, matching the
+   var(--rule-md) line under cards 03/04 (drawn on .features). .feat-header
+   no longer draws its own bottom rule (it was capped at 52rem). */
+.home-page .feat-card:nth-child(1),
+.home-page .feat-card:nth-child(2) {
+  border-top: 1px solid var(--rule-md);
 }
 
 .home-page .feat-card.on {
