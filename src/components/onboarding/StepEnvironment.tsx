@@ -1,38 +1,15 @@
 'use client'
 
-import { useRef, useEffect, useState, useTransition, useId } from 'react'
+import { useRef, useEffect, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
-import { MapPin, Flame, Droplet, Cloud, Snowflake, Flower, Sun, Leaf } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { StepFooter } from './StepFooter'
 import { CityAutocomplete } from './CityAutocomplete'
 import { detectSeason, detectClimateZone, reverseGeocode } from './environmentAutoDetect'
 import { saveEnvironment } from '@/app/actions/onboarding'
 import type { ClimateZone, Season } from '@prisma/client'
-
-const ICON_SIZE = 20
-const ICON_STROKE = 1.5
-
-// UI label diverges from the Prisma enum value for TEMPERATE: the screenshot
-// calls this "Moderate (humid)" — the underlying ClimateZone.TEMPERATE value
-// is unchanged, this is a display-only relabel, not a schema change.
-const CLIMATE_ZONES: { value: ClimateZone; label: string; icon: React.ReactNode }[] = [
-  { value: 'DRY', label: 'Dry', icon: <Flame size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-  { value: 'TEMPERATE', label: 'Moderate (humid)', icon: <Droplet size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-  { value: 'HUMID', label: 'Humid', icon: <Cloud size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-]
-
-// UI label diverges from the Prisma enum value for AUTUMN: the screenshot
-// calls this "Fall" — the underlying Season.AUTUMN value is unchanged, this
-// is a display-only relabel, not a schema change. Order matches the
-// screenshot: Winter, Spring, Summer, Fall.
-const SEASONS: { value: Season; label: string; icon: React.ReactNode }[] = [
-  { value: 'WINTER', label: 'Winter', icon: <Snowflake size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-  { value: 'SPRING', label: 'Spring', icon: <Flower size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-  { value: 'SUMMER', label: 'Summer', icon: <Sun size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-  { value: 'AUTUMN', label: 'Fall', icon: <Leaf size={ICON_SIZE} strokeWidth={ICON_STROKE} /> },
-]
 
 const SUB_COPY: React.CSSProperties = {
   fontFamily: 'var(--font-body)',
@@ -66,8 +43,6 @@ export function StepEnvironment({
   onBack,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const climateRef = useRef<HTMLDivElement>(null)
-  const seasonRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -85,9 +60,6 @@ export function StepEnvironment({
     'idle' | 'requesting' | 'done' | 'denied' | 'error' | 'declined'
   >('idle')
   const geoAbortRef = useRef<AbortController | null>(null)
-
-  const climateLabelId = useId()
-  const seasonLabelId = useId()
 
   // Latest props, read inside the async auto-detect flow below so we never
   // overwrite a value the user already set (manually, or from a prior resume)
@@ -252,7 +224,10 @@ export function StepEnvironment({
   }
 
   const hasValidCity = Boolean(city && countryCode)
-  const canContinue = hasValidCity && Boolean(climateZone) && Boolean(season)
+  // Climate and season are no longer shown or picked on screen — they are
+  // derived from the location (lat/lng + date) and persisted in the
+  // background. Continue only gates on having a valid city.
+  const canContinue = hasValidCity
 
   useEffect(() => {
     const node = rootRef.current
@@ -274,57 +249,9 @@ export function StepEnvironment({
           { y: 0, opacity: 1, duration: 0.55, stagger: 0.09, ease: 'power3.out', delay: 0.15 }
         )
       }
-
-      const climateCards = climateRef.current?.querySelectorAll('[data-card]')
-      if (climateCards?.length) {
-        gsap.fromTo(
-          climateCards,
-          { y: 16, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.45, stagger: 0.08, ease: 'power2.out', delay: 0.45 }
-        )
-      }
-
-      const seasonCards = seasonRef.current?.querySelectorAll('[data-card]')
-      if (seasonCards?.length) {
-        gsap.fromTo(
-          seasonCards,
-          { y: 12, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.4, stagger: 0.06, ease: 'power2.out', delay: 0.65 }
-        )
-      }
     }, node)
     return () => ctx.revert()
   }, [])
-
-  /** Arrow keys move between cards and select as they go, per the WAI-ARIA
-   *  radiogroup pattern. Wraps around at both ends. */
-  const handleClimateKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const delta =
-      e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
-      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1
-      : 0
-    if (delta === 0) return
-    e.preventDefault()
-    const next = (index + delta + CLIMATE_ZONES.length) % CLIMATE_ZONES.length
-    update({ climateZone: CLIMATE_ZONES[next].value })
-    setClimateAutoDetected(false)
-    const cards = climateRef.current?.querySelectorAll<HTMLButtonElement>('[data-card]')
-    cards?.[next]?.focus()
-  }
-
-  const handleSeasonKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const delta =
-      e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
-      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1
-      : 0
-    if (delta === 0) return
-    e.preventDefault()
-    const next = (index + delta + SEASONS.length) % SEASONS.length
-    update({ season: SEASONS[next].value })
-    setSeasonAutoDetected(false)
-    const cards = seasonRef.current?.querySelectorAll<HTMLButtonElement>('[data-card]')
-    cards?.[next]?.focus()
-  }
 
   const persist = () => {
     setError(null)
@@ -355,15 +282,9 @@ export function StepEnvironment({
     mode === 'ask' &&
     (geoStatus === 'denied' || geoStatus === 'error' || geoStatus === 'declined')
 
-  const climateLabel = CLIMATE_ZONES.find((z) => z.value === climateZone)?.label
-  const seasonLabel = SEASONS.find((s) => s.value === season)?.label
-  const detectedSummary = [
-    city && countryName ? `${city}, ${countryName}` : city || null,
-    climateLabel,
-    seasonLabel,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+  // Climate/season are still derived and persisted, just no longer surfaced
+  // in this summary line.
+  const detectedSummary = city && countryName ? `${city}, ${countryName}` : city || ''
 
   return (
     <div ref={rootRef}>
@@ -624,217 +545,9 @@ export function StepEnvironment({
           </div>
         </div>
 
-        {/* Climate */}
-        <div data-reveal style={{ marginBottom: '2rem' }}>
-          <span
-            id={climateLabelId}
-            className="label-caps"
-            style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}
-          >
-            Climate
-            {climateAutoDetected && (
-              <span
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 300,
-                  fontSize: '0.6875rem',
-                  letterSpacing: 'normal',
-                  textTransform: 'none',
-                  color: 'var(--color-text-muted)',
-                }}
-              >
-                auto-detected from your city — tap to adjust
-              </span>
-            )}
-          </span>
-          <div
-            ref={climateRef}
-            role="radiogroup"
-            aria-labelledby={climateLabelId}
-            aria-required="true"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '0.75rem',
-            }}
-          >
-            {CLIMATE_ZONES.map((zone, index) => {
-              const isSelected = climateZone === zone.value
-              return (
-                <button
-                  key={zone.value}
-                  type="button"
-                  role="radio"
-                  data-card
-                  aria-checked={isSelected}
-                  aria-label={zone.label}
-                  tabIndex={isSelected || (!climateZone && index === 0) ? 0 : -1}
-                  onKeyDown={(e) => handleClimateKeyDown(e, index)}
-                  onClick={() => {
-                    update({ climateZone: zone.value })
-                    setClimateAutoDetected(false)
-                  }}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.625rem',
-                    padding: '1.125rem 0.75rem',
-                    borderRadius: 'var(--radius-card)',
-                    border: isSelected
-                      ? '1.5px solid var(--color-sienna-400)'
-                      : '1px solid var(--color-border)',
-                    backgroundColor: isSelected
-                      ? 'var(--color-accent-subtle)'
-                      : 'var(--color-surface)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    transition:
-                      'border-color 180ms var(--ease-luxury), background-color 180ms var(--ease-luxury)',
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      border: isSelected
-                        ? '1px solid var(--color-sienna-400)'
-                        : '1px solid rgba(184,134,61,0.28)',
-                      color: isSelected ? 'var(--color-sienna-400)' : 'var(--color-alabaster-400)',
-                      transition: 'border-color 180ms var(--ease-luxury), color 180ms var(--ease-luxury)',
-                    }}
-                  >
-                    {zone.icon}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontWeight: 300,
-                      fontSize: '0.8125rem',
-                      textAlign: 'center',
-                      color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
-                      transition: 'color 180ms ease',
-                    }}
-                  >
-                    {zone.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Season */}
-        <div data-reveal style={{ marginBottom: '0.5rem' }}>
-          <span
-            id={seasonLabelId}
-            className="label-caps"
-            style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}
-          >
-            Season
-            {seasonAutoDetected && (
-              <span
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 300,
-                  fontSize: '0.6875rem',
-                  letterSpacing: 'normal',
-                  textTransform: 'none',
-                  color: 'var(--color-text-muted)',
-                }}
-              >
-                auto-detected from your city — tap to adjust
-              </span>
-            )}
-          </span>
-          <div
-            ref={seasonRef}
-            role="radiogroup"
-            aria-labelledby={seasonLabelId}
-            aria-required="true"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '0.625rem',
-            }}
-          >
-            {SEASONS.map((s, index) => {
-              const isSelected = season === s.value
-              return (
-                <button
-                  key={s.value}
-                  type="button"
-                  role="radio"
-                  data-card
-                  aria-checked={isSelected}
-                  aria-label={s.label}
-                  tabIndex={isSelected || (!season && index === 0) ? 0 : -1}
-                  onKeyDown={(e) => handleSeasonKeyDown(e, index)}
-                  onClick={() => {
-                    update({ season: s.value })
-                    setSeasonAutoDetected(false)
-                  }}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    padding: '1rem 0.5rem',
-                    borderRadius: 'var(--radius-card)',
-                    border: isSelected
-                      ? '1.5px solid var(--color-sienna-400)'
-                      : '1px solid var(--color-border)',
-                    backgroundColor: isSelected
-                      ? 'var(--color-accent-subtle)'
-                      : 'var(--color-surface)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    transition:
-                      'border-color 180ms var(--ease-luxury), background-color 180ms var(--ease-luxury)',
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      border: isSelected
-                        ? '1px solid var(--color-sienna-400)'
-                        : '1px solid rgba(184,134,61,0.28)',
-                      color: isSelected ? 'var(--color-sienna-400)' : 'var(--color-alabaster-400)',
-                      transition: 'border-color 180ms var(--ease-luxury), color 180ms var(--ease-luxury)',
-                    }}
-                  >
-                    {s.icon}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontWeight: 300,
-                      fontSize: '0.8125rem',
-                      textAlign: 'center',
-                      color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
-                      transition: 'color 180ms ease',
-                    }}
-                  >
-                    {s.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        {/* Climate and season are intentionally not rendered — they are
+            derived from the selected location and persisted in the
+            background (see handleCitySelect / handleAllowLocation). */}
 
         {error && (
           <p
