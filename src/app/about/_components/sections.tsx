@@ -8,33 +8,36 @@ import type { SectionData } from './Section'
  */
 export const SECTIONS: SectionData[] = [
   {
-    heading: 'A different starting point.',
+    label: 'A Systematic Approach',
+    heading: 'Understanding skincare requires more than understanding products.',
     paragraphs: [
       'SkinAudit approaches skincare as a connected system rather than a collection of individual products.',
-      'The platform brings together perspectives from skincare, technology, research and consumer behavior to make complex routines easier to understand and more useful in everyday life.',
+      'Drawing from skincare, technology, research and consumer behavior, its framework considers multiple layers of information together — translating complexity into guidance that is relevant to the individual.',
     ],
     claim: {
-      lead: 'The aim is not more skincare.',
-      text: 'It is greater clarity about the skincare you use.',
+      lead: '',
+      text: 'Structured intelligence. Clearer guidance.',
     },
   },
   {
-    heading: 'Built with expertise around it.',
+    label: 'Informed by Expertise',
+    heading: 'No single perspective is enough to understand something as individual as skin.',
     paragraphs: [
-      'SkinAudit is developed with input and perspective from professionals across relevant disciplines, helping inform how the platform thinks about products, routines and the broader world surrounding skin.',
-      'That work continues as the platform evolves.',
+      'SkinAudit is developed with input from professionals across relevant disciplines, whose perspectives inform how the technology approaches products, routines and the broader context surrounding skin.',
+      'As knowledge and evidence evolve, so does the framework.',
     ],
     claim: {
-      text: 'No single perspective is enough to understand something as individual as skin.',
+      text: 'Evidence informs the system. Expertise strengthens it.',
     },
   },
   {
-    heading: 'Independent by design.',
+    label: 'Independent by Design',
+    heading: 'Guidance independent of commercial influence.',
     paragraphs: [
-      'SkinAudit is built to serve the person using it — not the brands on their shelf.',
+      'SkinAudit is built to serve the person using it — not the brands being considered.',
       'No brand can pay to influence how a product is assessed, how it is considered within a routine, or what SkinAudit recommends.',
       'Commercial relationships do not determine the guidance you receive.',
     ],
-    claim: { text: 'Your routine. Independent perspective.' },
-  },
+    claim: { text: 'Independence is part of our standard.' },
+  }
 ]

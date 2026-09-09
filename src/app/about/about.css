@@ -221,7 +221,9 @@
   margin: clamp(1.5rem, 3vh, 2rem) 0;
 }
 .about-page .cta {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.6875rem;
   font-weight: 500;
@@ -236,6 +238,23 @@
 .about-page .cta:hover {
   background: var(--accent-br);
   color: #09080a;
+}
+
+/* The arrow is DRAWN, not typed. As an inline SVG on currentColor it is
+   identical on every platform and scales with the label. */
+.about-page .cta-arrow {
+  width: 0.95em;
+  height: 0.95em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.about-page .cta:hover .cta-arrow {
+  transform: translate(2px, -2px);
 }
 
 .about-page .foot {

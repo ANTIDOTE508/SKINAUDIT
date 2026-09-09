@@ -10,10 +10,11 @@ export function JournalSection() {
   return (
     <div className="section">
       <div className="inner">
-        <h2 className="disp sec-hed">
+        {/* <h2 className="disp sec-hed">
           <MaskedWords text="Beyond the platform." />
-        </h2>
+        </h2> */}
 
+        <p className="label">Beyond the platform</p>
         <p className="body-copy">
           SkinAudit&apos;s thinking continues through its independent editorial publication,
         </p>
@@ -26,13 +27,12 @@ export function JournalSection() {
           it.
         </p>
 
-        <a
-          className="cta"
-          href="https://theskinaudit.substack.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Explore the Journal &nbsp;↗
+        <a href="#" className="cta">
+          Explore the Journal
+          <svg className="cta-arrow" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+            <path d="M2.6 9.4 9.4 2.6" />
+            <path d="M4.9 2.6h4.5v4.5" />
+          </svg>
         </a>
       </div>
     </div>
