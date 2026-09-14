@@ -7,9 +7,7 @@ Statut : validé en brainstorming, prêt pour writing-plans
 
 L'utilisateur doit livrer plusieurs écrans front du flow "Dossier" (mockup UX fourni : Build your Dossier, Add a product avec Search/Scan/Enter manually, Search Results, Confirm Match, Add to Dossier avec Category & Status, Dossier list avec Filter/Sort, Product Detail sheet, Ingredients, Product History). Ces écrans permettent à un utilisateur d'ajouter des produits cosmétiques à son Dossier personnel.
 
-Un premier rapport (`RAPPORT_Primary_Product_Database_MVP.md`) analysait le memo `SKINAUDIT_MEMO_IngredientDatabases.7.8.26.pdf` et recommandait Open Beauty Facts (OBF) + EU CosIng comme sources externes. Ce rapport a été écrit **avant** l'inspection du schéma Prisma existant et avant la présentation du mockup — il proposait un modèle de données qui, à l'examen du schéma réel, existe déjà en grande partie.
-
-Ce document remplace la partie "architecture de données" de ce premier rapport, à la lumière :
+Ce document définit l'architecture de données pour ce chantier, à la lumière :
 1. du schéma Prisma déjà en place (`prisma/schema.prisma`), qui couvre déjà `Product`, `Brand`, `ProductVersion`, `ProductVersionIngredient`, `CanonicalIngredient`, `UserDossierProduct`, `UserRegimen`, `RitualItem` ;
 2. du mockup UX concret ("Dossier — UX Flow", 12 écrans).
 
