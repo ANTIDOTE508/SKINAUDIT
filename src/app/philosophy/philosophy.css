@@ -250,6 +250,13 @@
   height: 104%;
   display: block;
   animation: philo-topo-drift 42s ease-in-out infinite alternate;
+  /* This SVG is ~80 hand-authored polylines (~12k points total). Animating
+     its transform without compositor promotion forces the browser to
+     rasterize that whole vector layer every frame — on top of a
+     scroll-scrubbed GSAP tween on .topo-hed sitting right above it. That
+     combination is what stalled scrolling on mobile through this section. */
+  will-change: transform;
+  transform: translateZ(0);
 }
 @keyframes philo-topo-drift {
   from {
@@ -293,6 +300,10 @@
   letter-spacing: -0.03em;
   color: #ffffff;
   filter: drop-shadow(0 0 70px rgba(6, 5, 8, 0.85));
+  /* GSAP scrubs this element's transform on scroll (PhilosophyMotion.tsx);
+     promote it to its own layer so the scroll-linked tween composites
+     instead of repainting text + drop-shadow every frame. */
+  will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
   .page .topo-art {

@@ -309,6 +309,15 @@ html:has(.home-page) {
   border-left: none;
 }
 
+/* First stat row sits immediately below the hero photo — mid-scroll, its
+   slide-up transition can leave a frame where the label appears to float
+   over the photo instead of inside the black stats block. Render it
+   settled from the start; only the later rows animate in. */
+.home-page .s-row:first-child {
+  transform: none;
+  opacity: 1;
+}
+
 .home-page .s-row.on {
   transform: none;
   opacity: 1;
