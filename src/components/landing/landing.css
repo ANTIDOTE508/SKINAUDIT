@@ -112,42 +112,14 @@ html:has(.home-page) {
   will-change: transform;
 }
 
-/* Desktop: the hero source is near-square, but the hero band is short and wide,
-   so `cover` is width-driven — it fills 100vw and the image's height overflows,
-   leaving only a narrow horizontal slice through the centre visible. That is
-   the CEO's "too zoomed in — I want more products, more chaos".
-   Fix: show the whole pile with a height-fitted (`auto 100%`) sharp layer, and
-   fill the left/right gutters it leaves with a blurred, darkened blow-up of the
-   same photo on `::after` — so the frame still reads edge to edge with no bare
-   bands, and every product in the shot is on screen. */
+/* Desktop: full-bleed cover — the image fills the whole hero band with no
+   gutters or blurred blow-up layer. */
 @media (min-width: 768px) {
   .home-page .hero::before {
-    background-size: auto 106%;
+    background-size: cover;
     background-position: center center;
     inset: -1.5%;
     animation-name: hero-zoom-desktop;
-  }
-
-  .home-page .hero::after {
-    content: '';
-    position: absolute;
-    inset: -6%;
-    z-index: -3;
-    background-image: url('/images/landing/skin-audit-homepage-hero.webp');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    filter: blur(28px) brightness(0.42) saturate(0.85);
-    transform: scale(1.12); /* hide the blur's soft edge */
-    will-change: transform;
-  }
-}
-
-/* Wide monitors: the sharp layer can afford to fill more width — a little
-   crop top/bottom is fine and the blurred gutters stay narrow. */
-@media (min-width: 1600px) {
-  .home-page .hero::before {
-    background-size: auto 122%;
   }
 }
 
