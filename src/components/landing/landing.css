@@ -316,6 +316,13 @@ html:has(.home-page) {
 .home-page .s-row:first-child {
   transform: none;
   opacity: 1;
+  /* The site nav is `position: fixed` (measured ~70px tall) with no
+     scroll offset compensation anywhere on the page. A plain scroll
+     (no anchor needed) can land .stats flush at viewport top, hiding
+     its label under the opaque nav. Pad it clear of the nav so the
+     label is never hidden regardless of where the scroll settles. */
+  scroll-margin-top: 70px;
+  padding-top: calc(clamp(2.5rem, 5vh, 4.5rem) + 70px);
 }
 
 .home-page .s-row.on {
@@ -732,13 +739,13 @@ html:has(.home-page) {
    never crops back in to the "too zoomed in" centre the CEO flagged. */
 @keyframes hero-zoom-desktop {
   0% {
-    transform: scale(1) translateX(0) translateY(0);
+    transform: scale(1) translateX(0) translateY(10%);
   }
   50% {
-    transform: scale(1.03) translateX(-0.6%) translateY(-0.4%);
+    transform: scale(1.03) translateX(-0.6%) translateY(9.6%);
   }
   100% {
-    transform: scale(1.02) translateX(0.6%) translateY(0.3%);
+    transform: scale(1.02) translateX(0.6%) translateY(10.3%);
   }
 }
 
