@@ -633,7 +633,7 @@ model Brand {
   slug        String   @unique
   description String?
   website     String?
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("createdAt")
   updatedAt   DateTime @updatedAt @map("updatedAt")
 
   aliases  BrandAlias[]

@@ -20,32 +20,48 @@ export type NormalizedObfProduct = {
 }
 
 // Les categories_tags OBF utilisent le préfixe de taxonomie `en:` (ex :
-// "en:face-cleansers"). Ce mapping est un ensemble de départ couvrant les
-// tags les plus susceptibles d'apparaître pour le skincare ; l'étendre une
-// fois que le premier run à blanc réel (Tâche 3, Étape 5) montre quels tags
-// apparaissent réellement dans le dump filtré et passent actuellement à
-// travers les mailles (null, donc exclus — voir isSkincareObfRecord).
+// "en:face-cleansers"), avec une casse incohérente dans le dump réel
+// (ex : "en:Cosmetics", "en:Skin care") — d'où la comparaison en
+// minuscules ci-dessous. Ce mapping a été calibré à partir de l'inspection
+// réelle du dump OBF du 2026-09-16 (98 Mo, 75 112 lignes, 12 528 avec
+// code+ingredients_text+brands+categories_tags présents) : les tags
+// devinés initialement (en:face-cleansers, en:sunscreens, en:moisturisers,
+// etc.) n'apparaissaient pas du tout dans les données réelles. Remplacé
+// par les tags effectivement observés (en:cleansers, en:sunscreen,
+// en:facial-creams, en:face-masks, etc.) — voir le run de calibration
+// dans le plan docs/superpowers/plans/2026-09-15-obf-catalog-sync.md,
+// Tâche 3 Étape 5.
 const CATEGORY_TAG_MAP: Record<string, ProductCategory> = {
-  'en:face-cleansers': 'CLEANSING',
   'en:cleansers': 'CLEANSING',
+  'en:face-cleansers': 'CLEANSING',
   'en:make-up-removers': 'CLEANSING',
+  'en:liquid-soaps': 'CLEANSING',
+  'en:soaps': 'CLEANSING',
   'en:toners': 'PREPARATION',
   'en:face-toners': 'PREPARATION',
   'en:serums': 'TREATMENT',
   'en:face-serums': 'TREATMENT',
   'en:face-masks': 'TREATMENT',
+  'en:hair-masks': 'TREATMENT',
   'en:face-treatments': 'TREATMENT',
-  'en:moisturisers': 'SUPPORT',
-  'en:face-moisturisers': 'SUPPORT',
+  'en:anti-aging-face-care-products': 'TREATMENT',
+  'en:facial-creams': 'SUPPORT',
   'en:face-creams': 'SUPPORT',
-  'en:face-oils': 'SUPPORT',
+  'en:body-creams': 'SUPPORT',
+  'en:hand-creams': 'SUPPORT',
+  'en:body-milks': 'SUPPORT',
+  'en:body-oils': 'SUPPORT',
+  'en:face care': 'SUPPORT',
+  'en:skin care': 'SUPPORT',
+  'en:sunscreen': 'PROTECTION',
   'en:sunscreens': 'PROTECTION',
-  'en:sun-protection': 'PROTECTION',
+  'en:suncare': 'PROTECTION',
+  'en:in-sun-protections': 'PROTECTION',
 }
 
 export function mapObfCategoryToProductCategory(categoriesTags: string[]): ProductCategory | null {
   for (const tag of categoriesTags) {
-    const mapped = CATEGORY_TAG_MAP[tag]
+    const mapped = CATEGORY_TAG_MAP[tag.toLowerCase()]
     if (mapped) return mapped
   }
   return null

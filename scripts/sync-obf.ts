@@ -85,7 +85,7 @@ async function upsertBatch(batch: NormalizedObfProduct[], stats: SyncStats) {
   for (const item of batch) {
     try {
       const brand = await prisma.brand.upsert({
-        where: { name: item.brandName },
+        where: { slug: slugify(item.brandName) },
         update: {},
         create: {
           name: item.brandName,
