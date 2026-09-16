@@ -4,6 +4,7 @@ import type { ProductCategory } from '@prisma/client'
 export type ObfRecord = {
   code?: string
   product_name?: string
+  product_name_en?: string
   brands?: string
   categories_tags?: string[]
   ingredients_text?: string
@@ -84,9 +85,15 @@ export function normalizeObfRecord(record: ObfRecord): NormalizedObfProduct | nu
   const brandName = record.brands!.split(',')[0].trim()
   if (brandName === '') return null
 
+  // L'app cible un public anglophone. OBF ne fournit product_name_en que
+  // pour ~33,5% des produits skincare (mesuré sur le dump du 2026-09-16,
+  // 775/2313) — on le préfère quand présent, sinon on retombe sur
+  // product_name (langue du contributeur d'origine, souvent français).
+  const name = (record.product_name_en ?? record.product_name ?? '').trim() || `Unnamed product (${record.code})`
+
   return {
     barcode: record.code!.trim(),
-    name: (record.product_name ?? '').trim() || `Unnamed product (${record.code})`,
+    name,
     brandName,
     category,
     sizeLabel: record.quantity?.trim() || null,

@@ -60,4 +60,14 @@ const noName: ObfRecord = { ...cleanser, product_name: undefined }
 const normalizedNoName = normalizeObfRecord(noName)
 assertEqual(normalizedNoName?.name, 'Unnamed product (1234567890123)', 'missing product_name falls back to placeholder')
 
+// Cas 7 : product_name_en préféré quand présent (app cible un public anglophone)
+const withEnName: ObfRecord = { ...cleanser, product_name: 'Nettoyant moussant doux', product_name_en: 'Gentle Foaming Cleanser EN' }
+const normalizedWithEnName = normalizeObfRecord(withEnName)
+assertEqual(normalizedWithEnName?.name, 'Gentle Foaming Cleanser EN', 'product_name_en should be preferred over product_name')
+
+// Cas 8 : product_name_en absent retombe sur product_name
+const noEnName: ObfRecord = { ...cleanser, product_name: 'Nettoyant moussant doux', product_name_en: undefined }
+const normalizedNoEnName = normalizeObfRecord(noEnName)
+assertEqual(normalizedNoEnName?.name, 'Nettoyant moussant doux', 'missing product_name_en falls back to product_name')
+
 console.log('PASS: all OBF normalization assertions succeeded')
