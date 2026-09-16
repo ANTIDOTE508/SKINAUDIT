@@ -100,6 +100,7 @@ async function upsertBatch(batch: NormalizedObfProduct[], stats: SyncStats) {
           brandId: brand.id,
           category: item.category,
           sizeLabel: item.sizeLabel,
+          ingredientsText: item.ingredientsText,
         },
         create: {
           name: item.name,
@@ -108,6 +109,7 @@ async function upsertBatch(batch: NormalizedObfProduct[], stats: SyncStats) {
           brandId: brand.id,
           category: item.category,
           sizeLabel: item.sizeLabel,
+          ingredientsText: item.ingredientsText,
           source: 'CATALOG_SEED',
         },
       })

@@ -129,6 +129,12 @@ export async function getProductDetail(dossierProductId: number) {
   })
 
   const latestVersion = item.product.versions[0]
+  const structuredIngredients =
+    latestVersion?.ingredients.map((i) => ({
+      inci: i.canonicalIngredient.inci,
+      isKeyIngredient: i.isKeyIngredient,
+      concentration: i.concentration,
+    })) ?? []
 
   return {
     dossierProductId: item.id,
@@ -138,12 +144,12 @@ export async function getProductDetail(dossierProductId: number) {
     category: item.product.category,
     sizeLabel: item.product.sizeLabel,
     usedIn: item.ritualItems.map((r) => ({ timeOfDay: r.timeOfDay, stepOrder: r.stepOrder })),
-    ingredients:
-      latestVersion?.ingredients.map((i) => ({
-        inci: i.canonicalIngredient.inci,
-        isKeyIngredient: i.isKeyIngredient,
-        concentration: i.concentration,
-      })) ?? [],
+    // Les produits importés (source=CATALOG_SEED) n'ont pas de matching fin
+    // vers CanonicalIngredient (hors périmètre du chantier de sync OBF) —
+    // en repli, on expose le texte brut d'ingrédients OBF tel quel pour
+    // que l'écran Ingredients affiche quelque chose plutôt qu'une liste vide.
+    ingredients: structuredIngredients,
+    rawIngredientsText: structuredIngredients.length === 0 ? item.product.ingredientsText : null,
   }
 }
 

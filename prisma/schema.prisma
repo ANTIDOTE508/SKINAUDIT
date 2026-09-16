@@ -671,6 +671,7 @@ model Product {
   sizeLabel       String?         @map("size_label")
   source          ProductSource   @default(USER_MANUAL)
   createdByUserId String?         @map("created_by_user_id")
+  ingredientsText String?         @map("ingredients_text")
 
   brand           Brand?               @relation(fields: [brandId], references: [id], onDelete: SetNull)
   aliases         ProductAlias[]
