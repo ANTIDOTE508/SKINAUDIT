@@ -20,14 +20,14 @@
 - Onboarding step components use **inline styles with CSS custom properties** (`var(--color-*)`, `var(--font-*)`), not Tailwind utility classes — follow `StepDossierIntro.tsx` / `StepProducts.tsx` conventions exactly, including the `btn-primary btn-primary-accent` class for primary CTAs.
 - Screens 08→12 (permanent Dossier section) are **out of scope** for this plan.
 - Scan / Enter-manually entry points stay disabled "coming soon", same treatment as today.
-- Product images use a new `BottlePlaceholder` component (created in Task 1) — no real product photos.
+- Product images use a new `ProductImagePlaceholder` component (created in Task 1) — no real product photos.
 
 ---
 
 ## File Structure
 
 - **Modify** `prisma/schema.prisma` — add `dossierStep`, `dossierCompletedAt` to `UserProfile`.
-- **Create** `src/components/studio/BottlePlaceholder.tsx` — small SVG/gradient bottle placeholder, reused across screens 05/06/07.
+- **Create** `src/components/studio/ProductImagePlaceholder.tsx` — small SVG/gradient bottle placeholder, reused across screens 05/06/07.
 - **Modify** `src/app/actions/dossier.ts` — add `updateDossierStep`, `getDossierBuildState`, `finalizeDossierBuild` server actions.
 - **Create** `src/components/onboarding/dossierBuild/StepDossierBuild.tsx` — container managing internal screen state 1-6.
 - **Create** `src/components/onboarding/dossierBuild/ScreenEmptyDossier.tsx` — mockup screen 02.
@@ -44,15 +44,15 @@
 
 ---
 
-### Task 1: Schema fields + BottlePlaceholder component
+### Task 1: Schema fields + ProductImagePlaceholder component
 
 **Files:**
 - Modify: `prisma/schema.prisma:511-512`
-- Create: `src/components/studio/BottlePlaceholder.tsx`
+- Create: `src/components/studio/ProductImagePlaceholder.tsx`
 - Test: manual (type-check only, no DB round-trip in this task)
 
 **Interfaces:**
-- Produces: `UserProfile.dossierStep: number`, `UserProfile.dossierCompletedAt: Date | null` (Prisma Client fields, available after `pnpm db:generate`); `BottlePlaceholder(props: { size?: 'sm' | 'md' | 'lg' }): JSX.Element`
+- Produces: `UserProfile.dossierStep: number`, `UserProfile.dossierCompletedAt: Date | null` (Prisma Client fields, available after `pnpm db:generate`); `ProductImagePlaceholder(props: { size?: 'sm' | 'md' | 'lg' }): JSX.Element`
 
 - [ ] **Step 1: Add the two fields to the Prisma schema**
 
@@ -82,9 +82,9 @@ ALTER TABLE app.user_profiles
   ADD COLUMN dossier_completed_at TIMESTAMP(3) NULL;
 ```
 
-- [ ] **Step 3: Create the BottlePlaceholder component**
+- [ ] **Step 3: Create the ProductImagePlaceholder component**
 
-Create `src/components/studio/BottlePlaceholder.tsx`:
+Create `src/components/studio/ProductImagePlaceholder.tsx`:
 
 ```tsx
 type Props = {
@@ -101,7 +101,7 @@ const DIMENSIONS: Record<NonNullable<Props['size']>, { width: number; height: nu
  * Stand-in for a product photo until Product gains a real image field.
  * Renders a simple gradient bottle silhouette via inline SVG.
  */
-export function BottlePlaceholder({ size = 'md' }: Props) {
+export function ProductImagePlaceholder({ size = 'md' }: Props) {
   const { width, height } = DIMENSIONS[size]
 
   return (
@@ -129,13 +129,13 @@ export function BottlePlaceholder({ size = 'md' }: Props) {
 - [ ] **Step 4: Type-check**
 
 Run: `pnpm exec tsc --noEmit`
-Expected: no errors referencing `BottlePlaceholder.tsx` or `schema.prisma`-derived types.
+Expected: no errors referencing `ProductImagePlaceholder.tsx` or `schema.prisma`-derived types.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add prisma/schema.prisma src/components/studio/BottlePlaceholder.tsx
-git commit -m "feat: add dossierStep/dossierCompletedAt fields and BottlePlaceholder component"
+git add prisma/schema.prisma src/components/studio/ProductImagePlaceholder.tsx
+git commit -m "feat: add dossierStep/dossierCompletedAt fields and ProductImagePlaceholder component"
 ```
 
 ---
@@ -230,7 +230,7 @@ git commit -m "feat: add dossier build progress and finalization server actions"
 - Create: `src/components/onboarding/dossierBuild/ScreenCategoryStatus.tsx`
 
 **Interfaces:**
-- Consumes: `StepHeader` (`src/components/onboarding/StepHeader.tsx`, props `{eyebrow?, title, subtitle?}`), `BottlePlaceholder` (Task 1), `searchProducts(query: string)` from `dossier.ts:14-40` (returns `{id, name, brandName, category, sizeLabel}[]`), `ProductCategory`/`DossierProductStatus` types from `@prisma/client`
+- Consumes: `StepHeader` (`src/components/onboarding/StepHeader.tsx`, props `{eyebrow?, title, subtitle?}`), `ProductImagePlaceholder` (Task 1), `searchProducts(query: string)` from `dossier.ts:14-40` (returns `{id, name, brandName, category, sizeLabel}[]`), `ProductCategory`/`DossierProductStatus` types from `@prisma/client`
 - Produces: five presentational components consumed by `StepDossierBuild` (Task 4). Each is a plain function component — no server actions called directly except `ScreenSearch` (calls `searchProducts`). Prop shapes below are exact and must match Task 4's usage.
 
 - [ ] **Step 1: `ScreenEmptyDossier.tsx` (mockup screen 02)**
@@ -394,7 +394,7 @@ export function ScreenAddMethod({ onChooseSearch }: Props) {
 import { useState, useTransition } from 'react'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { StepHeader } from '../StepHeader'
-import { BottlePlaceholder } from '@/components/studio/BottlePlaceholder'
+import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
 import { searchProducts } from '@/app/actions/dossier'
 
 type SearchResult = Awaited<ReturnType<typeof searchProducts>>[number]
@@ -471,7 +471,7 @@ export function ScreenSearch({ onBack, onSelectProduct }: Props) {
               cursor: 'pointer',
             }}
           >
-            <BottlePlaceholder size="sm" />
+            <ProductImagePlaceholder size="sm" />
             <span style={{ flex: 1 }}>
               <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-alabaster-400)' }}>
                 {product.brandName ?? 'Unknown brand'}
@@ -500,7 +500,7 @@ export function ScreenSearch({ onBack, onSelectProduct }: Props) {
 'use client'
 
 import { StepHeader } from '../StepHeader'
-import { BottlePlaceholder } from '@/components/studio/BottlePlaceholder'
+import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
 
 type Product = {
   id: number
@@ -532,7 +532,7 @@ export function ScreenConfirmMatch({ product, onConfirm, onNotMyProduct }: Props
           marginBottom: '0.75rem',
         }}
       >
-        <BottlePlaceholder size="lg" />
+        <ProductImagePlaceholder size="lg" />
         <span>
           <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-alabaster-400)' }}>
             {product.brandName ?? 'Unknown brand'}
@@ -589,7 +589,7 @@ export function ScreenConfirmMatch({ product, onConfirm, onNotMyProduct }: Props
 
 import { useState, useTransition } from 'react'
 import { StepHeader } from '../StepHeader'
-import { BottlePlaceholder } from '@/components/studio/BottlePlaceholder'
+import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
 import type { ProductCategory, DossierProductStatus } from '@prisma/client'
 
 type Product = {
@@ -638,7 +638,7 @@ export function ScreenCategoryStatus({ product, onSubmit }: Props) {
           marginBottom: '1.5rem',
         }}
       >
-        <BottlePlaceholder size="md" />
+        <ProductImagePlaceholder size="md" />
         <span>
           <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-alabaster-400)' }}>
             {product.brandName ?? 'Unknown brand'}
@@ -757,7 +757,7 @@ git commit -m "feat: add Dossier build screens 02-06 (empty state through catego
 'use client'
 
 import { Check, ArrowRight } from 'lucide-react'
-import { BottlePlaceholder } from '@/components/studio/BottlePlaceholder'
+import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
 
 type Props = {
   productName: string
@@ -810,7 +810,7 @@ export function ScreenAdded({ productName, isFinishing, onAddAnother, onContinue
           marginBottom: '2rem',
         }}
       >
-        <BottlePlaceholder size="md" />
+        <ProductImagePlaceholder size="md" />
         <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.9375rem', color: 'var(--color-alabaster-100)' }}>
           {productName}
         </span>

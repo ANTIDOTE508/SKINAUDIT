@@ -56,7 +56,7 @@ after some notion of finishing screens 08-12 (which have no "done" state).
   implementation.
 - **Product images**: `Product` has no image field, and `obf-normalize.ts`
   does not extract `image_url`. Screens 02→07 use a new, small
-  `components/studio/BottlePlaceholder.tsx` component (does not exist yet —
+  `components/studio/ProductImagePlaceholder.tsx` component (does not exist yet —
   created as part of this plan) wherever the mockup shows a product image.
 - **Scan / OCR**: no OCR integration exists anywhere in the repo. The "Scan"
   entry point on screen 03 stays disabled / "coming soon", same treatment as
@@ -123,7 +123,7 @@ through `_07.png`), wired to the existing server actions in `dossier.ts`:
 - `addProductToDossier` (screen 06 "Set Category & Status")
 - new: `updateDossierStep`
 
-Product imagery uses the new `components/studio/BottlePlaceholder.tsx`
+Product imagery uses the new `components/studio/ProductImagePlaceholder.tsx`
 throughout (screens 05, 06, 07). The "Scan" affordance on screen 03 is
 rendered disabled with a "coming soon" label, consistent with today's
 placeholder treatment. "Enter manually" on screen 03 is also out of scope
