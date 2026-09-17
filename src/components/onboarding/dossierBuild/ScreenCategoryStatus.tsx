@@ -16,6 +16,7 @@ type Product = {
 type Props = {
   product: Product
   onSubmit: (input: { category: ProductCategory; status: DossierProductStatus }) => Promise<void>
+  categoryError?: string | null
 }
 
 const STATUS_OPTIONS: { value: DossierProductStatus; label: string; description: string }[] = [
@@ -24,7 +25,7 @@ const STATUS_OPTIONS: { value: DossierProductStatus; label: string; description:
   { value: 'ARCHIVED', label: 'Archived', description: 'No longer using' },
 ]
 
-export function ScreenCategoryStatus({ product, onSubmit }: Props) {
+export function ScreenCategoryStatus({ product, onSubmit, categoryError }: Props) {
   const [category, setCategory] = useState<ProductCategory>(product.category)
   const [status, setStatus] = useState<DossierProductStatus>('ACTIVE')
   const [isPending, startTransition] = useTransition()
@@ -120,6 +121,20 @@ export function ScreenCategoryStatus({ product, onSubmit }: Props) {
           </label>
         ))}
       </div>
+
+      {categoryError && (
+        <p
+          role="alert"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.8125rem',
+            color: 'var(--color-blush-500)',
+            marginBottom: '1rem',
+          }}
+        >
+          {categoryError}
+        </p>
+      )}
 
       <button
         type="button"

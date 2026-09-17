@@ -6,11 +6,12 @@ import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceho
 type Props = {
   productName: string
   isFinishing: boolean
+  finishError?: string | null
   onAddAnother: () => void
   onContinueToStudio: () => void
 }
 
-export function ScreenAdded({ productName, isFinishing, onAddAnother, onContinueToStudio }: Props) {
+export function ScreenAdded({ productName, isFinishing, finishError, onAddAnother, onContinueToStudio }: Props) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div
@@ -59,6 +60,20 @@ export function ScreenAdded({ productName, isFinishing, onAddAnother, onContinue
           {productName}
         </span>
       </div>
+
+      {finishError && (
+        <p
+          role="alert"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.8125rem',
+            color: 'var(--color-blush-500)',
+            marginBottom: '1rem',
+          }}
+        >
+          {finishError}
+        </p>
+      )}
 
       <button
         type="button"

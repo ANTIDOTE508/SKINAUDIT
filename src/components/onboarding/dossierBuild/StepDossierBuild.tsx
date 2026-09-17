@@ -24,11 +24,19 @@ type Props = {
 }
 
 export function StepDossierBuild({ initialDossierStep, onComplete }: Props) {
+  // Screens 4 (Confirm Match) and 5 (Category & Status) both require a
+  // `selectedProduct`, which is client-only state never restored from the
+  // server. Resuming directly onto either would render a blank screen (their
+  // branches return null with no product), so fall back to screen 2 (Add
+  // Method) instead — the user just re-picks a product.
+  const seededScreen = Math.min(Math.max(initialDossierStep, 0), 5) + 1
   const [screen, setScreen] = useState<Screen>(
-    (Math.min(Math.max(initialDossierStep, 0), 5) + 1) as Screen
+    (seededScreen === 4 || seededScreen === 5 ? 2 : seededScreen) as Screen
   )
   const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null)
   const [isFinishing, setIsFinishing] = useState(false)
+  const [finishError, setFinishError] = useState<string | null>(null)
+  const [categoryError, setCategoryError] = useState<string | null>(null)
   const [, startTransition] = useTransition()
 
   const goTo = (next: Screen) => {
@@ -40,16 +48,23 @@ export function StepDossierBuild({ initialDossierStep, onComplete }: Props) {
 
   const handleSubmitCategoryStatus = async (input: { category: ProductCategory; status: DossierProductStatus }) => {
     if (!selectedProduct) return
-    await addProductToDossier({ productId: selectedProduct.id, ...input })
-    goTo(6)
+    setCategoryError(null)
+    try {
+      await addProductToDossier({ productId: selectedProduct.id, ...input })
+      goTo(6)
+    } catch {
+      setCategoryError('Something went wrong. Please try again.')
+    }
   }
 
   const handleContinueToStudio = async () => {
     setIsFinishing(true)
+    setFinishError(null)
     try {
       await finalizeDossierBuild()
       await onComplete()
     } catch {
+      setFinishError('Something went wrong. Please try again.')
       setIsFinishing(false)
     }
   }
@@ -79,13 +94,18 @@ export function StepDossierBuild({ initialDossierStep, onComplete }: Props) {
       ) : null
     case 5:
       return selectedProduct ? (
-        <ScreenCategoryStatus product={selectedProduct} onSubmit={handleSubmitCategoryStatus} />
+        <ScreenCategoryStatus
+          product={selectedProduct}
+          onSubmit={handleSubmitCategoryStatus}
+          categoryError={categoryError}
+        />
       ) : null
     case 6:
       return (
         <ScreenAdded
           productName={selectedProduct?.name ?? 'Your product'}
           isFinishing={isFinishing}
+          finishError={finishError}
           onAddAnother={() => {
             setSelectedProduct(null)
             goTo(2)
