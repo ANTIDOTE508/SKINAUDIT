@@ -21,7 +21,7 @@ import { StepTools } from './StepTools'
 import type { ToolItemState } from './StepTools'
 import { StepInterpretation } from './StepInterpretation'
 import { StepDossierIntro } from './StepDossierIntro'
-import { StepProducts } from './StepProducts'
+import { StepDossierBuild } from './dossierBuild/StepDossierBuild'
 import { StepCompletion } from './StepCompletion'
 import { StepCounter } from './StepCounter'
 import { OnboardingSignOut } from './OnboardingSignOut'
@@ -257,12 +257,14 @@ export type WizardInitialProfile = {
 export function OnboardingWizard({
   initialStep = 0,
   initialProfile,
+  initialDossierStep = 0,
 }: {
   // Kept in the prop contract (page.tsx supplies it) though no screen reads it
   // any more since the personalised welcome step was removed.
   user?: WizardUser
   initialStep?: number
   initialProfile?: WizardInitialProfile | null
+  initialDossierStep?: number
 }) {
   // `initialStep` is the stored resume marker: 0 = nothing saved yet, N = step
   // N was completed. A brand-new user (0) opens on the step 0 transition
@@ -827,7 +829,7 @@ export function OnboardingWizard({
           )}
 
           {state.step === 25 && (
-            <StepProducts onComplete={completeAndEnterStudio} />
+            <StepDossierBuild initialDossierStep={initialDossierStep} onComplete={completeAndEnterStudio} />
           )}
 
           </>

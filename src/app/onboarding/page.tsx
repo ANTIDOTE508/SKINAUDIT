@@ -16,6 +16,7 @@ export default async function OnboardingPage() {
     select: {
       onboardingStep: true,
       onboardingCompletedAt: true,
+      dossierStep: true,
       genderIdentity: true,
       preferredName: true,
       birthMonth: true,
@@ -142,6 +143,7 @@ export default async function OnboardingPage() {
             }
           : null
       }
+      initialDossierStep={profile?.dossierStep ?? 0}
     />
   )
 }
