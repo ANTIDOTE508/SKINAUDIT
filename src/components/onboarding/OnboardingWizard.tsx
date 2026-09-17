@@ -1,9 +1,7 @@
 'use client'
 
 import { useReducer, useEffect, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
-import { completeOnboarding } from '@/app/actions/onboarding'
 import { StepBaselineTransition } from './StepBaselineTransition'
 import { StepIdentity } from './StepIdentity'
 import { StepSkinTypeSelfId } from './StepSkinTypeSelfId'
@@ -21,7 +19,6 @@ import { StepTools } from './StepTools'
 import type { ToolItemState } from './StepTools'
 import { StepInterpretation } from './StepInterpretation'
 import { StepDossierIntro } from './StepDossierIntro'
-import { StepDossierBuild } from './dossierBuild/StepDossierBuild'
 import { StepCompletion } from './StepCompletion'
 import { StepCounter } from './StepCounter'
 import { OnboardingSignOut } from './OnboardingSignOut'
@@ -205,7 +202,7 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 // completion step beyond it. Every follow-up now lives inline on its
 // master step's screen, so there are no conditionally-skipped screens —
 // the flow is a straight 1…TOTAL_STEPS walk.
-const TOTAL_STEPS = 25
+const TOTAL_STEPS = 24
 
 const ALL_SCREENS: number[] = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1)
 
@@ -337,21 +334,11 @@ export function OnboardingWizard({
   // Guards the anti-double-click lock so it always releases even if a GSAP
   // callback never fires (tab backgrounded, reduced-motion, unmount mid-tween).
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const router = useRouter()
 
   useEffect(() => () => {
     if (transitionTimer.current) clearTimeout(transitionTimer.current)
     gsap.killTweensOf(contentRef.current)
   }, [])
-
-  // The Dossier build sub-flow is the final step, so it — not a trailing
-  // completion screen — is what marks onboarding complete and hands the user
-  // to the Studio. See StepDossierBuild for its own error handling around
-  // finalization.
-  const completeAndEnterStudio = useCallback(async () => {
-    await completeOnboarding()
-    router.push('/studio')
-  }, [router])
 
   useEffect(() => {
     const node = containerRef.current
@@ -826,11 +813,7 @@ export function OnboardingWizard({
           {state.step === 23 && <StepCompletion onContinue={goNext} onBack={goBack} />}
 
           {state.step === 24 && (
-            <StepDossierIntro onContinue={goNext} onBack={goBack} />
-          )}
-
-          {state.step === 25 && (
-            <StepDossierBuild initialDossierStep={initialDossierStep} onComplete={completeAndEnterStudio} />
+            <StepDossierIntro onBack={goBack} />
           )}
 
           </>
