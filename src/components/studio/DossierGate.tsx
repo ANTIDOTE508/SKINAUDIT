@@ -45,7 +45,7 @@ export function DossierGate({ userName }: Props) {
         </p>
 
         <Link
-          href="/onboarding"
+          href="/onboarding?dossier=1"
           className="btn-primary btn-primary-accent"
           style={{
             display: 'flex',
