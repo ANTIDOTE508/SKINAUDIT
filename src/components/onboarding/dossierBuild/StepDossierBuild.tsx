@@ -1,0 +1,97 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { ScreenEmptyDossier } from './ScreenEmptyDossier'
+import { ScreenAddMethod } from './ScreenAddMethod'
+import { ScreenSearch } from './ScreenSearch'
+import { ScreenConfirmMatch } from './ScreenConfirmMatch'
+import { ScreenCategoryStatus } from './ScreenCategoryStatus'
+import { ScreenAdded } from './ScreenAdded'
+import { updateDossierStep, finalizeDossierBuild, addProductToDossier } from '@/app/actions/dossier'
+import type { searchProducts } from '@/app/actions/dossier'
+import type { ProductCategory, DossierProductStatus } from '@prisma/client'
+
+type SearchResult = Awaited<ReturnType<typeof searchProducts>>[number]
+
+// Internal screen numbers, matching dossierStep persistence (see spec §1):
+// 1 = Empty Dossier, 2 = Add Method, 3 = Search, 4 = Confirm Match,
+// 5 = Category & Status, 6 = Added.
+type Screen = 1 | 2 | 3 | 4 | 5 | 6
+
+type Props = {
+  initialDossierStep: number
+  onComplete: () => Promise<void>
+}
+
+export function StepDossierBuild({ initialDossierStep, onComplete }: Props) {
+  const [screen, setScreen] = useState<Screen>(
+    (Math.min(Math.max(initialDossierStep, 0), 5) + 1) as Screen
+  )
+  const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null)
+  const [isFinishing, setIsFinishing] = useState(false)
+  const [, startTransition] = useTransition()
+
+  const goTo = (next: Screen) => {
+    setScreen(next)
+    startTransition(async () => {
+      await updateDossierStep(next - 1)
+    })
+  }
+
+  const handleSubmitCategoryStatus = async (input: { category: ProductCategory; status: DossierProductStatus }) => {
+    if (!selectedProduct) return
+    await addProductToDossier({ productId: selectedProduct.id, ...input })
+    goTo(6)
+  }
+
+  const handleContinueToStudio = async () => {
+    setIsFinishing(true)
+    try {
+      await finalizeDossierBuild()
+      await onComplete()
+    } catch {
+      setIsFinishing(false)
+    }
+  }
+
+  switch (screen) {
+    case 1:
+      return <ScreenEmptyDossier onAddProduct={() => goTo(2)} />
+    case 2:
+      return <ScreenAddMethod onChooseSearch={() => goTo(3)} />
+    case 3:
+      return (
+        <ScreenSearch
+          onBack={() => goTo(2)}
+          onSelectProduct={(product) => {
+            setSelectedProduct(product)
+            goTo(4)
+          }}
+        />
+      )
+    case 4:
+      return selectedProduct ? (
+        <ScreenConfirmMatch
+          product={selectedProduct}
+          onConfirm={() => goTo(5)}
+          onNotMyProduct={() => goTo(3)}
+        />
+      ) : null
+    case 5:
+      return selectedProduct ? (
+        <ScreenCategoryStatus product={selectedProduct} onSubmit={handleSubmitCategoryStatus} />
+      ) : null
+    case 6:
+      return (
+        <ScreenAdded
+          productName={selectedProduct?.name ?? 'Your product'}
+          isFinishing={isFinishing}
+          onAddAnother={() => {
+            setSelectedProduct(null)
+            goTo(2)
+          }}
+          onContinueToStudio={handleContinueToStudio}
+        />
+      )
+  }
+}
