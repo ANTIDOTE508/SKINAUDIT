@@ -4,25 +4,18 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 
-export default async function OnboardingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ dossier?: string }>
-}) {
+export default async function OnboardingPage() {
   const session = await auth.api.getSession({ headers: await headers() })
 
   if (!session?.user?.id) {
     redirect('/signin')
   }
 
-  const { dossier } = await searchParams
-
   const profile = await prisma.userProfile.findUnique({
     where: { userId: session.user.id },
     select: {
       onboardingStep: true,
       onboardingCompletedAt: true,
-      dossierStep: true,
       genderIdentity: true,
       preferredName: true,
       birthMonth: true,
@@ -57,10 +50,8 @@ export default async function OnboardingPage({
     },
   })
 
-  // Onboarding is complete only when onboardingCompletedAt is set. The
-  // `dossier=1` escape hatch lets DossierGate's "Go to Dossier" link resume
-  // the Dossier build sub-flow (step 25) instead of bouncing back to Studio.
-  if (profile?.onboardingCompletedAt && dossier !== '1') {
+  // Onboarding is complete only when onboardingCompletedAt is set
+  if (profile?.onboardingCompletedAt) {
     redirect('/studio')
   }
 
@@ -151,7 +142,6 @@ export default async function OnboardingPage({
             }
           : null
       }
-      initialDossierStep={profile?.dossierStep ?? 0}
     />
   )
 }

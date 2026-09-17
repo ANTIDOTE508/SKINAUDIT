@@ -196,11 +196,11 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-// step 0 = full-bleed baseline transition screen (not counted); steps 1–25 =
-// the numbered wizard steps. Step 25 (product picker) is
-// the last one and completes onboarding itself, so there is no separate
-// completion step beyond it. Every follow-up now lives inline on its
-// master step's screen, so there are no conditionally-skipped screens —
+// step 0 = full-bleed baseline transition screen (not counted); steps 1–24 =
+// the numbered wizard steps. Step 24 (StepDossierIntro) completes the
+// profile and hands off to the standalone /dossier/build route, so there is
+// no separate completion step beyond it. Every follow-up now lives inline on
+// its master step's screen, so there are no conditionally-skipped screens —
 // the flow is a straight 1…TOTAL_STEPS walk.
 const TOTAL_STEPS = 24
 
@@ -254,14 +254,12 @@ export type WizardInitialProfile = {
 export function OnboardingWizard({
   initialStep = 0,
   initialProfile,
-  initialDossierStep = 0,
 }: {
   // Kept in the prop contract (page.tsx supplies it) though no screen reads it
   // any more since the personalised welcome step was removed.
   user?: WizardUser
   initialStep?: number
   initialProfile?: WizardInitialProfile | null
-  initialDossierStep?: number
 }) {
   // `initialStep` is the stored resume marker: 0 = nothing saved yet, N = step
   // N was completed. A brand-new user (0) opens on the step 0 transition
