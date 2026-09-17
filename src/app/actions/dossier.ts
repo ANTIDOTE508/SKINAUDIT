@@ -193,3 +193,40 @@ export async function updateDossierProductStatus(dossierProductId: number, statu
     })
   })
 }
+
+export async function updateDossierStep(step: number) {
+  const user = await requireSession()
+
+  await prisma.userProfile.updateMany({
+    where: { userId: user.id, dossierStep: { lt: step } },
+    data: { dossierStep: step },
+  })
+}
+
+export async function getDossierBuildState() {
+  const user = await requireSession()
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId: user.id },
+    select: { dossierStep: true, dossierCompletedAt: true },
+  })
+
+  return {
+    dossierStep: profile?.dossierStep ?? 0,
+    dossierCompletedAt: profile?.dossierCompletedAt ?? null,
+  }
+}
+
+export async function finalizeDossierBuild() {
+  const user = await requireSession()
+
+  await prisma.userProfile.updateMany({
+    where: { userId: user.id },
+    data: {
+      dossierStep: 6,
+      dossierCompletedAt: new Date(),
+      onboardingStep: 25,
+      onboardingCompletedAt: new Date(),
+    },
+  })
+}
