@@ -5,10 +5,10 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { ArrowRight } from 'lucide-react'
-import { acknowledgeDossierIntro } from '@/app/actions/onboarding'
+import { useRouter } from 'next/navigation'
+import { completeProfile } from '@/app/actions/onboarding'
 
 type Props = {
-  onContinue: () => void
   onBack: () => void
 }
 
@@ -16,11 +16,12 @@ type Props = {
  * Opens the dossier-building portion of onboarding. No user input — the CTA
  * only advances the resume marker and moves to the product picker.
  */
-export function StepDossierIntro({ onContinue, onBack }: Props) {
+export function StepDossierIntro({ onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
@@ -54,8 +55,8 @@ export function StepDossierIntro({ onContinue, onBack }: Props) {
     setError(null)
     startTransition(async () => {
       try {
-        await acknowledgeDossierIntro()
-        onContinue()
+        await completeProfile()
+        router.push('/dossier/build')
       } catch {
         setError('Unable to save. Please try again.')
       }
