@@ -344,9 +344,10 @@ export function OnboardingWizard({
     gsap.killTweensOf(contentRef.current)
   }, [])
 
-  // The product picker is the final step, so it — not a trailing completion
-  // screen — is what marks onboarding complete and hands the user to the
-  // Studio. Errors propagate to StepProducts, which surfaces them.
+  // The Dossier build sub-flow is the final step, so it — not a trailing
+  // completion screen — is what marks onboarding complete and hands the user
+  // to the Studio. See StepDossierBuild for its own error handling around
+  // finalization.
   const completeAndEnterStudio = useCallback(async () => {
     await completeOnboarding()
     router.push('/studio')
