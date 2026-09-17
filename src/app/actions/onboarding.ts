@@ -979,18 +979,22 @@ export async function acknowledgeAllSet() {
   return { ok: true }
 }
 
-// ─── Step 24 — Dossier intro ──────────────────────────────────
+// ─── Step 24 — Dossier intro / profile completion ─────────────
 /**
- * Like the interpretation screen, this one carries no user input —
- * acknowledging it only advances the resume marker so returning users land
- * on the product picker instead of re-reading the intro.
+ * Step 24 is the wizard's final step. Continuing from it both advances the
+ * resume marker and marks the profile complete — there is no trailing
+ * completion screen, and the Dossier build that follows is a separate
+ * workflow (see /dossier/build), not part of onboarding.
  */
-export async function acknowledgeDossierIntro() {
+export async function completeProfile() {
   const user = await requireSession()
 
   await prisma.userProfile.updateMany({
-    where: { userId: user.id, onboardingStep: { lt: 24 } },
-    data: { onboardingStep: 24 },
+    where: { userId: user.id },
+    data: {
+      onboardingStep: 24,
+      onboardingCompletedAt: new Date(),
+    },
   })
 
   return { ok: true }
@@ -1028,21 +1032,6 @@ export async function addProductToDossier(productId: number) {
     where: { userId_productId: { userId: user.id, productId } },
     create: { userId: user.id, productId, status: 'ACTIVE' },
     update: { status: 'ACTIVE' },
-  })
-
-  return { ok: true }
-}
-
-// ─── Complete onboarding ───────────────────────────────────────
-export async function completeOnboarding() {
-  const user = await requireSession()
-
-  await prisma.userProfile.updateMany({
-    where: { userId: user.id },
-    data: {
-      onboardingStep: 25,
-      onboardingCompletedAt: new Date(),
-    },
   })
 
   return { ok: true }

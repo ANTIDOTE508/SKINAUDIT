@@ -225,8 +225,6 @@ export async function finalizeDossierBuild() {
     data: {
       dossierStep: 6,
       dossierCompletedAt: new Date(),
-      onboardingStep: 25,
-      onboardingCompletedAt: new Date(),
     },
   })
 }
