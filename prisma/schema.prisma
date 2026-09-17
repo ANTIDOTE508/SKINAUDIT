@@ -510,6 +510,8 @@ model UserProfile {
   skincareExperience    SkincareExperience? @map("skincare_experience")
   onboardingStep        Int              @default(0) @map("onboarding_step")
   onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
+  dossierStep           Int              @default(0) @map("dossier_step")
+  dossierCompletedAt    DateTime?        @map("dossier_completed_at")
   createdAt             DateTime         @default(now()) @map("created_at")
   updatedAt             DateTime         @updatedAt @map("updated_at")
 
