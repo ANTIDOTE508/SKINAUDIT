@@ -61,8 +61,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -213,7 +212,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
               }
             `}</style>
           </div>,
-          document.body,
+          document.body
         )}
 
       {/* One width for the whole step — heading, rows and footer share it, so
@@ -235,10 +234,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
           What do you want your routine to work toward?
         </h2>
 
-        <p
-          data-reveal
-          style={{ ...SUB_COPY, textShadow: '0 1px 12px rgba(6,5,5,0.7)' }}
-        >
+        <p data-reveal style={{ ...SUB_COPY, textShadow: '0 1px 12px rgba(6,5,5,0.7)' }}>
           Select up to 3. These can go beyond your current concerns.
         </p>
 
@@ -314,10 +310,8 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
                   textAlign: 'left',
                   border: isSelected
                     ? '1.5px solid var(--color-sienna-400)'
-                    : '1px solid rgba(184,134,61,0.28)',
-                  backgroundColor: isSelected
-                    ? 'rgba(184,134,61,0.22)'
-                    : 'rgba(6,5,5,0.66)',
+                    : '1px solid rgba(196, 176, 154,0.28)',
+                  backgroundColor: isSelected ? 'rgba(196, 176, 154,0.22)' : 'rgba(6,5,5,0.66)',
                   // Slight frosted-glass — picks up the warm caustics from
                   // behind without letting them compete with the label.
                   backdropFilter: 'blur(6px)',
@@ -338,7 +332,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
                     borderRadius: '5px',
                     border: isSelected
                       ? '1px solid var(--color-sienna-400)'
-                      : '1px solid rgba(184,134,61,0.45)',
+                      : '1px solid rgba(196, 176, 154,0.45)',
                     backgroundColor: isSelected ? 'var(--color-sienna-400)' : 'transparent',
                     transition:
                       'background-color var(--duration-micro) var(--ease-luxury), border-color var(--duration-micro) var(--ease-luxury)',
@@ -361,9 +355,7 @@ export function StepSkinGoals({ value, onChange, onContinue, onBack }: Props) {
                     fontFamily: 'var(--font-body)',
                     fontWeight: 300,
                     fontSize: '0.9375rem',
-                    color: isSelected
-                      ? 'var(--color-alabaster-50)'
-                      : 'var(--color-alabaster-300)',
+                    color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
                     textShadow: '0 1px 8px rgba(6,5,5,0.7)',
                     transition: 'color var(--duration-micro) ease',
                   }}

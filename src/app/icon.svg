@@ -3,10 +3,10 @@
   <rect width="32" height="32" rx="6" fill="#0d0d0b"/>
 
   <!-- Outer sienna ring — the "audit lens" -->
-  <circle cx="16" cy="15" r="9.5" stroke="#b8863d" stroke-width="0.9" opacity="0.9"/>
+  <circle cx="16" cy="15" r="9.5" stroke="#c4b09a" stroke-width="0.9" opacity="0.9"/>
 
   <!-- Inner thin ring — depth -->
-  <circle cx="16" cy="15" r="7" stroke="#b8863d" stroke-width="0.4" opacity="0.35"/>
+  <circle cx="16" cy="15" r="7" stroke="#c4b09a" stroke-width="0.4" opacity="0.35"/>
 
   <!-- Monogram "S" — Cormorant-style, ultra-thin, alabaster -->
   <path
@@ -20,14 +20,14 @@
   <!-- Gold tick mark — the "audit" checkmark, bottom-right of lens -->
   <path
     d="M20.5 20.5 L22.8 22.8"
-    stroke="#b8863d"
+    stroke="#c4b09a"
     stroke-width="1.1"
     stroke-linecap="round"
     opacity="0.85"
   />
   <path
     d="M22.0 22.0 L25.2 25.2"
-    stroke="#b8863d"
+    stroke="#c4b09a"
     stroke-width="1.6"
     stroke-linecap="round"
     opacity="0.7"

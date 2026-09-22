@@ -84,8 +84,7 @@ export function StepPihFrequency({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -116,9 +115,11 @@ export function StepPihFrequency({
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + OPTIONS.length) % OPTIONS.length
@@ -129,9 +130,11 @@ export function StepPihFrequency({
 
   const handleDurationKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + DURATION_OPTIONS.length) % DURATION_OPTIONS.length
@@ -267,11 +270,11 @@ export function StepPihFrequency({
                 -webkit-backdrop-filter: blur(6px);
               }
               .step9-pih-root [data-radio-pill][aria-checked="true"] {
-                background-color: rgba(184, 134, 61, 0.22) !important;
+                background-color: rgba(196, 176, 154, 0.22) !important;
               }
             `}</style>
           </div>,
-          document.body,
+          document.body
         )}
 
       {/* One width for the whole step — heading, pills, follow-up, and
@@ -290,17 +293,13 @@ export function StepPihFrequency({
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          When your skin heals from something — a pimple, a cut, an insect bite,
-          or friction — does the area typically leave a dark mark behind?
+          When your skin heals from something — a pimple, a cut, an insect bite, or friction — does
+          the area typically leave a dark mark behind?
         </h2>
 
-        <p
-          data-reveal
-          style={{ ...SUB_COPY, textShadow: '0 1px 12px rgba(6,5,5,0.7)' }}
-        >
-          This includes: dark spots after a breakout clears, a shadow where a
-          scratch was, darkening after waxing or threading, or a patch that stays
-          discoloured after any kind of irritation.
+        <p data-reveal style={{ ...SUB_COPY, textShadow: '0 1px 12px rgba(6,5,5,0.7)' }}>
+          This includes: dark spots after a breakout clears, a shadow where a scratch was, darkening
+          after waxing or threading, or a patch that stays discoloured after any kind of irritation.
         </p>
 
         <span

@@ -42,8 +42,7 @@ export function StepDehydrationCheck({ value, onChange, onContinue, onBack }: Pr
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -65,9 +64,11 @@ export function StepDehydrationCheck({ value, onChange, onContinue, onBack }: Pr
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + OPTIONS.length) % OPTIONS.length
@@ -197,14 +198,17 @@ export function StepDehydrationCheck({ value, onChange, onContinue, onBack }: Pr
                 -webkit-backdrop-filter: blur(6px);
               }
               .step6-dehydration-root [data-radio-pill][aria-checked="true"] {
-                background-color: rgba(184, 134, 61, 0.22) !important;
+                background-color: rgba(196, 176, 154, 0.22) !important;
               }
             `}</style>
           </div>,
-          document.body,
+          document.body
         )}
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '30rem' }} className="step6-dehydration-root">
+      <div
+        style={{ position: 'relative', zIndex: 1, maxWidth: '30rem' }}
+        className="step6-dehydration-root"
+      >
         <h2
           data-reveal
           style={{
@@ -218,8 +222,7 @@ export function StepDehydrationCheck({ value, onChange, onContinue, onBack }: Pr
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          Does your skin ever feel tight or lacking in comfort even when it looks
-          oily or shiny?
+          Does your skin ever feel tight or lacking in comfort even when it looks oily or shiny?
         </h2>
 
         <span
@@ -270,13 +273,23 @@ export function StepDehydrationCheck({ value, onChange, onContinue, onBack }: Pr
         {error && (
           <p
             role="alert"
-            style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-blush-500)', marginBottom: '1rem' }}
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              color: 'var(--color-blush-500)',
+              marginBottom: '1rem',
+            }}
           >
             {error}
           </p>
         )}
 
-        <StepFooter onContinue={handleContinue} onBack={onBack} isLoading={isPending} continueDisabled={!value} />
+        <StepFooter
+          onContinue={handleContinue}
+          onBack={onBack}
+          isLoading={isPending}
+          continueDisabled={!value}
+        />
       </div>
     </div>
   )

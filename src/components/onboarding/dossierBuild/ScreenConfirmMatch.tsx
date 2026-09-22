@@ -1,6 +1,7 @@
 'use client'
 
-import { StepHeader } from '../StepHeader'
+import type { CSSProperties } from 'react'
+import { ScreenHeader } from './ScreenHeader'
 import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
 
 type Product = {
@@ -8,50 +9,110 @@ type Product = {
   name: string
   brandName: string | null
   sizeLabel: string | null
+  /** Free-text category landing from the catalogue ("Leave-on exfoliant"). */
+  subcategory?: string | null
 }
 
 type Props = {
   product: Product
   onConfirm: () => void
+  /** Returns to the result list with the previous search term preserved. */
+  onShowOtherMatches: () => void
   onNotMyProduct: () => void
+  onBack: () => void
 }
 
-export function ScreenConfirmMatch({ product, onConfirm, onNotMyProduct }: Props) {
+const OUTLINED: CSSProperties = {
+  width: '100%',
+  minHeight: '52px',
+  borderRadius: 'var(--radius-card)',
+  border: '1px solid var(--color-accent-border)',
+  backgroundColor: 'transparent',
+  color: 'var(--color-alabaster-200)',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.9375rem',
+  cursor: 'pointer',
+}
+
+export function ScreenConfirmMatch({
+  product,
+  onConfirm,
+  onShowOtherMatches,
+  onNotMyProduct,
+  onBack,
+}: Props) {
+  const meta = [product.sizeLabel, product.subcategory]
+    .filter((part): part is string => Boolean(part))
+    .join(' · ')
+
   return (
     <div>
-      <StepHeader title="Is this your product?" />
+      <ScreenHeader title="Is this your product?" onBack={onBack} />
 
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          padding: '1.25rem',
+          padding: '1.5rem',
           borderRadius: 'var(--radius-card)',
           border: '1px solid var(--color-accent-border)',
           backgroundColor: 'var(--color-surface)',
-          marginBottom: '0.75rem',
+          marginBottom: '1.25rem',
         }}
       >
-        <ProductImagePlaceholder size="lg" />
-        <span>
-          <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--color-alabaster-400)' }}>
-            {product.brandName ?? 'Unknown brand'}
-          </span>
-          <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.9375rem', color: 'var(--color-alabaster-100)' }}>
-            {product.name}
-          </span>
-          {product.sizeLabel && (
-            <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--color-alabaster-400)' }}>
-              {product.sizeLabel}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <ProductImagePlaceholder size="lg" />
+          <span style={{ minWidth: 0 }}>
+            <span
+              style={{
+                display: 'block',
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.8125rem',
+                color: 'var(--color-alabaster-400)',
+                marginBottom: '0.25rem',
+              }}
+            >
+              {product.brandName ?? 'Unknown brand'}
             </span>
-          )}
-        </span>
-      </div>
+            <span
+              style={{
+                display: 'block',
+                fontFamily: 'var(--font-body)',
+                fontSize: '1rem',
+                lineHeight: 1.45,
+                color: 'var(--color-alabaster-100)',
+              }}
+            >
+              {product.name}
+            </span>
+            {meta && (
+              <span
+                style={{
+                  display: 'block',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.8125rem',
+                  color: 'var(--color-alabaster-400)',
+                  marginTop: '0.375rem',
+                }}
+              >
+                {meta}
+              </span>
+            )}
+          </span>
+        </div>
 
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--color-alabaster-400)', margin: '0 0 2rem' }}>
-        Packaging may vary.
-      </p>
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.75rem',
+            color: 'var(--color-alabaster-400)',
+            textAlign: 'right',
+            margin: '1.25rem 0 0',
+            paddingTop: '1rem',
+            borderTop: '1px solid rgba(196, 176, 154,0.18)',
+          }}
+        >
+          Packaging may vary.
+        </p>
+      </div>
 
       <button
         type="button"
@@ -61,21 +122,16 @@ export function ScreenConfirmMatch({ product, onConfirm, onNotMyProduct }: Props
       >
         Yes, this is my product
       </button>
+
       <button
         type="button"
-        onClick={onNotMyProduct}
-        style={{
-          width: '100%',
-          minHeight: '52px',
-          borderRadius: 'var(--radius-card)',
-          border: '1px solid var(--color-accent-border)',
-          backgroundColor: 'transparent',
-          color: 'var(--color-alabaster-200)',
-          fontFamily: 'var(--font-body)',
-          fontSize: '0.875rem',
-          cursor: 'pointer',
-        }}
+        onClick={onShowOtherMatches}
+        style={{ ...OUTLINED, marginBottom: '0.75rem' }}
       >
+        Show me other matches
+      </button>
+
+      <button type="button" onClick={onNotMyProduct} style={OUTLINED}>
         Not my product
       </button>
     </div>

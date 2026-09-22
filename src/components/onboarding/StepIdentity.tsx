@@ -17,8 +17,18 @@ const OPTIONS: { value: GenderIdentity; label: string }[] = [
 ]
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
 
 // ─── Shared field styling ─────────────────────────────────────
@@ -38,7 +48,7 @@ const CONTROL_BASE: React.CSSProperties = {
   fontSize: '0.9375rem',
   color: 'var(--color-alabaster-50)',
   backgroundColor: 'transparent',
-  border: '1px solid rgba(184,134,61,0.28)',
+  border: '1px solid rgba(196, 176, 154,0.28)',
   borderRadius: '4px',
   padding: '0.9375rem 1.125rem',
   outline: 'none',
@@ -116,9 +126,11 @@ export function StepIdentity({
    *  radiogroup pattern. Wraps around at both ends. */
   const handleIdentityKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
-      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1
-      : 0
+      e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + OPTIONS.length) % OPTIONS.length
@@ -198,8 +210,12 @@ export function StepIdentity({
           required
           aria-required="true"
           style={CONTROL_BASE}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-sienna-400)' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(184,134,61,0.28)' }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--color-sienna-400)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(196, 176, 154,0.28)'
+          }}
         />
       </div>
 
@@ -237,8 +253,8 @@ export function StepIdentity({
                   ...CONTROL_BASE,
                   textAlign: 'left',
                   cursor: 'pointer',
-                  borderColor: isSelected ? 'var(--color-sienna-400)' : 'rgba(184,134,61,0.28)',
-                  backgroundColor: isSelected ? 'rgba(184,134,61,0.10)' : 'transparent',
+                  borderColor: isSelected ? 'var(--color-sienna-400)' : 'rgba(196, 176, 154,0.28)',
+                  backgroundColor: isSelected ? 'rgba(196, 176, 154,0.10)' : 'transparent',
                   color: isSelected ? 'var(--color-sienna-300)' : 'var(--color-alabaster-300)',
                 }}
               >
@@ -257,7 +273,11 @@ export function StepIdentity({
             <span
               id={monthLabelId}
               className="label-caps"
-              style={{ display: 'block', color: 'var(--color-alabaster-400)', marginBottom: '0.5rem' }}
+              style={{
+                display: 'block',
+                color: 'var(--color-alabaster-400)',
+                marginBottom: '0.5rem',
+              }}
             >
               Month
             </span>
@@ -274,7 +294,11 @@ export function StepIdentity({
             <span
               id={yearLabelId}
               className="label-caps"
-              style={{ display: 'block', color: 'var(--color-alabaster-400)', marginBottom: '0.5rem' }}
+              style={{
+                display: 'block',
+                color: 'var(--color-alabaster-400)',
+                marginBottom: '0.5rem',
+              }}
             >
               Year
             </span>

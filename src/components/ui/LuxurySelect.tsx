@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from 'gsap'
 
@@ -30,7 +22,7 @@ type Props = {
   maxPanelHeight?: number
 }
 
-const FIELD_BORDER_IDLE = 'rgba(184,134,61,0.28)'
+const FIELD_BORDER_IDLE = 'rgba(196, 176, 154,0.28)'
 const FIELD_BORDER_ACTIVE = 'var(--color-sienna-400)'
 const PANEL_GAP = 6
 const VIEWPORT_MARGIN = 16
@@ -85,10 +77,7 @@ export function LuxurySelect({
   const [focused, setFocused] = useState(false)
   const [position, setPosition] = useState<PanelPosition | null>(null)
 
-  const selectedIndex = useMemo(
-    () => options.findIndex((o) => o.value === value),
-    [options, value]
-  )
+  const selectedIndex = useMemo(() => options.findIndex((o) => o.value === value), [options, value])
   const [activeIndex, setActiveIndex] = useState(selectedIndex >= 0 ? selectedIndex : 0)
 
   const selectedLabel = selectedIndex >= 0 ? options[selectedIndex].label : null
@@ -150,8 +139,7 @@ export function LuxurySelect({
     hasAnimatedRef.current = true
     const direction = position.direction
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       if (reduced) {
@@ -183,7 +171,12 @@ export function LuxurySelect({
     ctxRef.current = null
   }, [open])
 
-  useEffect(() => () => { ctxRef.current?.revert() }, [])
+  useEffect(
+    () => () => {
+      ctxRef.current?.revert()
+    },
+    []
+  )
 
   // ── Keep the active option in view ─────────────────────────────
   useEffect(() => {
@@ -210,9 +203,7 @@ export function LuxurySelect({
   const openPanel = useCallback(
     (startIndex?: number) => {
       if (disabled || options.length === 0) return
-      setActiveIndex(
-        startIndex ?? (selectedIndex >= 0 ? selectedIndex : 0)
-      )
+      setActiveIndex(startIndex ?? (selectedIndex >= 0 ? selectedIndex : 0))
       // Measure before opening so the panel mounts with a position already
       // set. Otherwise `position` is still null on the first open of this
       // instance and the entrance animation — which keys off `open` alone —
@@ -422,7 +413,7 @@ export function LuxurySelect({
               backgroundColor: 'rgba(18,16,14,0.94)',
               backdropFilter: 'blur(14px) saturate(1.1)',
               WebkitBackdropFilter: 'blur(14px) saturate(1.1)',
-              border: '1px solid rgba(184,134,61,0.30)',
+              border: '1px solid rgba(196, 176, 154,0.30)',
               borderRadius: 'var(--radius-badge)',
               boxShadow:
                 '0 1px 0 0 rgba(232,201,154,0.06) inset, 0 24px 60px -12px rgba(0,0,0,0.75), 0 2px 10px rgba(0,0,0,0.45)',
@@ -478,9 +469,9 @@ export function LuxurySelect({
                           ? 'var(--color-alabaster-50)'
                           : 'var(--color-alabaster-300)',
                       backgroundColor: isActive
-                        ? 'rgba(184,134,61,0.12)'
+                        ? 'rgba(196, 176, 154,0.12)'
                         : isSelected
-                          ? 'rgba(184,134,61,0.06)'
+                          ? 'rgba(196, 176, 154,0.06)'
                           : 'transparent',
                       transition:
                         'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',

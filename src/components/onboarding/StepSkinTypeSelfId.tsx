@@ -86,8 +86,7 @@ export function StepSkinTypeSelfId({ value, onChange, onContinue, onBack }: Prop
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -213,12 +212,10 @@ export function StepSkinTypeSelfId({ value, onChange, onContinue, onBack }: Prop
                   textAlign: 'left',
                   border: isSelected
                     ? '1.5px solid var(--color-sienna-400)'
-                    : '1px solid rgba(184,134,61,0.28)',
-                  backgroundColor: isSelected
-                    ? 'rgba(184,134,61,0.14)'
-                    : 'rgba(6,5,5,0.42)',
+                    : '1px solid rgba(196, 176, 154,0.28)',
+                  backgroundColor: isSelected ? 'rgba(196, 176, 154,0.14)' : 'rgba(6,5,5,0.42)',
                   boxShadow: isSelected
-                    ? '0 0 0 1px rgba(184,134,61,0.15), inset 0 0 20px rgba(184,134,61,0.04)'
+                    ? '0 0 0 1px rgba(196, 176, 154,0.15), inset 0 0 20px rgba(196, 176, 154,0.04)'
                     : 'none',
                   transition:
                     'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
@@ -258,9 +255,7 @@ export function StepSkinTypeSelfId({ value, onChange, onContinue, onBack }: Prop
                     fontFamily: 'var(--font-body)',
                     fontWeight: 400,
                     fontSize: '0.9375rem',
-                    color: isSelected
-                      ? 'var(--color-alabaster-50)'
-                      : 'var(--color-alabaster-200)',
+                    color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-200)',
                   }}
                 >
                   {type.label}

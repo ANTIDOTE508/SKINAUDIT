@@ -94,15 +94,13 @@ export function StepRedness({
   // flushing trigger, and a fade speed are all required.
   const canContinue =
     pattern != null &&
-    (!showFollowUp ||
-      (areas.length > 0 && flushTriggers.length > 0 && flushFadeSpeed != null))
+    (!showFollowUp || (areas.length > 0 && flushTriggers.length > 0 && flushFadeSpeed != null))
 
   useEffect(() => {
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -155,9 +153,11 @@ export function StepRedness({
 
   const handleFadeKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + FADE_OPTIONS.length) % FADE_OPTIONS.length
@@ -170,9 +170,11 @@ export function StepRedness({
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + PATTERN_OPTIONS.length) % PATTERN_OPTIONS.length
@@ -246,8 +248,8 @@ export function StepRedness({
             margin: '0 0 2.25rem',
           }}
         >
-          Do you notice redness on your cheeks, nose, or chin that&apos;s there
-          most of the time — not related to a breakout, exercise, or heat?
+          Do you notice redness on your cheeks, nose, or chin that&apos;s there most of the time —
+          not related to a breakout, exercise, or heat?
         </h2>
 
         <span
@@ -350,7 +352,7 @@ export function StepRedness({
                         borderRadius: '50%',
                         border: isSelected
                           ? '1px solid var(--color-sienna-400)'
-                          : '1px solid rgba(184,134,61,0.45)',
+                          : '1px solid rgba(196, 176, 154,0.45)',
                         backgroundColor: isSelected ? 'var(--color-sienna-400)' : 'transparent',
                         transition:
                           'background-color var(--duration-micro) var(--ease-luxury), border-color var(--duration-micro) var(--ease-luxury)',
@@ -362,7 +364,9 @@ export function StepRedness({
                         fontWeight: 300,
                         fontSize: '0.8125rem',
                         lineHeight: 1.3,
-                        color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
+                        color: isSelected
+                          ? 'var(--color-alabaster-50)'
+                          : 'var(--color-alabaster-300)',
                         transition: 'color var(--duration-micro) ease',
                       }}
                     >
@@ -375,8 +379,7 @@ export function StepRedness({
 
             {/* Flushing triggers (multi-select) */}
             <p style={{ ...FOLLOWUP_LABEL, marginTop: '2.5rem' }} id={flushTriggersLabelId}>
-              Does your face flush or turn red easily in response to any of the
-              following?
+              Does your face flush or turn red easily in response to any of the following?
             </p>
 
             <div
@@ -425,7 +428,7 @@ export function StepRedness({
                         borderRadius: '50%',
                         border: isSelected
                           ? '1px solid var(--color-sienna-400)'
-                          : '1px solid rgba(184,134,61,0.45)',
+                          : '1px solid rgba(196, 176, 154,0.45)',
                         backgroundColor: isSelected ? 'var(--color-sienna-400)' : 'transparent',
                         transition:
                           'background-color var(--duration-micro) var(--ease-luxury), border-color var(--duration-micro) var(--ease-luxury)',
@@ -437,7 +440,9 @@ export function StepRedness({
                         fontWeight: 300,
                         fontSize: '0.8125rem',
                         lineHeight: 1.3,
-                        color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
+                        color: isSelected
+                          ? 'var(--color-alabaster-50)'
+                          : 'var(--color-alabaster-300)',
                         transition: 'color var(--duration-micro) ease',
                       }}
                     >

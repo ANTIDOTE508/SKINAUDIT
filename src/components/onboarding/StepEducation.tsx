@@ -177,7 +177,7 @@ export function StepEducation({ onContinue, onBack }: Props) {
         ref={dividerRef}
         style={{
           height: '1px',
-          backgroundColor: 'rgba(184,134,61,0.12)',
+          backgroundColor: 'rgba(196, 176, 154,0.12)',
           marginBottom: '2rem',
         }}
       />
@@ -189,10 +189,7 @@ export function StepEducation({ onContinue, onBack }: Props) {
       >
         What SkinAudit surfaces
       </span>
-      <div
-        ref={metricsRef}
-        style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}
-      >
+      <div ref={metricsRef} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
         {METRICS.map((metric) => (
           <div
             key={metric.name}
@@ -264,11 +261,7 @@ export function StepEducation({ onContinue, onBack }: Props) {
         ))}
       </div>
 
-      <StepFooter
-        onContinue={onContinue}
-        onBack={onBack}
-        continueLabel="I'm ready"
-      />
+      <StepFooter onContinue={onContinue} onBack={onBack} continueLabel="I'm ready" />
     </div>
   )
 }

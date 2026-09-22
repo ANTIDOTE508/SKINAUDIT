@@ -1,119 +1,215 @@
 'use client'
 
-import { Check, ArrowRight } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
 
 type Props = {
   productName: string
+  brandName?: string | null
+  categoryLabel?: string | null
+  statusLabel?: string | null
   isFinishing: boolean
   finishError?: string | null
   onAddAnother: () => void
   onContinueToStudio: () => void
 }
 
-export function ScreenAdded({ productName, isFinishing, finishError, onAddAnother, onContinueToStudio }: Props) {
+export function ScreenAdded({
+  productName,
+  brandName,
+  categoryLabel,
+  statusLabel,
+  isFinishing,
+  finishError,
+  onAddAnother,
+  onContinueToStudio,
+}: Props) {
+  const fullName = brandName ? `${brandName} ${productName}` : productName
+  const tags = [categoryLabel, statusLabel].filter((tag): tag is string => Boolean(tag))
+
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        textAlign: 'center',
+      }}
+    >
       <div
-        aria-hidden="true"
         style={{
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          border: '1px solid var(--color-accent-border)',
+          flex: 1,
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
           justifyContent: 'center',
-          margin: '0 auto 1.5rem',
-        }}
-      >
-        <Check size={22} strokeWidth={1.5} color="var(--color-sienna-400)" />
-      </div>
-
-      <h2
-        style={{
-          fontFamily: 'var(--font-heading)',
-          fontWeight: 300,
-          fontSize: '1.5rem',
-          color: 'var(--color-alabaster-50)',
-          margin: '0 0 1.5rem',
-        }}
-      >
-        Added to your Dossier
-      </h2>
-
-      <div
-        style={{
-          display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
-          padding: '1rem',
-          borderRadius: 'var(--radius-card)',
-          border: '1px solid var(--color-accent-border)',
-          backgroundColor: 'var(--color-surface)',
-          textAlign: 'left',
-          marginBottom: '2rem',
+          paddingBottom: '2rem',
         }}
       >
-        <ProductImagePlaceholder size="md" />
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.9375rem', color: 'var(--color-alabaster-100)' }}>
-          {productName}
-        </span>
-      </div>
-
-      {finishError && (
-        <p
-          role="alert"
+        <div
+          aria-hidden="true"
           style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.8125rem',
-            color: 'var(--color-blush-500)',
-            marginBottom: '1rem',
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            border: '1px solid var(--color-accent-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '1.25rem',
           }}
         >
-          {finishError}
+          <Check size={24} strokeWidth={1.5} color="var(--color-sienna-400)" />
+        </div>
+
+        <p
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: 'var(--color-sienna-400)',
+            margin: '0 0 0.5rem',
+          }}
+        >
+          Added
         </p>
-      )}
 
-      <button
-        type="button"
-        onClick={onAddAnother}
-        disabled={isFinishing}
-        style={{
-          width: '100%',
-          minHeight: '52px',
-          borderRadius: 'var(--radius-card)',
-          border: '1px solid var(--color-accent-border)',
-          backgroundColor: 'transparent',
-          color: 'var(--color-alabaster-200)',
-          fontFamily: 'var(--font-body)',
-          fontSize: '0.875rem',
-          cursor: isFinishing ? 'default' : 'pointer',
-          marginBottom: '0.75rem',
-        }}
-      >
-        Add another product
-      </button>
+        <h2
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 300,
+            fontSize: '1.5rem',
+            lineHeight: 1.2,
+            color: 'var(--color-alabaster-50)',
+            margin: '0 0 0.875rem',
+          }}
+        >
+          Added to your Dossier
+        </h2>
 
-      <button
-        type="button"
-        onClick={onContinueToStudio}
-        disabled={isFinishing}
-        className="btn-primary btn-primary-accent"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.75rem',
-          width: '100%',
-          minHeight: '58px',
-          paddingInline: '1.5rem',
-        }}
-      >
-        <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
-        {isFinishing ? 'Setting up your space…' : 'Continue to Studio'}
-        <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
-      </button>
+        {tags.length > 0 && (
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontWeight: 300,
+              fontSize: '0.875rem',
+              lineHeight: 1.6,
+              color: 'var(--color-alabaster-400)',
+              margin: '0 0 2rem',
+              maxWidth: '24rem',
+            }}
+          >
+            {fullName} has been saved as {tags.join(' · ')}.
+          </p>
+        )}
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.25rem',
+            textAlign: 'left',
+          }}
+        >
+          <ProductImagePlaceholder size="md" />
+          <span style={{ minWidth: 0 }}>
+            {brandName && (
+              <span
+                style={{
+                  display: 'block',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.8125rem',
+                  color: 'var(--color-alabaster-400)',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                {brandName}
+              </span>
+            )}
+            <span
+              style={{
+                display: 'block',
+                fontFamily: 'var(--font-body)',
+                fontSize: '1rem',
+                lineHeight: 1.45,
+                color: 'var(--color-alabaster-100)',
+                marginBottom: tags.length > 0 ? '0.5rem' : 0,
+              }}
+            >
+              {productName}
+            </span>
+            {tags.length > 0 && (
+              <span style={{ display: 'flex', gap: '0.5rem' }}>
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '0.25rem 0.625rem',
+                      borderRadius: 'var(--radius-badge)',
+                      border: '1px solid var(--color-accent-border)',
+                      color: 'var(--color-alabaster-300)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.6875rem',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </span>
+            )}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 'auto' }}>
+        {finishError && (
+          <p
+            role="alert"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              color: 'var(--color-blush-500)',
+              margin: '0 0 1rem',
+            }}
+          >
+            {finishError}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={onContinueToStudio}
+          disabled={isFinishing}
+          className="btn-primary btn-primary-accent"
+          style={{ width: '100%', minHeight: '56px', marginBottom: '0.75rem' }}
+        >
+          {isFinishing ? 'Setting up your space…' : 'Go to Dossier'}
+        </button>
+
+        <button
+          type="button"
+          onClick={onAddAnother}
+          disabled={isFinishing}
+          className="btn-secondary"
+          style={{
+            width: '100%',
+            minHeight: '56px',
+            borderRadius: 'var(--radius-card)',
+            borderColor: 'var(--color-accent-border)',
+            fontSize: '0.9375rem',
+            fontWeight: 400,
+            letterSpacing: 0,
+            textTransform: 'none',
+          }}
+        >
+          Add another product
+        </button>
+      </div>
     </div>
   )
 }

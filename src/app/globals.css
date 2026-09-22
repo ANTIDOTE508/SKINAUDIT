@@ -7,9 +7,9 @@
 
 @theme {
   /* ── Obsidian (dark backgrounds) ── */
-  --color-obsidian-950: #0a0908;
-  --color-obsidian-900: #12100e;
-  --color-obsidian-800: #1c1916;
+  --color-obsidian-950: #060504;
+  --color-obsidian-900: #0e0c0a;
+  --color-obsidian-800: #12100e;
   --color-obsidian-700: #2a2520;
 
   /* ── Alabaster (light / text) ── */
@@ -19,21 +19,26 @@
   --color-alabaster-300: #d4d2ca;
   --color-alabaster-400: #b8b5ab;
 
-  /* ── Sienna Gold (accent) ── */
-  --color-sienna-300: #e8c99a;
-  --color-sienna-400: #d4a96a;
-  --color-sienna-500: #b8863d;
-  --color-sienna-600: #9a6e2e;
+  /* ── Sienna (accent — warm sand, no gold) ── */
+  --color-sienna-300: #d0bcaa;
+  --color-sienna-400: #c4b09a;
+  --color-sienna-500: #c4b09a;
+  --color-sienna-600: #b0a08c;
 
   /* ── Sage (positive / success) ── */
   --color-sage-100: #d4ddd0;
   --color-sage-400: #8fa888;
-  --color-sage-600: #6b8f63;
+  --color-sage-600: #6a8c69;
 
   /* ── Blush (caution / warning) ── */
   --color-blush-50: #f5ede8;
   --color-blush-200: #e8c4b4;
-  --color-blush-500: #c9897a;
+  --color-blush-500: #8c4a3f;
+
+  /* ── Status (Dossier product state) ── */
+  --color-status-active: #6a8c69;
+  --color-status-depleted: #6b6560;
+  --color-status-flag: #8c4a3f;
 
   /* ── Typography ── */
   --font-heading: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
@@ -72,8 +77,8 @@
   --color-text-secondary: var(--color-alabaster-300);
   --color-text-muted: var(--color-alabaster-400);
   --color-accent: var(--color-sienna-500);
-  --color-accent-subtle: rgba(184, 134, 61, 0.15);
-  --color-accent-border: rgba(184, 134, 61, 0.3);
+  --color-accent-subtle: rgba(196, 176, 154, 0.15);
+  --color-accent-border: rgba(196, 176, 154, 0.3);
 
   color-scheme: dark;
 }
@@ -438,7 +443,7 @@ body {
   /* Active step carries the sienna ring */
   .studio-m-circle-active {
     border-color: var(--color-sienna-500);
-    box-shadow: 0 0 0 1px rgba(184, 134, 61, 0.25);
+    box-shadow: 0 0 0 1px rgba(196, 176, 154, 0.25);
   }
 
   /* Reuse the 90x130 desktop bottle DOM at mini scale. The wrapper is
@@ -773,7 +778,7 @@ body {
 
 .luxury-select-list {
   scrollbar-width: thin;
-  scrollbar-color: rgba(184, 134, 61, 0.42) transparent;
+  scrollbar-color: rgba(196, 176, 154, 0.42) transparent;
 }
 
 .luxury-select-list::-webkit-scrollbar {
@@ -785,12 +790,12 @@ body {
 }
 
 .luxury-select-list::-webkit-scrollbar-thumb {
-  background-color: rgba(184, 134, 61, 0.38);
+  background-color: rgba(196, 176, 154, 0.38);
   border-radius: 3px;
 }
 
 .luxury-select-list::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(212, 169, 106, 0.6);
+  background-color: rgba(208, 188, 170, 0.6);
 }
 
 /* ================================================================
@@ -815,7 +820,7 @@ body {
    ================================================================ */
 
 [data-radio-pill]:hover:not(:disabled) {
-  border-color: rgba(184, 134, 61, 0.55);
+  border-color: rgba(196, 176, 154, 0.55);
   background-color: rgba(6, 5, 5, 0.62);
 }
 

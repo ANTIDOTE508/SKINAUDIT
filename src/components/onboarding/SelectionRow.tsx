@@ -53,19 +53,18 @@ export function SelectionRow({
         border: isSelected
           ? '1.5px solid var(--color-sienna-400)'
           : '1px solid var(--color-border)',
-        backgroundColor: isSelected
-          ? 'var(--color-accent-subtle)'
-          : 'var(--color-surface)',
+        backgroundColor: isSelected ? 'var(--color-accent-subtle)' : 'var(--color-surface)',
         cursor: isDisabled ? 'not-allowed' : 'pointer',
         opacity: isDisabled ? 0.35 : 1,
         textAlign: 'left',
         transition: 'all 200ms var(--ease-luxury)',
         outline: 'none',
-        boxShadow: isSelected ? '0 0 0 1px rgba(184,134,61,0.12)' : 'none',
+        boxShadow: isSelected ? '0 0 0 1px rgba(196, 176, 154,0.12)' : 'none',
         width: '100%',
       }}
       onMouseEnter={(e) => {
-        if (!isSelected && !isDisabled) e.currentTarget.style.borderColor = 'rgba(184,134,61,0.3)'
+        if (!isSelected && !isDisabled)
+          e.currentTarget.style.borderColor = 'rgba(196, 176, 154,0.3)'
       }}
       onMouseLeave={(e) => {
         if (!isSelected && !isDisabled) e.currentTarget.style.borderColor = 'var(--color-border)'
@@ -73,7 +72,12 @@ export function SelectionRow({
     >
       <span style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
         {icon && (
-          <span style={{ color: isSelected ? 'var(--color-sienna-400)' : 'var(--color-alabaster-400)', flexShrink: 0 }}>
+          <span
+            style={{
+              color: isSelected ? 'var(--color-sienna-400)' : 'var(--color-alabaster-400)',
+              flexShrink: 0,
+            }}
+          >
             {icon}
           </span>
         )}

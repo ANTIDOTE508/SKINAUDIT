@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 type Props = {
   size?: 'sm' | 'md' | 'lg'
 }
@@ -14,6 +16,9 @@ const DIMENSIONS: Record<NonNullable<Props['size']>, { width: number; height: nu
  */
 export function ProductImagePlaceholder({ size = 'md' }: Props) {
   const { width, height } = DIMENSIONS[size]
+  // Per-instance id: several placeholders render on one page (search results),
+  // and a shared id would make them all reference whichever <defs> is first.
+  const gradientId = `bottle-placeholder-gradient-${useId()}`
 
   return (
     <svg
@@ -25,13 +30,13 @@ export function ProductImagePlaceholder({ size = 'md' }: Props) {
       style={{ flexShrink: 0 }}
     >
       <defs>
-        <linearGradient id="bottle-placeholder-gradient" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--color-alabaster-400)" stopOpacity="0.35" />
           <stop offset="100%" stopColor="var(--color-alabaster-400)" stopOpacity="0.12" />
         </linearGradient>
       </defs>
-      <rect x="24" y="4" width="16" height="10" rx="2" fill="url(#bottle-placeholder-gradient)" />
-      <rect x="14" y="16" width="36" height="72" rx="6" fill="url(#bottle-placeholder-gradient)" />
+      <rect x="24" y="4" width="16" height="10" rx="2" fill={`url(#${gradientId})`} />
+      <rect x="14" y="16" width="36" height="72" rx="6" fill={`url(#${gradientId})`} />
     </svg>
   )
 }

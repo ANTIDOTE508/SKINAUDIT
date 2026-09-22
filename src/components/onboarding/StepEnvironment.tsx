@@ -192,7 +192,8 @@ export function StepEnvironment({
     // the user explicitly picked for the city they're currently on.
     const isDifferentCity = selectedCity !== propsRef.current.city
     const canOverrideSeason = isDifferentCity || seasonAutoDetected || !propsRef.current.season
-    const canOverrideClimate = isDifferentCity || climateAutoDetected || !propsRef.current.climateZone
+    const canOverrideClimate =
+      isDifferentCity || climateAutoDetected || !propsRef.current.climateZone
 
     // Single patch/update call: propsRef.current only refreshes on the next
     // render, so multiple sequential update() calls in this same handler
@@ -216,7 +217,8 @@ export function StepEnvironment({
         // already true when the fetch started, so a still-false
         // climateAutoDetectedRef here can't be a stale resume value from
         // the previous city, only a genuine manual override made since).
-        if (!isDifferentCity && !climateAutoDetectedRef.current && propsRef.current.climateZone) return
+        if (!isDifferentCity && !climateAutoDetectedRef.current && propsRef.current.climateZone)
+          return
         update({ climateZone: zone })
         setClimateAutoDetected(true)
       })
@@ -233,8 +235,7 @@ export function StepEnvironment({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -279,8 +280,7 @@ export function StepEnvironment({
   // lookup produced at least one usable field (so it can be reviewed/adjusted).
   const showManualForm = mode === 'manual' || geoStatus === 'done'
   const showManualFallbackLink =
-    mode === 'ask' &&
-    (geoStatus === 'denied' || geoStatus === 'error' || geoStatus === 'declined')
+    mode === 'ask' && (geoStatus === 'denied' || geoStatus === 'error' || geoStatus === 'declined')
 
   // Climate/season are still derived and persisted, just no longer surfaced
   // in this summary line.
@@ -296,7 +296,17 @@ export function StepEnvironment({
           the dense form must stay legible everywhere. */}
       {mounted &&
         createPortal(
-          <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', backgroundColor: 'var(--color-obsidian-950)' }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 0,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+              backgroundColor: 'var(--color-obsidian-950)',
+            }}
+          >
             <Image
               src="/images/onboarding/step5/bg-environment-window.webp"
               alt=""
@@ -354,13 +364,12 @@ export function StepEnvironment({
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          SkinAudit uses your general location to understand the environment
-          around your routine.
+          SkinAudit uses your general location to understand the environment around your routine.
         </h2>
 
         <p data-reveal style={SUB_COPY}>
-          Allow location and we&apos;ll handle the context automatically. We care
-          about the city you&apos;re in, not your home address.
+          Allow location and we&apos;ll handle the context automatically. We care about the city
+          you&apos;re in, not your home address.
         </p>
 
         {/* ── State A: geolocation permission prompt ── */}
@@ -402,7 +411,8 @@ export function StepEnvironment({
                     ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color =
+                      'var(--color-alabaster-400)'
                   }}
                 >
                   Decline
@@ -467,8 +477,7 @@ export function StepEnvironment({
                   maxWidth: '28rem',
                 }}
               >
-                We couldn&apos;t detect your location. You can set it manually
-                instead.
+                We couldn&apos;t detect your location. You can set it manually instead.
               </p>
             )}
 
@@ -484,7 +493,7 @@ export function StepEnvironment({
               marginBottom: '1.5rem',
               padding: '0.875rem 1rem',
               borderRadius: 'var(--radius-card)',
-              border: '1px solid rgba(184,134,61,0.28)',
+              border: '1px solid rgba(196, 176, 154,0.28)',
               backgroundColor: 'var(--color-accent-subtle)',
             }}
           >
@@ -516,60 +525,64 @@ export function StepEnvironment({
 
         {/* ── State B: manual city + climate + season form ── */}
         {showManualForm && (
-        <>
-        {/* Location field — city autocomplete, country deduced automatically */}
-        <div data-reveal style={{ marginBottom: '2rem' }}>
-          <span className="label-caps" style={{ display: 'block', marginBottom: '0.75rem' }}>
-            Current location
-          </span>
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              border: '1px solid rgba(184,134,61,0.28)',
-              borderRadius: '4px',
-              padding: '0.9375rem 1.125rem',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <CityAutocomplete city={city} countryName={countryName} onSelect={handleCitySelect} />
+          <>
+            {/* Location field — city autocomplete, country deduced automatically */}
+            <div data-reveal style={{ marginBottom: '2rem' }}>
+              <span className="label-caps" style={{ display: 'block', marginBottom: '0.75rem' }}>
+                Current location
+              </span>
+              <div
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  border: '1px solid rgba(196, 176, 154,0.28)',
+                  borderRadius: '4px',
+                  padding: '0.9375rem 1.125rem',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <CityAutocomplete
+                    city={city}
+                    countryName={countryName}
+                    onSelect={handleCitySelect}
+                  />
+                </div>
+                <MapPin
+                  size={18}
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                  style={{ flexShrink: 0, color: 'var(--color-sienna-400)' }}
+                />
+              </div>
             </div>
-            <MapPin
-              size={18}
-              strokeWidth={1.5}
-              aria-hidden="true"
-              style={{ flexShrink: 0, color: 'var(--color-sienna-400)' }}
-            />
-          </div>
-        </div>
 
-        {/* Climate and season are intentionally not rendered — they are
+            {/* Climate and season are intentionally not rendered — they are
             derived from the selected location and persisted in the
             background (see handleCitySelect / handleAllowLocation). */}
 
-        {error && (
-          <p
-            role="alert"
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.8125rem',
-              color: 'var(--color-blush-500)',
-              marginTop: '0.75rem',
-            }}
-          >
-            {error}
-          </p>
-        )}
+            {error && (
+              <p
+                role="alert"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.8125rem',
+                  color: 'var(--color-blush-500)',
+                  marginTop: '0.75rem',
+                }}
+              >
+                {error}
+              </p>
+            )}
 
-        <StepFooter
-          onContinue={handleContinue}
-          onBack={onBack}
-          isLoading={isPending}
-          continueDisabled={!canContinue}
-        />
-        </>
+            <StepFooter
+              onContinue={handleContinue}
+              onBack={onBack}
+              isLoading={isPending}
+              continueDisabled={!canContinue}
+            />
+          </>
         )}
       </div>
     </div>

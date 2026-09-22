@@ -63,8 +63,7 @@ export function StepDarkerAreas({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -92,9 +91,11 @@ export function StepDarkerAreas({
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + AREA_OPTIONS.length) % AREA_OPTIONS.length
@@ -162,8 +163,7 @@ export function StepDarkerAreas({
             margin: '0 0 2.25rem',
           }}
         >
-          Do you notice areas of your skin that are consistently darker than the
-          surrounding skin?
+          Do you notice areas of your skin that are consistently darker than the surrounding skin?
         </h2>
 
         <div
@@ -203,8 +203,8 @@ export function StepDarkerAreas({
               className="label-caps"
               style={{ display: 'block', marginBottom: '0.875rem' }}
             >
-              When darker areas appear, what tends to make them more noticeable? —
-              select all that apply
+              When darker areas appear, what tends to make them more noticeable? — select all that
+              apply
             </span>
 
             <div
@@ -252,7 +252,7 @@ export function StepDarkerAreas({
                         borderRadius: '50%',
                         border: isSelected
                           ? '1px solid var(--color-sienna-400)'
-                          : '1px solid rgba(184,134,61,0.45)',
+                          : '1px solid rgba(196, 176, 154,0.45)',
                         backgroundColor: isSelected ? 'var(--color-sienna-400)' : 'transparent',
                         transition:
                           'background-color var(--duration-micro) var(--ease-luxury), border-color var(--duration-micro) var(--ease-luxury)',
@@ -264,7 +264,9 @@ export function StepDarkerAreas({
                         fontWeight: 300,
                         fontSize: '0.8125rem',
                         lineHeight: 1.3,
-                        color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
+                        color: isSelected
+                          ? 'var(--color-alabaster-50)'
+                          : 'var(--color-alabaster-300)',
                         transition: 'color var(--duration-micro) ease',
                       }}
                     >

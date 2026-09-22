@@ -45,10 +45,8 @@ export function UndertoneCard({
         outline: 'none',
         border: selected
           ? '1px solid var(--color-sienna-400)'
-          : '1px solid rgba(184,134,61,0.28)',
-        backgroundColor: selected
-          ? 'rgba(184,134,61,0.14)'
-          : 'rgba(6,5,5,0.42)',
+          : '1px solid rgba(196, 176, 154,0.28)',
+        backgroundColor: selected ? 'rgba(196, 176, 154,0.14)' : 'rgba(6,5,5,0.42)',
         transition:
           'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
       }}
@@ -65,7 +63,7 @@ export function UndertoneCard({
           borderRadius: '50%',
           border: selected
             ? '1.5px solid var(--color-sienna-400)'
-            : '1.5px solid rgba(184,134,61,0.45)',
+            : '1.5px solid rgba(196, 176, 154,0.45)',
           transition: 'border-color var(--duration-micro) var(--ease-luxury)',
         }}
       >
@@ -88,9 +86,7 @@ export function UndertoneCard({
             fontFamily: 'var(--font-body)',
             fontWeight: 300,
             fontSize: '0.9375rem',
-            color: selected
-              ? 'var(--color-alabaster-50)'
-              : 'var(--color-alabaster-300)',
+            color: selected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
             transition: 'color var(--duration-micro) var(--ease-luxury)',
           }}
         >

@@ -25,17 +25,15 @@ export function WizardProgress({ steps, currentIndex }: Props) {
                   backgroundColor: isDone
                     ? 'var(--color-sienna-500)'
                     : isActive
-                    ? 'var(--color-sienna-400)'
-                    : 'var(--color-obsidian-700)',
+                      ? 'var(--color-sienna-400)'
+                      : 'var(--color-obsidian-700)',
                   border: isActive
                     ? '1.5px solid var(--color-sienna-300)'
                     : isDone
-                    ? 'none'
-                    : '1px solid var(--color-obsidian-700)',
+                      ? 'none'
+                      : '1px solid var(--color-obsidian-700)',
                   transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                  boxShadow: isActive
-                    ? '0 0 8px rgba(184,134,61,0.4)'
-                    : 'none',
+                  boxShadow: isActive ? '0 0 8px rgba(196, 176, 154,0.4)' : 'none',
                 }}
               />
               <span
@@ -48,8 +46,8 @@ export function WizardProgress({ steps, currentIndex }: Props) {
                   color: isDone
                     ? 'var(--color-sienna-500)'
                     : isActive
-                    ? 'var(--color-alabaster-300)'
-                    : 'var(--color-obsidian-700)',
+                      ? 'var(--color-alabaster-300)'
+                      : 'var(--color-obsidian-700)',
                   whiteSpace: 'nowrap',
                   transition: 'color 0.4s ease',
                 }}
@@ -65,9 +63,7 @@ export function WizardProgress({ steps, currentIndex }: Props) {
                   width: '32px',
                   height: '1px',
                   marginBottom: '18px',
-                  backgroundColor: isDone
-                    ? 'var(--color-sienna-500)'
-                    : 'var(--color-obsidian-700)',
+                  backgroundColor: isDone ? 'var(--color-sienna-500)' : 'var(--color-obsidian-700)',
                   transition: 'background-color 0.4s ease',
                 }}
               />

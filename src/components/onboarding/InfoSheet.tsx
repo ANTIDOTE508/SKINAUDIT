@@ -77,7 +77,14 @@ export function InfoSheet({ title, items, isOpen, onClose, activeValue }: Props)
       gsap.set(overlay, { opacity: 0 })
       gsap.set(panel, { opacity: 0, y: isMobile ? 24 : 0, scale: isMobile ? 1 : 0.97 })
       gsap.to(overlay, { opacity: 1, duration: 0.25, ease: 'power2.out' })
-      gsap.to(panel, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'power3.out', delay: 0.05 })
+      gsap.to(panel, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.35,
+        ease: 'power3.out',
+        delay: 0.05,
+      })
     })
     closeButtonRef.current?.focus()
     return () => ctx.revert()
@@ -184,8 +191,12 @@ export function InfoSheet({ title, items, isOpen, onClose, activeValue }: Props)
                     gap: '0.875rem',
                     padding: '0.9375rem 1rem',
                     borderRadius: 'var(--radius-card)',
-                    border: isActive ? '1.5px solid var(--color-sienna-400)' : '1px solid var(--color-border)',
-                    backgroundColor: isActive ? 'var(--color-accent-subtle)' : 'var(--color-surface)',
+                    border: isActive
+                      ? '1.5px solid var(--color-sienna-400)'
+                      : '1px solid var(--color-border)',
+                    backgroundColor: isActive
+                      ? 'var(--color-accent-subtle)'
+                      : 'var(--color-surface)',
                   }}
                 >
                   <span
@@ -197,7 +208,7 @@ export function InfoSheet({ title, items, isOpen, onClose, activeValue }: Props)
                       width: '36px',
                       height: '36px',
                       borderRadius: '50%',
-                      border: '1px solid rgba(184,134,61,0.28)',
+                      border: '1px solid rgba(196, 176, 154,0.28)',
                       color: 'var(--color-sienna-400)',
                       flexShrink: 0,
                     }}

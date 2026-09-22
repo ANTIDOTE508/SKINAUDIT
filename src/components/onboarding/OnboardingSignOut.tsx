@@ -36,7 +36,7 @@ export function OnboardingSignOut() {
         fontWeight: 300,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
-        color: isPending ? 'var(--color-obsidian-700)' : 'var(--color-alabaster-500)',
+        color: isPending ? 'var(--color-obsidian-700)' : 'var(--color-alabaster-400)',
         transition: 'color 200ms ease',
         whiteSpace: 'nowrap',
         lineHeight: 1,
@@ -48,7 +48,7 @@ export function OnboardingSignOut() {
       }}
       onMouseLeave={(e) => {
         if (!isPending) {
-          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-500)'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
         }
       }}
     >

@@ -33,12 +33,7 @@ type Props = {
   onBack: () => void
 }
 
-export function StepSkinTone({
-  value,
-  onChange,
-  onContinue,
-  onBack,
-}: Props) {
+export function StepSkinTone({ value, onChange, onContinue, onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
@@ -50,8 +45,7 @@ export function StepSkinTone({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -73,9 +67,11 @@ export function StepSkinTone({
    *  radiogroup pattern. Wraps around at both ends. */
   const handleToneKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
-      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1
-      : 0
+      e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + SWATCHES.length) % SWATCHES.length
@@ -101,8 +97,7 @@ export function StepSkinTone({
   }
 
   // Tick position along the rule: centred on the selected swatch's column.
-  const tickPercent =
-    value == null ? null : ((value - 0.5) / SKIN_TONE_SCALE_COUNT) * 100
+  const tickPercent = value == null ? null : ((value - 0.5) / SKIN_TONE_SCALE_COUNT) * 100
 
   return (
     <div ref={rootRef}>
@@ -184,7 +179,7 @@ export function StepSkinTone({
                   border: isSelected
                     ? '1px solid var(--color-sienna-400)'
                     : '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: isSelected ? '0 0 0 2px rgba(184,134,61,0.35)' : 'none',
+                  boxShadow: isSelected ? '0 0 0 2px rgba(196, 176, 154,0.35)' : 'none',
                   outline: 'none',
                   transition:
                     'border-color var(--duration-micro) var(--ease-luxury), box-shadow var(--duration-micro) var(--ease-luxury)',
@@ -213,7 +208,11 @@ export function StepSkinTone({
         <div style={{ marginTop: '1rem' }}>
           <div
             aria-hidden="true"
-            style={{ position: 'relative', height: '1px', backgroundColor: 'rgba(184,134,61,0.28)' }}
+            style={{
+              position: 'relative',
+              height: '1px',
+              backgroundColor: 'rgba(196, 176, 154,0.28)',
+            }}
           >
             {tickPercent !== null && (
               <span

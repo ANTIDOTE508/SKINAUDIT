@@ -62,10 +62,8 @@ export function RadioPill({
         outline: 'none',
         border: selected
           ? '1px solid var(--color-sienna-400)'
-          : '1px solid rgba(184,134,61,0.28)',
-        backgroundColor: selected
-          ? 'rgba(184,134,61,0.14)'
-          : 'rgba(6,5,5,0.42)',
+          : '1px solid rgba(196, 176, 154,0.28)',
+        backgroundColor: selected ? 'rgba(196, 176, 154,0.14)' : 'rgba(6,5,5,0.42)',
         transition:
           'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
       }}
@@ -82,7 +80,7 @@ export function RadioPill({
           borderRadius: '50%',
           border: selected
             ? '1px solid var(--color-sienna-400)'
-            : '1px solid rgba(184,134,61,0.45)',
+            : '1px solid rgba(196, 176, 154,0.45)',
           fontFamily: 'var(--font-body)',
           fontWeight: 300,
           fontSize: '0.8125rem',
@@ -91,8 +89,8 @@ export function RadioPill({
           transition: 'border-color var(--duration-micro) var(--ease-luxury)',
         }}
       >
-        {leftSlot ?? (
-          selected ? (
+        {leftSlot ??
+          (selected ? (
             <span
               style={{
                 width: '10px',
@@ -101,8 +99,7 @@ export function RadioPill({
                 backgroundColor: 'var(--color-sienna-400)',
               }}
             />
-          ) : null
-        )}
+          ) : null)}
       </span>
 
       <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -112,9 +109,7 @@ export function RadioPill({
             fontFamily: 'var(--font-body)',
             fontWeight: 300,
             fontSize: '0.9375rem',
-            color: selected
-              ? 'var(--color-alabaster-50)'
-              : 'var(--color-alabaster-300)',
+            color: selected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
             transition: 'color var(--duration-micro) var(--ease-luxury)',
           }}
         >

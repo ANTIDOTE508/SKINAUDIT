@@ -40,8 +40,7 @@ const OPTIONS: {
   {
     value: 'OBSESSIVE',
     label: 'Skincare obsessive',
-    definition:
-      'skincare is a passion; enjoy continuous refinement and tracking',
+    definition: 'skincare is a passion; enjoy continuous refinement and tracking',
     icon: <Sparkles size={18} strokeWidth={1.5} />,
   },
 ]
@@ -85,8 +84,7 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -108,9 +106,11 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + OPTIONS.length) % OPTIONS.length
@@ -239,10 +239,8 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
                     outline: 'none',
                     border: isSelected
                       ? '1px solid var(--color-sienna-400)'
-                      : '1px solid rgba(184,134,61,0.28)',
-                    backgroundColor: isSelected
-                      ? 'rgba(184,134,61,0.14)'
-                      : 'rgba(6,5,5,0.42)',
+                      : '1px solid rgba(196, 176, 154,0.28)',
+                    backgroundColor: isSelected ? 'rgba(196, 176, 154,0.14)' : 'rgba(6,5,5,0.42)',
                     transition:
                       'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
                   }}
@@ -259,7 +257,7 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
                       borderRadius: '50%',
                       border: isSelected
                         ? '1px solid var(--color-sienna-400)'
-                        : '1px solid rgba(184,134,61,0.45)',
+                        : '1px solid rgba(196, 176, 154,0.45)',
                       color: 'var(--color-sienna-400)',
                     }}
                   >
@@ -303,7 +301,7 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
                     justifyContent: 'center',
                     width: '44px',
                     borderRadius: '10px',
-                    border: '1px solid rgba(184,134,61,0.28)',
+                    border: '1px solid rgba(196, 176, 154,0.28)',
                     background: 'rgba(6,5,5,0.42)',
                     color: 'var(--color-alabaster-400)',
                     cursor: 'pointer',

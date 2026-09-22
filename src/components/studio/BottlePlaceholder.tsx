@@ -82,7 +82,7 @@ export function BottlePlaceholder({
           height: '86px',
           borderRadius: '4px 4px 6px 6px',
           background:
-            'linear-gradient(180deg, rgba(212,169,106,0.10) 0%, rgba(184,134,61,0.05) 45%, var(--color-obsidian-800) 100%)',
+            'linear-gradient(180deg, rgba(208, 188, 170,0.10) 0%, rgba(196, 176, 154,0.05) 45%, var(--color-obsidian-800) 100%)',
           border: '1px solid var(--color-obsidian-700)',
           position: 'relative',
           overflow: 'hidden',

@@ -118,9 +118,7 @@ function FollowUpPanel({
   const toggleArea = (area: string) => {
     const has = item.faceAreas.includes(area)
     onChange({
-      faceAreas: has
-        ? item.faceAreas.filter((a) => a !== area)
-        : [...item.faceAreas, area],
+      faceAreas: has ? item.faceAreas.filter((a) => a !== area) : [...item.faceAreas, area],
     })
   }
 
@@ -131,7 +129,7 @@ function FollowUpPanel({
         marginBottom: '0.5rem',
         padding: '1rem',
         borderRadius: 'var(--radius-card)',
-        border: '1px solid rgba(184,134,61,0.28)',
+        border: '1px solid rgba(196, 176, 154,0.28)',
         backgroundColor: 'rgba(6,5,5,0.4)',
         display: 'flex',
         flexDirection: 'column',
@@ -139,7 +137,11 @@ function FollowUpPanel({
       }}
     >
       <div>
-        <span id={freqLabelId} className="label-caps" style={{ display: 'block', marginBottom: '0.5rem' }}>
+        <span
+          id={freqLabelId}
+          className="label-caps"
+          style={{ display: 'block', marginBottom: '0.5rem' }}
+        >
           How often do you use / have it?
         </span>
         <div
@@ -161,7 +163,11 @@ function FollowUpPanel({
       </div>
 
       <div>
-        <span id={lastLabelId} className="label-caps" style={{ display: 'block', marginBottom: '0.5rem' }}>
+        <span
+          id={lastLabelId}
+          className="label-caps"
+          style={{ display: 'block', marginBottom: '0.5rem' }}
+        >
           When did you last have it?
         </span>
         <div
@@ -183,7 +189,11 @@ function FollowUpPanel({
       </div>
 
       <div>
-        <span id={areasLabelId} className="label-caps" style={{ display: 'block', marginBottom: '0.5rem' }}>
+        <span
+          id={areasLabelId}
+          className="label-caps"
+          style={{ display: 'block', marginBottom: '0.5rem' }}
+        >
           Which areas of your face? — select all that apply
         </span>
         <div
@@ -233,7 +243,7 @@ function FollowUpPanel({
                     borderRadius: '50%',
                     border: selected
                       ? '1px solid var(--color-sienna-400)'
-                      : '1px solid rgba(184,134,61,0.45)',
+                      : '1px solid rgba(196, 176, 154,0.45)',
                     backgroundColor: selected ? 'var(--color-sienna-400)' : 'transparent',
                     flexShrink: 0,
                   }}
@@ -278,7 +288,11 @@ function ToolSection({
 
   return (
     <div data-reveal style={{ marginBottom: '2rem' }}>
-      <span id={labelId} className="label-caps" style={{ display: 'block', marginBottom: '0.75rem' }}>
+      <span
+        id={labelId}
+        className="label-caps"
+        style={{ display: 'block', marginBottom: '0.75rem' }}
+      >
         {heading}
       </span>
 
@@ -323,7 +337,7 @@ function ToolSection({
                   borderRadius: '50%',
                   border: selected
                     ? '1px solid var(--color-sienna-400)'
-                    : '1px solid rgba(184,134,61,0.45)',
+                    : '1px solid rgba(196, 176, 154,0.45)',
                   backgroundColor: selected ? 'var(--color-sienna-400)' : 'transparent',
                   flexShrink: 0,
                 }}
@@ -391,8 +405,7 @@ export function StepTools({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -411,8 +424,7 @@ export function StepTools({
   }, [])
 
   // Any selected item with an incomplete follow-up blocks Next.
-  const allComplete =
-    homeDevices.every(isComplete) && professionalTreatments.every(isComplete)
+  const allComplete = homeDevices.every(isComplete) && professionalTreatments.every(isComplete)
 
   const handleContinue = () => {
     if (!allComplete) {
@@ -472,8 +484,7 @@ export function StepTools({
             margin: '0 0 2.25rem',
           }}
         >
-          Select any that apply. For each one, we&apos;ll ask three quick
-          questions.
+          Select any that apply. For each one, we&apos;ll ask three quick questions.
         </p>
 
         <ToolSection

@@ -51,9 +51,7 @@ export function SelectionCard({
         border: isSelected
           ? '1.5px solid var(--color-sienna-400)'
           : '1px solid var(--color-border)',
-        backgroundColor: isSelected
-          ? 'var(--color-accent-subtle)'
-          : 'var(--color-surface)',
+        backgroundColor: isSelected ? 'var(--color-accent-subtle)' : 'var(--color-surface)',
         cursor: 'pointer',
         textAlign: 'left',
         transition:
@@ -61,7 +59,7 @@ export function SelectionCard({
         outline: 'none',
         width: '100%',
         boxShadow: isSelected
-          ? '0 0 0 1px rgba(184,134,61,0.15), inset 0 0 20px rgba(184,134,61,0.04)'
+          ? '0 0 0 1px rgba(196, 176, 154,0.15), inset 0 0 20px rgba(196, 176, 154,0.04)'
           : 'none',
       }}
       onMouseEnter={(e) => {
@@ -71,7 +69,7 @@ export function SelectionCard({
             duration: 0.18,
             ease: 'power2.out',
           })
-          e.currentTarget.style.borderColor = 'rgba(184,134,61,0.35)'
+          e.currentTarget.style.borderColor = 'rgba(196, 176, 154,0.35)'
         }
       }}
       onMouseLeave={(e) => {
@@ -94,9 +92,7 @@ export function SelectionCard({
           width: '16px',
           height: '16px',
           borderRadius: isMulti ? '4px' : '50%',
-          border: isSelected
-            ? 'none'
-            : '1px solid var(--color-obsidian-700)',
+          border: isSelected ? 'none' : '1px solid var(--color-obsidian-700)',
           backgroundColor: isSelected ? 'var(--color-sienna-500)' : 'transparent',
           display: 'flex',
           alignItems: 'center',

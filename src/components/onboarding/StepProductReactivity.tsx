@@ -16,8 +16,7 @@ import type {
 const OPTIONS: { value: ProductReactivity; title: string }[] = [
   {
     value: 'FREQUENT_STING',
-    title:
-      'I often feel stinging, burning, or tingling that lasts more than a few minutes',
+    title: 'I often feel stinging, burning, or tingling that lasts more than a few minutes',
   },
   {
     value: 'MILD_TRANSIENT',
@@ -100,8 +99,7 @@ export function StepProductReactivity({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -131,9 +129,11 @@ export function StepProductReactivity({
 
   /** Arrow-key direction for the WAI-ARIA radiogroup pattern; 0 = ignore. */
   const arrowDelta = (e: React.KeyboardEvent) =>
-    e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-    : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-    : 0
+    e.key === 'ArrowDown' || e.key === 'ArrowRight'
+      ? 1
+      : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+        ? -1
+        : 0
 
   const handleReactivityKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta = arrowDelta(e)
@@ -199,10 +199,7 @@ export function StepProductReactivity({
           transform. */}
       {mounted &&
         createPortal(
-          <div
-            aria-hidden="true"
-            className="step11-reactivity-stage"
-          >
+          <div aria-hidden="true" className="step11-reactivity-stage">
             <div className="step11-reactivity-frame">
               <Image
                 src="/images/onboarding/stepProductReactivity/onboarding-product-reactivity-portrait.webp"
@@ -310,11 +307,11 @@ export function StepProductReactivity({
                 height: 100%;
                 background: linear-gradient(
                   to bottom,
-                  rgba(184, 134, 61, 0)   0%,
-                  rgba(184, 134, 61, 0.10) 22%,
-                  rgba(184, 134, 61, 0.28) 50%,
-                  rgba(184, 134, 61, 0.10) 78%,
-                  rgba(184, 134, 61, 0)   100%
+                  rgba(196, 176, 154, 0)   0%,
+                  rgba(196, 176, 154, 0.10) 22%,
+                  rgba(196, 176, 154, 0.28) 50%,
+                  rgba(196, 176, 154, 0.10) 78%,
+                  rgba(196, 176, 154, 0)   100%
                 );
                 opacity: 0.7;
                 mix-blend-mode: screen;
@@ -341,11 +338,11 @@ export function StepProductReactivity({
                 -webkit-backdrop-filter: blur(6px);
               }
               .step11-reactivity-root [data-radio-pill][aria-checked="true"] {
-                background-color: rgba(184, 134, 61, 0.22) !important;
+                background-color: rgba(196, 176, 154, 0.22) !important;
               }
             `}</style>
           </div>,
-          document.body,
+          document.body
         )}
 
       {/* Centre the copy stack in the wizard's 680px column. The flex
@@ -383,8 +380,8 @@ export function StepProductReactivity({
             textShadow: '0 1px 24px rgba(6,5,5,0.7)',
           }}
         >
-          When you apply new skincare products — especially serums, exfoliants, or
-          actives — how does your skin usually respond?
+          When you apply new skincare products — especially serums, exfoliants, or actives — how
+          does your skin usually respond?
         </h2>
 
         <span
@@ -434,9 +431,12 @@ export function StepProductReactivity({
         {/* ── Inline follow-up: only for the two "reacts" answers ── */}
         {showFollowUp && (
           <>
-            <p style={{ ...FOLLOWUP_LABEL, marginTop: '2.5rem', textAlign: 'center' }} id={historyLabelId}>
-              Does your skin go through periods of persistent dryness, flaking,
-              itching, or discomfort?
+            <p
+              style={{ ...FOLLOWUP_LABEL, marginTop: '2.5rem', textAlign: 'center' }}
+              id={historyLabelId}
+            >
+              Does your skin go through periods of persistent dryness, flaking, itching, or
+              discomfort?
             </p>
 
             <div
@@ -470,8 +470,8 @@ export function StepProductReactivity({
             </div>
 
             <p style={{ ...FOLLOWUP_LABEL, textAlign: 'center' }} id={severityLabelId}>
-              Have you ever had a product reaction that caused visible redness,
-              hives, or a rash — not just mild irritation or a new breakout?
+              Have you ever had a product reaction that caused visible redness, hives, or a rash —
+              not just mild irritation or a new breakout?
             </p>
 
             <div

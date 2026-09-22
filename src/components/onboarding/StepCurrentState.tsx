@@ -79,8 +79,7 @@ export function StepCurrentState({
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -102,9 +101,11 @@ export function StepCurrentState({
    *  radiogroup pattern. Wraps around at both ends. */
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-      : 0
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? -1
+          : 0
     if (delta === 0) return
     e.preventDefault()
     const next = (index + delta + STATE_OPTIONS.length) % STATE_OPTIONS.length
@@ -262,11 +263,11 @@ export function StepCurrentState({
                 -webkit-backdrop-filter: blur(6px);
               }
               .step17-current-state-root [data-radio-pill][aria-checked="true"] {
-                background-color: rgba(184, 134, 61, 0.22) !important;
+                background-color: rgba(196, 176, 154, 0.22) !important;
               }
             `}</style>
           </div>,
-          document.body,
+          document.body
         )}
 
       <div
@@ -362,7 +363,7 @@ export function StepCurrentState({
                         borderRadius: '50%',
                         border: isSelected
                           ? '1px solid var(--color-sienna-400)'
-                          : '1px solid rgba(184,134,61,0.45)',
+                          : '1px solid rgba(196, 176, 154,0.45)',
                         backgroundColor: isSelected ? 'var(--color-sienna-400)' : 'transparent',
                         transition:
                           'background-color var(--duration-micro) var(--ease-luxury), border-color var(--duration-micro) var(--ease-luxury)',
@@ -374,7 +375,9 @@ export function StepCurrentState({
                         fontWeight: 300,
                         fontSize: '0.8125rem',
                         lineHeight: 1.3,
-                        color: isSelected ? 'var(--color-alabaster-50)' : 'var(--color-alabaster-300)',
+                        color: isSelected
+                          ? 'var(--color-alabaster-50)'
+                          : 'var(--color-alabaster-300)',
                         transition: 'color var(--duration-micro) ease',
                       }}
                     >
