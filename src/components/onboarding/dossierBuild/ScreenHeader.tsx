@@ -1,16 +1,27 @@
 'use client'
 
-import type { ReactNode } from 'react'
 import { ArrowLeft, X } from 'lucide-react'
 
-type Props = {
+type SectionNavProps = {
+  /** 'dossier' | 'studio' — which section link is highlighted. */
+  activeSection: 'dossier' | 'studio'
+  onNavigateStudio?: () => void
+  /** Trailing icon action on the topbar, e.g. the settings gear. */
+  action?: React.ReactNode
+}
+
+type TitleNavProps = {
   title: string
-  /** Trailing affordance on the title row — a settings gear on the empty state. */
-  action?: ReactNode
-  /** Shown in its own row above the title, matching the mockups' navigation row. */
+  /** Omitted on screen03 (Add a product), which mockups draw as a sheet with
+   *  only a close button, no back arrow. */
   onBack?: () => void
-  /** Trailing close affordance, on the same row as the back arrow. */
   onClose?: () => void
+}
+
+type Props = SectionNavProps | TitleNavProps
+
+function isTitleNav(props: Props): props is TitleNavProps {
+  return 'title' in props
 }
 
 const ICON_BUTTON: React.CSSProperties = {
@@ -23,72 +34,61 @@ const ICON_BUTTON: React.CSSProperties = {
   border: 'none',
   padding: 0,
   cursor: 'pointer',
-  color: 'var(--color-alabaster-300)',
+  color: 'var(--color-alabaster-400)',
   flexShrink: 0,
+  opacity: 0.65,
 }
 
 /**
- * Screen title block for the Dossier build flow. The mockups use a smaller
- * serif title than the onboarding wizard's StepHeader, with navigation
- * affordances sitting on their own row above it.
+ * Sticky topbar for the Dossier build flow, matching the two nav patterns the
+ * mockups use: a section switcher (Dossier / Studio, mockups 02 and 07) or a
+ * back button with a contextual title (mockups 04-06).
  */
-export function ScreenHeader({ title, action, onBack, onClose }: Props) {
-  const hasNavRow = Boolean(onBack || onClose)
+export function ScreenHeader(props: Props) {
+  if (isTitleNav(props)) {
+    const { title, onBack, onClose } = props
+    return (
+      <header className="db-topbar">
+        {onBack ? (
+          <button type="button" onClick={onBack} aria-label="Back" style={ICON_BUTTON}>
+            <ArrowLeft size={20} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        ) : (
+          <span />
+        )}
+        <h1 className="db-topbar-title">{title}</h1>
+        {onClose && (
+          <button type="button" onClick={onClose} aria-label="Close" style={ICON_BUTTON}>
+            <X size={20} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        )}
+      </header>
+    )
+  }
 
+  const { activeSection, onNavigateStudio, action } = props
   return (
-    <div>
-      {hasNavRow && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            // Pull the row back so the 34px hit area optically aligns with the
-            // 24px icons the mockups draw flush to the card padding.
-            margin: '-0.5rem -0.5rem 0.5rem',
-          }}
+    <header className="db-topbar">
+      <nav className="db-section-nav" aria-label="Main sections">
+        <button
+          type="button"
+          className={`db-section-link${activeSection === 'dossier' ? ' active' : ''}`}
+          aria-current={activeSection === 'dossier' ? 'page' : undefined}
         >
-          {onBack ? (
-            <button type="button" onClick={onBack} aria-label="Back" style={ICON_BUTTON}>
-              <ArrowLeft size={20} strokeWidth={1.5} aria-hidden="true" />
-            </button>
-          ) : (
-            <span />
-          )}
-
-          {onClose && (
-            <button type="button" onClick={onClose} aria-label="Close" style={ICON_BUTTON}>
-              <X size={20} strokeWidth={1.5} aria-hidden="true" />
-            </button>
-          )}
-        </div>
-      )}
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: '1rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 300,
-            fontSize: 'clamp(1.5rem, 2.4vw, 1.875rem)',
-            lineHeight: 1.15,
-            letterSpacing: '-0.01em',
-            color: 'var(--color-alabaster-50)',
-            margin: 0,
-          }}
+          Dossier
+        </button>
+        <span className="db-section-sep" aria-hidden="true">
+          /
+        </span>
+        <button
+          type="button"
+          className={`db-section-link${activeSection === 'studio' ? ' active' : ''}`}
+          onClick={onNavigateStudio}
         >
-          {title}
-        </h2>
-
-        {action}
-      </div>
-    </div>
+          Studio
+        </button>
+      </nav>
+      {action}
+    </header>
   )
 }

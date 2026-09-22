@@ -59,10 +59,10 @@ const METHODS: Method[] = [
 
 export function ScreenAddMethod({ onChooseSearch, onClose }: Props) {
   return (
-    <div>
+    <>
       <ScreenHeader title="Add a product" onClose={onClose} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="db-content" style={{ gap: '1rem' }}>
         {METHODS.map(({ key, icon: Icon, label, description }) => (
           <button key={key} type="button" onClick={onChooseSearch} style={CARD}>
             <Icon size={ICON_SIZE} strokeWidth={ICON_STROKE} color="var(--color-sienna-400)" />
@@ -100,6 +100,6 @@ export function ScreenAddMethod({ onChooseSearch, onClose }: Props) {
           </button>
         ))}
       </div>
-    </div>
+    </>
   )
 }

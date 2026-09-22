@@ -155,6 +155,7 @@ export function StepDossierBuild({ initialDossierStep, onComplete }: Props) {
             goTo(2)
           }}
           onContinueToStudio={handleContinueToStudio}
+          onNavigateStudio={handleExit}
         />
       )
   }

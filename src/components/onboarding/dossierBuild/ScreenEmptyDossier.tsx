@@ -20,9 +20,9 @@ const CHIPS = [
 
 export function ScreenEmptyDossier({ onAddProduct, onOpenSettings }: Props) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <>
       <ScreenHeader
-        title="Dossier"
+        activeSection="dossier"
         action={
           <button
             type="button"
@@ -32,62 +32,41 @@ export function ScreenEmptyDossier({ onAddProduct, onOpenSettings }: Props) {
             style={{
               background: 'none',
               border: 'none',
-              padding: 0,
-              marginTop: '0.25rem',
+              padding: '8px',
               cursor: onOpenSettings ? 'pointer' : 'default',
-              color: 'var(--color-alabaster-300)',
+              color: 'var(--color-alabaster-400)',
+              opacity: 0.6,
               flexShrink: 0,
               lineHeight: 0,
             }}
           >
-            <Settings size={20} strokeWidth={1.5} aria-hidden="true" />
+            <Settings size={18} strokeWidth={1.3} aria-hidden="true" />
           </button>
         }
       />
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          paddingBottom: '1.5rem',
-          borderBottom: '1px solid rgba(196, 176, 154,0.18)',
-          marginBottom: '1.5rem',
-        }}
-      >
+      <nav className="db-tabs" role="tablist">
         {CHIPS.map((chip) => (
-          <span
+          <button
             key={chip.label}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '0.375rem 0.75rem',
-              borderRadius: 'var(--radius-badge)',
-              border: '1px solid',
-              borderColor: chip.active ? 'var(--color-accent-border)' : 'var(--color-border)',
-              backgroundColor: chip.active ? 'var(--color-accent-subtle)' : 'transparent',
-              color: chip.active ? 'var(--color-alabaster-100)' : 'var(--color-alabaster-400)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.75rem',
-              fontWeight: 400,
-              whiteSpace: 'nowrap',
-            }}
+            type="button"
+            role="tab"
+            aria-selected={chip.active}
+            className={`db-tab${chip.active ? ' active' : ''}`}
           >
-            {chip.label}&nbsp;({chip.count})
-          </span>
+            {chip.label} ({chip.count})
+          </button>
         ))}
-      </div>
+      </nav>
 
       {/* Centred empty state, vertically centred in the space left above the CTA */}
       <div
+        className="db-content"
         style={{
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          paddingBottom: '2rem',
         }}
       >
         <svg
@@ -136,16 +115,16 @@ export function ScreenEmptyDossier({ onAddProduct, onOpenSettings }: Props) {
           Add your skincare products to get started. Products in your Dossier can be used in your
           rituals, but are not evaluated until they&apos;re assigned.
         </p>
-      </div>
 
-      <button
-        type="button"
-        onClick={onAddProduct}
-        className="btn-primary btn-primary-accent"
-        style={{ width: '100%', minHeight: '56px' }}
-      >
-        + Add Product
-      </button>
-    </div>
+        <button
+          type="button"
+          onClick={onAddProduct}
+          className="btn-primary btn-primary-accent"
+          style={{ width: '100%', maxWidth: '320px', minHeight: '52px' }}
+        >
+          + Add Product
+        </button>
+      </div>
+    </>
   )
 }
