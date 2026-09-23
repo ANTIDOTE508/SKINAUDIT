@@ -1,0 +1,362 @@
+/* ================================================================
+   DOSSIER SHEETS — Filter (screen09.html) and Sort (screen09b.html).
+   Values copied from the mockups: bottom sheet under 720px, centred
+   dialog above.
+   ================================================================ */
+
+.ds-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.ds-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 5, 4, 0.72);
+}
+
+.ds-sheet {
+  position: relative;
+  width: 100%;
+  max-height: calc(100dvh - 60px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 28px 24px 52px;
+  background: var(--color-obsidian-900);
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--color-alabaster-50);
+  outline: none;
+}
+
+.ds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+
+.ds-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--color-alabaster-50);
+}
+
+.ds-reset {
+  padding: 6px 0;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  background: none;
+  border: none;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ds-close {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  color: var(--color-alabaster-400);
+  background: none;
+  border: none;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ds-reset:hover,
+.ds-close:hover {
+  opacity: 1;
+}
+
+/* ── Filter sections & chips ─────────────────────────────────────────── */
+.ds-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 36px;
+}
+
+.ds-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ds-label {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.6;
+}
+
+.ds-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--color-alabaster-300);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.ds-chip:hover {
+  border-color: var(--color-alabaster-400);
+  color: var(--color-alabaster-50);
+}
+
+.ds-chip[aria-pressed='true'] {
+  border-color: var(--color-sienna-400);
+  background: rgba(196, 176, 154, 0.12);
+  color: var(--color-sienna-400);
+}
+
+.ds-chip-check {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ds-chip[aria-pressed='true'] .ds-chip-check {
+  opacity: 1;
+}
+
+.ds-chip-dot {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.ds-chip-dot.active {
+  background: #c4b09a;
+}
+
+.ds-chip-dot.seasonal {
+  background: #8a9e8a;
+}
+
+.ds-chip-dot.archived {
+  background: #5a5550;
+}
+
+/* ── Sort rows ───────────────────────────────────────────────────────── */
+.ds-sort-group {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+}
+
+.ds-sort-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.ds-sort-row:last-child {
+  border-bottom: none;
+}
+
+.ds-sort-row:hover {
+  background: #161310;
+}
+
+.ds-sort-row input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.ds-radio {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 50%;
+  transition: border-color 0.15s;
+}
+
+.ds-radio-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-sienna-400);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ds-sort-row input:checked ~ .ds-radio {
+  border-color: var(--color-sienna-400);
+}
+
+.ds-sort-row input:checked ~ .ds-radio .ds-radio-dot {
+  opacity: 1;
+}
+
+.ds-sort-row:focus-within .ds-radio {
+  border-color: var(--color-sienna-400);
+}
+
+.ds-sort-text {
+  flex: 1;
+}
+
+.ds-sort-label {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--color-alabaster-50);
+}
+
+.ds-sort-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+}
+
+.ds-sort-dir {
+  flex-shrink: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--color-alabaster-400);
+  opacity: 0.35;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────── */
+.ds-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ds-sort-group + .ds-actions {
+  margin-top: 28px;
+}
+
+.ds-btn-primary,
+.ds-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 11px;
+  text-transform: uppercase;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.ds-btn-primary {
+  height: 52px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--color-obsidian-950);
+  background: var(--color-sienna-400);
+  border: none;
+  transition: background 0.18s;
+}
+
+.ds-btn-primary:hover {
+  background: var(--color-sienna-300);
+}
+
+.ds-btn-secondary {
+  height: 46px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--color-alabaster-300);
+  background: none;
+  border: 1px solid var(--color-border);
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.ds-btn-secondary:hover {
+  border-color: var(--color-alabaster-400);
+  color: var(--color-alabaster-50);
+}
+
+.ds-reset:focus-visible,
+.ds-close:focus-visible,
+.ds-chip:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 2px;
+}
+
+.ds-btn-primary:focus-visible,
+.ds-btn-secondary:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 3px;
+}
+
+/* ── Desktop — centred dialog ────────────────────────────────────────── */
+@media (min-width: 720px) {
+  .ds-root {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .ds-scrim {
+    background: rgba(6, 5, 4, 0.85);
+  }
+
+  .ds-sheet {
+    max-width: var(--ds-max-width, 540px);
+    max-height: 100%;
+    padding: 40px 40px 52px;
+    border: 1px solid var(--color-border);
+  }
+
+  .ds-title {
+    font-size: 26px;
+  }
+}

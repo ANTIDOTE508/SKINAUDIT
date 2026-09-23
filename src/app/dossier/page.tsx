@@ -15,6 +15,7 @@ export default async function DossierPage() {
       id: true,
       status: true,
       category: true,
+      addedAt: true,
       product: { select: { name: true, category: true, brand: { select: { name: true } } } },
     },
   })
@@ -26,6 +27,7 @@ export default async function DossierPage() {
     brandName: row.product.brand?.name ?? null,
     // The user's own category, else the catalogue's.
     category: row.category ?? row.product.category,
+    addedAt: row.addedAt.toISOString(),
   }))
 
   return (

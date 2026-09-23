@@ -1,18 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import type { DossierProductStatus, ProductCategory } from '@prisma/client'
+import type { DossierProductStatus } from '@prisma/client'
 import { DossierEmptyState } from './DossierEmptyState'
+import { DossierFilterSheet } from './DossierFilterSheet'
+import { DossierSortSheet } from './DossierSortSheet'
 import { useOpenDossierModal } from './DossierModalContext'
+import {
+  CATEGORY_LABELS,
+  STATUS_LABELS,
+  EMPTY_FILTER,
+  SORT_OPTIONS,
+  applyFilter,
+  applySort,
+  filterCount,
+  type DossierFilter,
+  type DossierListItem,
+  type DossierSort,
+} from './dossierListing'
 import './dossierList.css'
 
-export type DossierListItem = {
-  id: number
-  status: DossierProductStatus
-  productName: string
-  brandName: string | null
-  category: ProductCategory
-}
+export type { DossierListItem }
 
 type Tab = 'ALL' | DossierProductStatus
 
@@ -23,26 +31,17 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'ARCHIVED', label: 'Archived' },
 ]
 
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  CLEANSING: 'Cleansing',
-  PREPARATION: 'Preparation',
-  TREATMENT: 'Treatment',
-  SUPPORT: 'Support',
-  PROTECTION: 'Protection',
-}
-
-const STATUS_LABELS: Record<DossierProductStatus, string> = {
-  ACTIVE: 'Active',
-  SEASONAL: 'Seasonal',
-  ARCHIVED: 'Archived',
-}
-
 /**
  * Dossier product list — mockup 08 (templates/buildDossier/screen08.html)
  * without its "Dossier / Studio" topbar, which the Studio sidebar replaces.
+ * The status tab and the filter sheet (mockup 09) combine; the sort sheet
+ * (mockup 09b) orders the result.
  */
 export function DossierList({ items }: { items: DossierListItem[] }) {
   const [tab, setTab] = useState<Tab>('ALL')
+  const [filter, setFilter] = useState<DossierFilter>(EMPTY_FILTER)
+  const [sort, setSort] = useState<DossierSort>('date-desc')
+  const [openSheet, setOpenSheet] = useState<'filter' | 'sort' | null>(null)
   const openDossierModal = useOpenDossierModal()
   const openAddProduct = () => openDossierModal('method')
 
@@ -54,10 +53,20 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
     )
   }
 
+  // Tab counts follow the filter sheet, so each count matches what its tab shows.
+  const filtered = applyFilter(items, filter)
   const countFor = (key: Tab) =>
-    key === 'ALL' ? items.length : items.filter((item) => item.status === key).length
-  const visible = tab === 'ALL' ? items : items.filter((item) => item.status === tab)
-  const tabLabel = TABS.find((t) => t.key === tab)?.label.toLowerCase()
+    key === 'ALL' ? filtered.length : filtered.filter((item) => item.status === key).length
+  const visible = applySort(
+    tab === 'ALL' ? filtered : filtered.filter((item) => item.status === tab),
+    sort
+  )
+  const activeFilters = filterCount(filter)
+  const sortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label
+  const emptyMessage =
+    activeFilters > 0
+      ? 'No products match these filters.'
+      : `No ${TABS.find((t) => t.key === tab)?.label.toLowerCase()} products.`
 
   return (
     <div className="dl-page">
@@ -77,15 +86,13 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
         ))}
       </div>
 
-      {/* Filter and Sort sheets (mockups 09 / 09b) are not built yet: the
-          controls are shown but inert. The list is already sorted by date added. */}
       <div className="dl-filter-bar">
         <div className="dl-filter-left">
           <button
             type="button"
-            className="dl-filter-btn"
-            disabled
-            aria-label="Filter products — coming soon"
+            className={`dl-filter-btn${activeFilters > 0 ? ' is-set' : ''}`}
+            aria-haspopup="dialog"
+            onClick={() => setOpenSheet('filter')}
           >
             <svg
               width="13"
@@ -102,13 +109,14 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
               <line x1="3" y1="6.5" x2="10" y2="6.5" />
               <line x1="5" y1="10" x2="8" y2="10" />
             </svg>
-            Filter
+            Filter{activeFilters > 0 && ` (${activeFilters})`}
           </button>
           <button
             type="button"
             className="dl-filter-btn"
-            disabled
-            aria-label="Sorted by date added — other sorts coming soon"
+            aria-haspopup="dialog"
+            aria-label={`Sort products — currently ${sortLabel}`}
+            onClick={() => setOpenSheet('sort')}
           >
             <svg
               width="13"
@@ -125,7 +133,7 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
               <line x1="1" y1="6.5" x2="10" y2="6.5" />
               <line x1="1" y1="10.5" x2="12" y2="10.5" />
             </svg>
-            Date added
+            {sortLabel}
             <svg
               width="10"
               height="10"
@@ -141,13 +149,13 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
             </svg>
           </button>
         </div>
-        <span className="dl-filter-count">
+        <span className="dl-filter-count" aria-live="polite">
           {visible.length} {visible.length === 1 ? 'product' : 'products'}
         </span>
       </div>
 
       {visible.length === 0 ? (
-        <p className="dl-tab-empty">No {tabLabel} products.</p>
+        <p className="dl-tab-empty">{emptyMessage}</p>
       ) : (
         <ul className="dl-list">
           {visible.map((item) => (
@@ -203,6 +211,28 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
           Add Product
         </button>
       </div>
+
+      {/* Mounted only while open, so each opening starts from the applied state. */}
+      {openSheet === 'filter' && (
+        <DossierFilterSheet
+          initial={filter}
+          onApply={(next) => {
+            setFilter(next)
+            setOpenSheet(null)
+          }}
+          onClose={() => setOpenSheet(null)}
+        />
+      )}
+      {openSheet === 'sort' && (
+        <DossierSortSheet
+          initial={sort}
+          onApply={(next) => {
+            setSort(next)
+            setOpenSheet(null)
+          }}
+          onClose={() => setOpenSheet(null)}
+        />
+      )}
     </div>
   )
 }

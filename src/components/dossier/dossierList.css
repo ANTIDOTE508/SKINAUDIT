@@ -108,8 +108,29 @@
   opacity: 0.7;
 }
 
-.dl-filter-btn:disabled {
-  cursor: default;
+.dl-filter-btn {
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dl-filter-btn:hover {
+  border-color: var(--color-alabaster-400);
+  color: var(--color-alabaster-50);
+  opacity: 1;
+}
+
+.dl-filter-btn:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 2px;
+}
+
+/* A filter is applied: signal that products may be hidden. */
+.dl-filter-btn.is-set {
+  border-color: var(--color-sienna-400);
+  color: var(--color-sienna-400);
+  opacity: 1;
 }
 
 .dl-filter-count {
