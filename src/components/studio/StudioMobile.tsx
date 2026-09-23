@@ -1,16 +1,13 @@
 'use client'
 
-import { useState, useRef, type ReactNode } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { ChevronDown, LayoutGrid, FileText, CalendarCheck, TrendingUp, User } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { useState, useRef, useCallback, type ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
 import { BottlePlaceholder } from './BottlePlaceholder'
 import { HealthGauge } from './HealthGauge'
 import { REGIMEN } from './RegimenRow'
 import { AccountSheet, type StudioUser } from './AccountSheet'
-import { isNavActive } from './StudioSidebar'
+import { StudioDrawer } from './StudioDrawer'
 import { getInitials } from '@/lib/user-display'
 
 const ROUTINES = ['AM Routine', 'PM Routine', 'Weekly Treatment'] as const
@@ -19,14 +16,6 @@ const ROUTINES = ['AM Routine', 'PM Routine', 'Weekly Treatment'] as const
 const MOBILE_METRICS = [
   { label: 'Irritation Risk', value: 'Low', score: '8/100', percent: 35 },
   { label: 'Barrier Support', value: 'Good', score: '72/100', percent: 70 },
-]
-
-const TABS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: 'Studio', href: '/studio', icon: LayoutGrid },
-  { label: 'Dossier', href: '/dossier', icon: FileText },
-  { label: 'Check-ins', href: '#', icon: CalendarCheck },
-  { label: 'Progress', href: '#', icon: TrendingUp },
-  { label: 'Profile', href: '#', icon: User },
 ]
 
 function MobileMetricCard({
@@ -122,16 +111,16 @@ function MobileMetricCard({
 
 type Props = {
   user: StudioUser
-  /** Page content between the top bar and the tab bar; defaults to the
-   *  Studio overview. */
+  /** Page content below the top bar; defaults to the Studio overview. */
   children?: ReactNode
 }
 
 export function StudioMobile({ user, children }: Props) {
-  const pathname = usePathname()
   const [routine, setRoutine] = useState<string>(ROUTINES[0])
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const avatarRef = useRef<HTMLButtonElement>(null)
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   const initials = getInitials(user.name, user.email)
 
@@ -139,6 +128,22 @@ export function StudioMobile({ user, children }: Props) {
     <div className="studio-mobile">
       {/* 1 — Top bar */}
       <header className="studio-m-topbar">
+        <button
+          type="button"
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
+          aria-haspopup="dialog"
+          // Same desktop guard as the avatar below.
+          onClick={() => {
+            if (window.matchMedia('(max-width: 767px)').matches) {
+              setMenuOpen(true)
+            }
+          }}
+          className="studio-m-menu"
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
         <div className="studio-m-topbar-center">
           <SkinauditLogo />
         </div>
@@ -230,25 +235,7 @@ export function StudioMobile({ user, children }: Props) {
         </>
       )}
 
-      {/* 7 — Bottom tab bar */}
-      <nav className="studio-m-tabbar" aria-label="Primary">
-        {TABS.map((tab) => {
-          const isActive = isNavActive(tab.href, pathname)
-          const Icon = tab.icon
-          const className = isActive ? 'studio-m-tab studio-m-tab-active' : 'studio-m-tab'
-          return (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              aria-current={isActive ? 'page' : undefined}
-              className={className}
-            >
-              <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
-              <span>{tab.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
+      <StudioDrawer isOpen={menuOpen} onClose={closeMenu} />
 
       <AccountSheet
         user={user}

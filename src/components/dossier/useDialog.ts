@@ -8,14 +8,31 @@ const noopSubscribe = () => () => {}
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+/** `rise` for centred dialogs and bottom sheets, `slide-left` for drawers. */
+const ENTRANCES = {
+  rise: [
+    { y: 16, opacity: 0 },
+    { y: 0, opacity: 1 },
+  ],
+  'slide-left': [{ xPercent: -100 }, { xPercent: 0 }],
+} satisfies Record<string, [gsap.TweenVars, gsap.TweenVars]>
+
 /**
- * Shared behaviour for the Dossier's portaled dialogs (add-product modal,
- * filter and sort sheets): entrance tween, Escape to close, background scroll
+ * Shared behaviour for portaled dialogs (the Dossier's add-product modal,
+ * filter and sort sheets, the Studio's mobile nav drawer): entrance tween, Escape to close, background scroll
  * lock, focus moved in on open and returned to the trigger on close, and a
  * Tab focus trap. Attach `dialogRef`/`scrimRef` and `onTrapKeyDown`, and only
  * portal once `mounted` is true.
  */
-export function useDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function useDialog({
+  isOpen,
+  onClose,
+  entrance = 'rise',
+}: {
+  isOpen: boolean
+  onClose: () => void
+  entrance?: keyof typeof ENTRANCES
+}) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const scrimRef = useRef<HTMLDivElement>(null)
   // createPortal needs a real <body>: false during SSR, true on the client.
@@ -38,15 +55,12 @@ export function useDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       if (!reduced) {
         // opacity, not autoAlpha: visibility:hidden would block the focus
         // effect below from moving focus into the dialog.
-        gsap.fromTo(
-          dialog,
-          { y: 16, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.42, ease: 'expo.out' }
-        )
+        const [from, to] = ENTRANCES[entrance]
+        gsap.fromTo(dialog, from, { ...to, duration: 0.42, ease: 'expo.out' })
       }
     })
     return () => ctx.revert()
-  }, [isOpen, mounted])
+  }, [isOpen, mounted, entrance])
 
   /* ── Escape to close ── */
   useEffect(() => {

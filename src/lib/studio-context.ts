@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { SIDEBAR_COOKIE } from '@/lib/studio-sidebar'
 
 /**
- * Session + onboarding guards and Dossier state shared by /dashboard and
- * /studio. Redirects away when the user is signed out or mid-onboarding.
+ * Session + onboarding guards, Dossier state and shell preferences shared by
+ * /dashboard, /studio and /dossier. Redirects away when the user is signed out or mid-onboarding.
  */
 export async function loadStudioContext() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -16,7 +17,7 @@ export async function loadStudioContext() {
 
   const userId = session.user.id
 
-  const [profile, dossierProductCount] = await Promise.all([
+  const [profile, dossierProductCount, cookieStore] = await Promise.all([
     prisma.userProfile.findUnique({
       where: { userId },
       select: { onboardingCompletedAt: true },
@@ -26,6 +27,7 @@ export async function loadStudioContext() {
     prisma.userDossierProduct.count({
       where: { userId, status: { not: 'ARCHIVED' } },
     }),
+    cookies(),
   ])
 
   // Onboarding is complete only when onboardingCompletedAt is set
@@ -37,5 +39,8 @@ export async function loadStudioContext() {
     userId,
     user: { name: session.user.name ?? null, email: session.user.email },
     isDossierEmpty: dossierProductCount === 0,
+    // Read on the server so the desktop sidebar renders at its saved width on
+    // first paint, without a collapse animation or hydration mismatch.
+    sidebarCollapsed: cookieStore.get(SIDEBAR_COOKIE)?.value === 'collapsed',
   }
 }

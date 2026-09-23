@@ -330,8 +330,7 @@ body {
     display: block;
     min-height: 100vh;
     background-color: var(--color-obsidian-950);
-    /* Clear the fixed tab bar (56px) plus the device safe area. */
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 1.5rem);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
   }
 
   /* ── 1. Top bar ── */
@@ -347,6 +346,53 @@ body {
 
   .studio-m-topbar-center {
     display: flex;
+  }
+
+  /* Menu button — two hairlines, the lower one shorter. Opens the drawer
+     that stands in for the desktop sidebar. */
+  .studio-m-menu {
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 6px;
+    width: 40px;
+    height: 40px;
+    padding: 0 11px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .studio-m-menu span {
+    display: block;
+    width: 18px;
+    height: 1px;
+    background-color: var(--color-alabaster-400);
+    transition:
+      width var(--duration-micro) var(--ease-luxury),
+      background-color var(--duration-micro) var(--ease-luxury);
+  }
+
+  .studio-m-menu span + span {
+    width: 11px;
+  }
+
+  .studio-m-menu:active span {
+    background-color: var(--color-sienna-400);
+  }
+
+  .studio-m-menu:active span + span {
+    width: 18px;
+  }
+
+  .studio-m-menu:focus-visible {
+    outline: 1px solid var(--color-sienna-400);
+    outline-offset: -4px;
   }
 
   .studio-m-avatar {
@@ -535,42 +581,6 @@ body {
     border-color: var(--color-sienna-500);
   }
 
-  /* ── 7. Bottom tab bar ── */
-  .studio-m-tabbar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
-    display: flex;
-    align-items: stretch;
-    height: calc(56px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background-color: var(--color-obsidian-950);
-    border-top: 1px solid var(--color-border);
-  }
-
-  .studio-m-tab {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    text-decoration: none;
-    color: var(--color-alabaster-400);
-    font-family: var(--font-body);
-    font-size: 0.625rem;
-    font-weight: 300;
-    letter-spacing: 0.02em;
-  }
-
-  .studio-m-tab-active {
-    color: var(--color-sienna-400);
-    font-weight: 400;
-  }
-
   /* ── Account bottom sheet ──
      Scoped inside the mobile media query on purpose: the sheet is
      position:fixed, so it would escape the display:none mobile tree and
@@ -685,9 +695,6 @@ body {
     }
     .studio-m-bottle-scale > div {
       transform: scale(0.26);
-    }
-    .studio-m-tab {
-      font-size: 0.5625rem;
     }
   }
 }

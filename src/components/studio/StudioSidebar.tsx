@@ -13,11 +13,14 @@ import {
   Settings,
   LogOut,
   RotateCcw,
+  ChevronLeft,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { resetOnboarding } from '@/app/actions/onboarding'
+import { saveSidebarCollapsed } from '@/lib/studio-sidebar'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
+import './studioNav.css'
 
 type NavItem = {
   label: string
@@ -42,107 +45,42 @@ export function isNavActive(href: string, pathname: string) {
   return href !== '#' && (pathname === href || pathname.startsWith(`${href}/`))
 }
 
-/**
- * A single nav row. Kept local to the sidebar because its active treatment
- * (left accent bar + raised pill) is specific to this shell.
- */
-function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
-  const [isHovered, setIsHovered] = useState(false)
+/** One nav row: icon + label. `data-tip` feeds the collapsed-rail tooltip. */
+function NavLink({
+  item,
+  isActive,
+  onNavigate,
+}: {
+  item: NavItem
+  isActive: boolean
+  onNavigate?: () => void
+}) {
   const Icon = item.icon
-
-  const color = isActive
-    ? 'var(--color-sienna-300)'
-    : isHovered
-      ? 'var(--color-alabaster-200)'
-      : 'var(--color-alabaster-400)'
-
-  const style: React.CSSProperties = {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.625rem 0.875rem',
-    borderRadius: 'var(--radius-button)',
-    backgroundColor: isActive
-      ? 'var(--color-obsidian-800)'
-      : isHovered
-        ? 'rgba(255,255,255,0.02)'
-        : 'transparent',
-    color,
-    textDecoration: 'none',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.8125rem',
-    fontWeight: isActive ? 400 : 300,
-    letterSpacing: '0.02em',
-    transition:
-      'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
-  }
-
-  const content = (
-    <>
-      {/* Thin left accent bar — active only */}
-      {isActive && (
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '2px',
-            height: '18px',
-            borderRadius: '0 2px 2px 0',
-            backgroundColor: 'var(--color-sienna-500)',
-          }}
-        />
-      )}
-      <Icon size={16} strokeWidth={1.5} color={color} aria-hidden="true" />
-      {item.label}
-    </>
-  )
-
   return (
     <Link
       href={item.href}
       aria-current={isActive ? 'page' : undefined}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={style}
+      data-tip={item.label}
+      className="sn-row"
+      onClick={onNavigate}
     >
-      {content}
+      {/* Thin left accent bar — active only */}
+      {isActive && <span className="sn-accent" aria-hidden="true" />}
+      <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+      <span className="sn-label">{item.label}</span>
     </Link>
   )
 }
 
-/** Shared look for the sidebar's action buttons (retake, log out). */
-function actionRowStyle(isHovered: boolean, isBusy: boolean): React.CSSProperties {
-  return {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.625rem 0.875rem',
-    borderRadius: 'var(--radius-button)',
-    background: isHovered ? 'rgba(255,255,255,0.02)' : 'transparent',
-    border: 'none',
-    textAlign: 'left',
-    cursor: isBusy ? 'default' : 'pointer',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.8125rem',
-    fontWeight: 300,
-    letterSpacing: '0.02em',
-    color: isHovered ? 'var(--color-alabaster-200)' : 'var(--color-alabaster-400)',
-    transition:
-      'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
-  }
-}
-
-export function StudioSidebar() {
+/**
+ * The menu's rows — primary nav, then settings and account actions pinned to
+ * the bottom. Shared by the desktop sidebar and the mobile drawer.
+ */
+export function StudioNavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
-  const [logoutHovered, setLogoutHovered] = useState(false)
   const [isRestarting, setIsRestarting] = useState(false)
-  const [retakeHovered, setRetakeHovered] = useState(false)
 
   async function handleSignOut() {
     if (isSigningOut) return
@@ -167,69 +105,126 @@ export function StudioSidebar() {
   }
 
   return (
-    <nav
-      aria-label="Primary"
-      style={{
-        width: '230px',
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'var(--color-obsidian-950)',
-        borderRight: '1px solid var(--color-border)',
-        padding: '1.75rem 1rem',
-        overflowY: 'auto',
-      }}
-    >
-      {/* Wordmark */}
-      <div style={{ padding: '0 0.875rem', marginBottom: '2.5rem' }}>
-        <SkinauditLogo />
-      </div>
-
-      {/* Primary nav */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+    <>
+      <div className="sn-group">
         {PRIMARY_NAV.map((item) => (
-          <NavLink key={item.label} item={item} isActive={isNavActive(item.href, pathname)} />
+          <NavLink
+            key={item.label}
+            item={item}
+            isActive={isNavActive(item.href, pathname)}
+            onNavigate={onNavigate}
+          />
         ))}
       </div>
 
-      {/* Bottom cluster */}
-      <div
-        style={{
-          marginTop: 'auto',
-          paddingTop: '2rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.125rem',
-        }}
-      >
+      <div className="sn-group sn-group-bottom">
         {SECONDARY_NAV.map((item) => (
-          <NavLink key={item.label} item={item} isActive={false} />
+          <NavLink key={item.label} item={item} isActive={false} onNavigate={onNavigate} />
         ))}
 
         <button
           type="button"
           onClick={handleRetake}
           disabled={isRestarting}
-          onMouseEnter={() => setRetakeHovered(true)}
-          onMouseLeave={() => setRetakeHovered(false)}
-          style={actionRowStyle(retakeHovered, isRestarting)}
+          data-tip="Retake audit"
+          className="sn-row"
         >
           <RotateCcw size={16} strokeWidth={1.5} aria-hidden="true" />
-          {isRestarting ? 'Opening…' : 'Retake audit'}
+          <span className="sn-label">{isRestarting ? 'Opening…' : 'Retake audit'}</span>
         </button>
 
         <button
           type="button"
           onClick={handleSignOut}
           disabled={isSigningOut}
-          onMouseEnter={() => setLogoutHovered(true)}
-          onMouseLeave={() => setLogoutHovered(false)}
-          style={actionRowStyle(logoutHovered, isSigningOut)}
+          data-tip="Log out"
+          className="sn-row"
         >
           <LogOut size={16} strokeWidth={1.5} aria-hidden="true" />
-          {isSigningOut ? 'Signing out…' : 'Log out'}
+          <span className="sn-label">{isSigningOut ? 'Signing out…' : 'Log out'}</span>
         </button>
       </div>
-    </nav>
+    </>
+  )
+}
+
+type Tip = { label: string; top: number; left: number }
+
+/**
+ * Desktop sidebar. Collapses to an icon rail: icons stay anchored while the
+ * width eases in and labels fade, so nothing jumps. The state is saved in a
+ * cookie so the next page renders at the right width on the server.
+ */
+export function StudioSidebar({ initialCollapsed = false }: { initialCollapsed?: boolean }) {
+  const [collapsed, setCollapsed] = useState(initialCollapsed)
+  const [tip, setTip] = useState<Tip | null>(null)
+
+  function toggle() {
+    const next = !collapsed
+    setCollapsed(next)
+    setTip(null)
+    saveSidebarCollapsed(next)
+  }
+
+  // The rail's labels are hidden, so hovered/focused rows name themselves in
+  // a tooltip. It is position:fixed to escape the nav's scroll clipping.
+  function showTip(e: React.SyntheticEvent) {
+    if (!collapsed) return
+    const row = (e.target as Element).closest<HTMLElement>('[data-tip]')
+    if (!row) {
+      setTip(null)
+      return
+    }
+    const rect = row.getBoundingClientRect()
+    setTip({
+      label: row.dataset.tip ?? '',
+      top: rect.top + rect.height / 2,
+      left: rect.right + 14,
+    })
+  }
+
+  const hideTip = () => setTip(null)
+
+  return (
+    <div className={collapsed ? 'sn-sidebar is-collapsed' : 'sn-sidebar'}>
+      <nav
+        id="studio-sidebar-nav"
+        aria-label="Primary"
+        className="sn-nav"
+        onMouseOver={showTip}
+        onFocus={showTip}
+        onMouseLeave={hideTip}
+        onBlur={hideTip}
+        onScroll={hideTip}
+      >
+        <div className="sn-brand">
+          <span className="sn-wordmark">
+            <SkinauditLogo />
+          </span>
+          <span className="sn-seal" aria-hidden="true">
+            S
+          </span>
+        </div>
+
+        <StudioNavLinks />
+      </nav>
+
+      <button
+        type="button"
+        className="sn-toggle"
+        aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
+        aria-expanded={!collapsed}
+        aria-controls="studio-sidebar-nav"
+        onClick={toggle}
+      >
+        <ChevronLeft size={14} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+
+      {tip && (
+        <span className="sn-tip" style={{ top: tip.top, left: tip.left }} aria-hidden="true">
+          {tip.label}
+        </span>
+      )}
+    </div>
   )
 }

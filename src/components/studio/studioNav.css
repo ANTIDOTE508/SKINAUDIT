@@ -1,0 +1,341 @@
+/* ================================================================
+   STUDIO NAV — desktop sidebar (collapsible to an icon rail) and the
+   mobile drawer opened from the top bar. Both share the `.sn-row` rows.
+   ================================================================ */
+
+/* ── Desktop sidebar ─────────────────────────────────────────────────── */
+.sn-sidebar {
+  position: relative;
+  /* Above <main>, so the toggle can straddle the border. */
+  z-index: 2;
+  flex-shrink: 0;
+  width: 230px;
+  background-color: var(--color-obsidian-950);
+  border-right: 1px solid var(--color-border);
+  transition: width var(--duration-short) var(--ease-luxury);
+}
+
+/* Rail width centres the icons without moving them: 1rem nav padding +
+   0.875rem row padding + 8px half-icon = 38px, doubled. */
+.sn-sidebar.is-collapsed {
+  width: 76px;
+}
+
+.sn-nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.75rem 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/* Wordmark when expanded, a hairline seal on the icon axis when collapsed. */
+.sn-brand {
+  position: relative;
+  flex-shrink: 0;
+  height: 28px;
+  margin-bottom: 2.5rem;
+}
+
+.sn-wordmark {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  display: flex;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  transition: opacity 260ms var(--ease-luxury) 120ms;
+}
+
+.sn-seal {
+  position: absolute;
+  top: 0;
+  left: calc(0.875rem - 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-alabaster-400);
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 120ms var(--ease-exit),
+    transform 120ms var(--ease-exit);
+}
+
+.is-collapsed .sn-wordmark {
+  opacity: 0;
+  transition: opacity 120ms var(--ease-exit);
+}
+
+.is-collapsed .sn-seal {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 260ms var(--ease-luxury) 160ms,
+    transform 260ms var(--ease-luxury) 160ms;
+}
+
+/* Collapse / expand handle, centred on the sidebar's right border. */
+.sn-toggle {
+  position: absolute;
+  top: calc(1.75rem + 2px);
+  right: -12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--color-alabaster-400);
+  background-color: var(--color-obsidian-900);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  opacity: 0.7;
+  cursor: pointer;
+  transition:
+    opacity var(--duration-micro) var(--ease-luxury),
+    color var(--duration-micro) var(--ease-luxury),
+    border-color var(--duration-micro) var(--ease-luxury);
+}
+
+.sn-sidebar:hover .sn-toggle,
+.sn-toggle:focus-visible {
+  opacity: 1;
+}
+
+.sn-toggle:hover {
+  color: var(--color-alabaster-100);
+  border-color: var(--color-sienna-500);
+}
+
+.sn-toggle:focus-visible {
+  outline: 1px solid var(--color-sienna-400);
+  outline-offset: 2px;
+}
+
+.sn-toggle svg {
+  transition: transform var(--duration-short) var(--ease-luxury);
+}
+
+.is-collapsed .sn-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* Rail tooltip — fixed, so the nav's overflow never clips it. */
+.sn-tip {
+  position: fixed;
+  z-index: 60;
+  padding: 0.375rem 0.625rem;
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--color-alabaster-100);
+  background-color: var(--color-obsidian-800);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-badge);
+  pointer-events: none;
+  transform: translateY(-50%);
+  animation: sn-tip-in 160ms var(--ease-enter);
+}
+
+@keyframes sn-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-4px, -50%);
+  }
+}
+
+/* ── Rows (sidebar + drawer) ─────────────────────────────────────────── */
+.sn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.sn-group-bottom {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.sn-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-align: left;
+  text-decoration: none;
+  color: var(--color-alabaster-400);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-micro) var(--ease-luxury),
+    color var(--duration-micro) var(--ease-luxury);
+}
+
+.sn-row svg {
+  flex-shrink: 0;
+}
+
+.sn-row:hover {
+  color: var(--color-alabaster-200);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.sn-row:disabled {
+  cursor: default;
+}
+
+.sn-row[aria-current='page'] {
+  font-weight: 400;
+  color: var(--color-sienna-300);
+  background-color: var(--color-obsidian-800);
+}
+
+.sn-row:focus-visible {
+  outline: 1px solid var(--color-sienna-400);
+  outline-offset: -1px;
+}
+
+.sn-accent {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 18px;
+  background-color: var(--color-sienna-500);
+  border-radius: 0 2px 2px 0;
+  transform: translateY(-50%);
+}
+
+/* Labels fade out fast as the rail closes, and back in once it has
+   mostly opened, so text is never seen being clipped. */
+.sn-label {
+  transition: opacity 260ms var(--ease-luxury) 120ms;
+}
+
+.is-collapsed .sn-label {
+  opacity: 0;
+  transition: opacity 120ms var(--ease-exit);
+}
+
+/* ── Mobile drawer ───────────────────────────────────────────────────── */
+.sd-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.sd-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(6, 5, 5, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.sd-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(300px, 84vw);
+  padding: env(safe-area-inset-top, 0px) 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--color-obsidian-950);
+  border-right: 1px solid var(--color-border);
+  outline: none;
+}
+
+/* Same height and hairline as the top bar it covers. */
+.sd-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  margin: 0 -1rem 1.5rem;
+  padding: 0 0.5rem 0 1.875rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sd-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--color-alabaster-400);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--duration-micro) var(--ease-luxury);
+}
+
+.sd-close:active {
+  color: var(--color-alabaster-100);
+}
+
+.sd-close:focus-visible {
+  outline: 1px solid var(--color-sienna-400);
+  outline-offset: -4px;
+}
+
+.sd-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* Touch-sized rows. */
+.sd-nav .sn-row {
+  gap: 0.875rem;
+  min-height: 44px;
+  font-size: 0.9375rem;
+}
+
+/* The drawer belongs to the mobile tree only. */
+@media (min-width: 768px) {
+  .sd-root {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-sidebar,
+  .sn-wordmark,
+  .sn-seal,
+  .sn-label,
+  .sn-toggle svg {
+    transition: none !important;
+  }
+
+  .sn-tip {
+    animation: none;
+  }
+}

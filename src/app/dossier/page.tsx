@@ -4,7 +4,7 @@ import { StudioShell } from '@/components/studio/StudioShell'
 import { DossierList, type DossierListItem } from '@/components/dossier/DossierList'
 
 export default async function DossierPage() {
-  const { userId, user } = await loadStudioContext()
+  const { userId, user, sidebarCollapsed } = await loadStudioContext()
 
   // Every status, archived included: the status tabs filter client-side and
   // "All" counts archived products too (mockup 08: 22 = 14 + 4 + 4).
@@ -31,7 +31,7 @@ export default async function DossierPage() {
   }))
 
   return (
-    <StudioShell user={user}>
+    <StudioShell user={user} sidebarCollapsed={sidebarCollapsed}>
       <DossierList items={items} />
     </StudioShell>
   )

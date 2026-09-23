@@ -17,13 +17,20 @@ import type { StudioUser } from './AccountSheet'
 
 type Props = {
   user: StudioUser
+  /** Saved desktop sidebar state (cookie, read on the server). */
+  sidebarCollapsed?: boolean
   /** Open the Dossier modal on arrival (dashboard landing with an empty Dossier). */
   initialDossierOpen?: boolean
   /** Page content for the central frame; defaults to the Studio overview. */
   children?: ReactNode
 }
 
-export function StudioShell({ user, initialDossierOpen = false, children }: Props) {
+export function StudioShell({
+  user,
+  sidebarCollapsed = false,
+  initialDossierOpen = false,
+  children,
+}: Props) {
   const router = useRouter()
   const [dossierStart, setDossierStart] = useState<DossierModalStart | null>(
     initialDossierOpen ? 'empty' : null
@@ -63,7 +70,7 @@ export function StudioShell({ user, initialDossierOpen = false, children }: Prop
             overflow: 'hidden',
           }}
         >
-          <StudioSidebar />
+          <StudioSidebar initialCollapsed={sidebarCollapsed} />
 
           <main
             style={{

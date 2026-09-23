@@ -327,14 +327,15 @@
 }
 
 @media (max-width: 767px) {
-  /* Mobile: the document scrolls, so the button is pinned to the viewport
-     just above the fixed tab bar (as in the mockup), and the list keeps
-     room underneath so the last row never hides behind it. */
+  /* Mobile: the document scrolls, so the button is pinned to the bottom
+     of the viewport, and the list keeps room underneath so the last row
+     never hides behind it. */
   .dl-fab-wrap {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    bottom: 0;
+    padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px));
   }
 
   .dl-list,
