@@ -169,7 +169,10 @@ export async function getDossierProductHistory(dossierProductId: number) {
   return events.map((e) => ({ type: e.type, metadata: e.metadata, occurredAt: e.occurredAt }))
 }
 
-export async function updateDossierProductStatus(dossierProductId: number, status: DossierProductStatus) {
+export async function updateDossierProductStatus(
+  dossierProductId: number,
+  status: DossierProductStatus
+) {
   const user = await requireSession()
 
   await prisma.$transaction(async (tx) => {
@@ -191,40 +194,5 @@ export async function updateDossierProductStatus(dossierProductId: number, statu
         metadata: { from: current.status, to: status },
       },
     })
-  })
-}
-
-export async function updateDossierStep(step: number) {
-  const user = await requireSession()
-
-  await prisma.userProfile.updateMany({
-    where: { userId: user.id, dossierStep: { lt: step } },
-    data: { dossierStep: step },
-  })
-}
-
-export async function getDossierBuildState() {
-  const user = await requireSession()
-
-  const profile = await prisma.userProfile.findUnique({
-    where: { userId: user.id },
-    select: { dossierStep: true, dossierCompletedAt: true },
-  })
-
-  return {
-    dossierStep: profile?.dossierStep ?? 0,
-    dossierCompletedAt: profile?.dossierCompletedAt ?? null,
-  }
-}
-
-export async function finalizeDossierBuild() {
-  const user = await requireSession()
-
-  await prisma.userProfile.updateMany({
-    where: { userId: user.id },
-    data: {
-      dossierStep: 6,
-      dossierCompletedAt: new Date(),
-    },
   })
 }

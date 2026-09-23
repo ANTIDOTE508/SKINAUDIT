@@ -2,18 +2,15 @@
 
 import { Check } from 'lucide-react'
 import { ProductImagePlaceholder } from '@/components/studio/ProductImagePlaceholder'
-import { ScreenHeader } from './ScreenHeader'
 
 type Props = {
   productName: string
   brandName?: string | null
   categoryLabel?: string | null
   statusLabel?: string | null
-  isFinishing: boolean
-  finishError?: string | null
   onAddAnother: () => void
-  onContinueToStudio: () => void
-  onNavigateStudio: () => void
+  /** Closes the Dossier modal. */
+  onDone: () => void
 }
 
 export function ScreenAdded({
@@ -21,19 +18,14 @@ export function ScreenAdded({
   brandName,
   categoryLabel,
   statusLabel,
-  isFinishing,
-  finishError,
   onAddAnother,
-  onContinueToStudio,
-  onNavigateStudio,
+  onDone,
 }: Props) {
   const fullName = brandName ? `${brandName} ${productName}` : productName
   const tags = [categoryLabel, statusLabel].filter((tag): tag is string => Boolean(tag))
 
   return (
     <>
-      <ScreenHeader activeSection="dossier" onNavigateStudio={onNavigateStudio} />
-
       <div className="db-content" style={{ flex: 1, textAlign: 'center' }}>
         <div
           style={{
@@ -166,34 +158,18 @@ export function ScreenAdded({
         </div>
 
         <div style={{ marginTop: 'auto' }}>
-          {finishError && (
-            <p
-              role="alert"
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.8125rem',
-                color: 'var(--color-blush-500)',
-                margin: '0 0 1rem',
-              }}
-            >
-              {finishError}
-            </p>
-          )}
-
           <button
             type="button"
-            onClick={onContinueToStudio}
-            disabled={isFinishing}
+            onClick={onDone}
             className="btn-primary btn-primary-accent"
             style={{ width: '100%', minHeight: '56px', marginBottom: '0.75rem' }}
           >
-            {isFinishing ? 'Setting up your space…' : 'Go to Dossier'}
+            Go to Dossier
           </button>
 
           <button
             type="button"
             onClick={onAddAnother}
-            disabled={isFinishing}
             className="btn-secondary"
             style={{
               width: '100%',

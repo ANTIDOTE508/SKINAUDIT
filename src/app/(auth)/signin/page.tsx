@@ -69,7 +69,7 @@ export default function SignInPage() {
         return
       }
 
-      router.push('/studio')
+      router.push('/dashboard')
     } catch {
       setErrors({ form: 'An error occurred. Please try again.' })
     } finally {

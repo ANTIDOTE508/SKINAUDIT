@@ -983,8 +983,8 @@ export async function acknowledgeAllSet() {
 /**
  * Step 24 is the wizard's final step. Continuing from it both advances the
  * resume marker and marks the profile complete — there is no trailing
- * completion screen, and the Dossier build that follows is a separate
- * workflow (see /dossier/build), not part of onboarding.
+ * completion screen, and adding Dossier products happens afterwards in the
+ * Dossier modal on /dashboard, not as part of onboarding.
  */
 export async function completeProfile() {
   const user = await requireSession()
@@ -995,43 +995,6 @@ export async function completeProfile() {
       onboardingStep: 24,
       onboardingCompletedAt: new Date(),
     },
-  })
-
-  return { ok: true }
-}
-
-// ─── Step 25 — Product search & add ──────────────────────────
-export async function searchProducts(query: string) {
-  await requireSession()
-  if (!query.trim() || query.length < 2) return []
-
-  const results = await prisma.product.findMany({
-    where: {
-      OR: [
-        { name: { contains: query, mode: 'insensitive' } },
-        { aliases: { some: { alias: { contains: query, mode: 'insensitive' } } } },
-        { brand: { name: { contains: query, mode: 'insensitive' } } },
-      ],
-    },
-    take: 8,
-    select: {
-      id: true,
-      name: true,
-      category: true,
-      brand: { select: { name: true } },
-    },
-  })
-
-  return results
-}
-
-export async function addProductToDossier(productId: number) {
-  const user = await requireSession()
-
-  await prisma.userDossierProduct.upsert({
-    where: { userId_productId: { userId: user.id, productId } },
-    create: { userId: user.id, productId, status: 'ACTIVE' },
-    update: { status: 'ACTIVE' },
   })
 
   return { ok: true }

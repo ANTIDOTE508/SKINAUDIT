@@ -56,7 +56,7 @@ export function StepDossierIntro({ onBack }: Props) {
     startTransition(async () => {
       try {
         await completeProfile()
-        router.push('/dossier/build')
+        router.push('/dashboard')
       } catch {
         setError('Unable to save. Please try again.')
       }

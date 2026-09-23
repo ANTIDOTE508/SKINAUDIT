@@ -1,17 +1,48 @@
 'use client'
 
-import { StudioSidebar } from './StudioSidebar'
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { StudioSidebar, type StudioNavItem } from './StudioSidebar'
 import { StudioHeader } from './StudioHeader'
 import { RegimenRow } from './RegimenRow'
 import { RegimenOverview } from './RegimenOverview'
 import { StudioInsights } from './StudioInsights'
 import { StudioMobile } from './StudioMobile'
+import { DossierModal } from '@/components/dossier/DossierModal'
 import type { StudioUser } from './AccountSheet'
 
-export function StudioShell({ user }: { user: StudioUser }) {
+type Props = {
+  user: StudioUser
+  /** Nav entry to highlight; null highlights nothing. */
+  activeNav: StudioNavItem | null
+  /** No non-archived product in the Dossier yet. */
+  isDossierEmpty: boolean
+  /** Open the Dossier modal on arrival (dashboard landing with an empty Dossier). */
+  initialDossierOpen?: boolean
+}
+
+export function StudioShell({
+  user,
+  activeNav,
+  isDossierEmpty,
+  initialDossierOpen = false,
+}: Props) {
+  const router = useRouter()
+  const [isDossierOpen, setIsDossierOpen] = useState(initialDossierOpen)
+
+  // The Dossier entry only opens the modal while the Dossier is empty — the
+  // permanent Dossier section does not exist yet.
+  const onOpenDossier = isDossierEmpty ? () => setIsDossierOpen(true) : undefined
+
+  const closeDossier = useCallback(() => {
+    setIsDossierOpen(false)
+    // A product may have been added: re-read the count on the server.
+    router.refresh()
+  }, [router])
+
   return (
     <>
-      <StudioMobile user={user} />
+      <StudioMobile user={user} activeNav={activeNav} onOpenDossier={onOpenDossier} />
 
       <div
         className="studio-desktop"
@@ -35,7 +66,7 @@ export function StudioShell({ user }: { user: StudioUser }) {
             overflow: 'hidden',
           }}
         >
-          <StudioSidebar />
+          <StudioSidebar activeNav={activeNav} onOpenDossier={onOpenDossier} />
 
           <main
             style={{
@@ -52,6 +83,8 @@ export function StudioShell({ user }: { user: StudioUser }) {
           </main>
         </div>
       </div>
+
+      <DossierModal isOpen={isDossierOpen} onClose={closeDossier} />
     </>
   )
 }

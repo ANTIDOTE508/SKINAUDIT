@@ -1,0 +1,186 @@
+/* ================================================================
+   DOSSIER MODAL — hosts the empty state (mockup 02) and the add-product
+   flow (mockups 03-07) on top of /dashboard and /studio.
+   ================================================================ */
+
+/* ── Empty state — values copied from screen02.html `.content` ─────────── */
+.dossier-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 32px;
+  text-align: center;
+}
+
+.dossier-empty-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 28px;
+  opacity: 0.38;
+}
+
+.dossier-empty-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--color-alabaster-50);
+  margin: 0 0 14px;
+}
+
+.dossier-empty-body {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.72;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-300);
+  opacity: 0.75;
+  max-width: 360px;
+  margin: 0 0 44px;
+}
+
+.dossier-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  height: 52px;
+  background: var(--color-sienna-400);
+  color: var(--color-obsidian-950);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.dossier-empty-cta:hover {
+  background: var(--color-sienna-300);
+}
+
+.dossier-empty-cta:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 3px;
+}
+
+@media (min-width: 900px) {
+  .dossier-empty {
+    padding: 100px 48px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dossier-empty {
+    padding: 60px 24px;
+  }
+
+  .dossier-empty-cta {
+    max-width: 100%;
+  }
+}
+
+/* ── Modal chrome ─────────────────────────────────────────────────────── */
+.dossier-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dossier-modal-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 5, 4, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.dossier-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  height: min(760px, 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--color-obsidian-950);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  /* Focused programmatically on open; the ring belongs to its controls. */
+  outline: none;
+}
+
+/* Screens without a close button of their own get a floating one where the
+   topbar's trailing icon sits. The zero-height sticky rail keeps it pinned
+   while the dialog scrolls, without pushing the screen content down. */
+.dossier-modal-close-rail {
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  height: 0;
+  flex-shrink: 0;
+}
+
+.dossier-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 32px;
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-alabaster-400);
+  opacity: 0.65;
+  transition: opacity 0.15s;
+}
+
+.dossier-modal-close:hover {
+  opacity: 1;
+}
+
+.dossier-modal-close:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 2px;
+}
+
+@media (min-width: 900px) {
+  .dossier-modal-close {
+    right: 3rem;
+  }
+}
+
+/* Phones: the modal takes the whole viewport, like the mockups. */
+@media (max-width: 767px) {
+  .dossier-modal-root {
+    padding: 0;
+  }
+
+  .dossier-modal {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+  }
+
+  .dossier-modal-close {
+    right: 20px;
+  }
+}

@@ -83,7 +83,7 @@ export default function SignUpPage() {
         return
       }
 
-      router.push('/studio')
+      router.push('/dashboard')
     } catch {
       setErrors({ form: 'An error occurred. Please try again.' })
     } finally {

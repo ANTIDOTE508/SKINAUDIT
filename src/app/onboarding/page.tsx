@@ -52,7 +52,7 @@ export default async function OnboardingPage() {
 
   // Onboarding is complete only when onboardingCompletedAt is set
   if (profile?.onboardingCompletedAt) {
-    redirect('/studio')
+    redirect('/dashboard')
   }
 
   // Environment answers live in a separate table from UserProfile, so they

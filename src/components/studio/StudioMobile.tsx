@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { ChevronDown, LayoutGrid, FileText, CalendarCheck, TrendingUp, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
@@ -10,6 +9,7 @@ import { BottlePlaceholder } from './BottlePlaceholder'
 import { HealthGauge } from './HealthGauge'
 import { REGIMEN } from './RegimenRow'
 import { AccountSheet, type StudioUser } from './AccountSheet'
+import type { StudioNavItem } from './StudioSidebar'
 import { getInitials } from '@/lib/user-display'
 
 const ROUTINES = ['AM Routine', 'PM Routine', 'Weekly Treatment'] as const
@@ -20,9 +20,9 @@ const MOBILE_METRICS = [
   { label: 'Barrier Support', value: 'Good', score: '72/100', percent: 70 },
 ]
 
-const TABS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: 'Studio', href: '/studio', icon: LayoutGrid },
-  { label: 'Dossier', href: '#', icon: FileText },
+const TABS: { key?: StudioNavItem; label: string; href: string; icon: LucideIcon }[] = [
+  { key: 'studio', label: 'Studio', href: '/studio', icon: LayoutGrid },
+  { key: 'dossier', label: 'Dossier', href: '#', icon: FileText },
   { label: 'Check-ins', href: '#', icon: CalendarCheck },
   { label: 'Progress', href: '#', icon: TrendingUp },
   { label: 'Profile', href: '#', icon: User },
@@ -119,8 +119,14 @@ function MobileMetricCard({
   )
 }
 
-export function StudioMobile({ user }: { user: StudioUser }) {
-  const pathname = usePathname()
+type Props = {
+  user: StudioUser
+  activeNav: StudioNavItem | null
+  /** When set, the Dossier tab opens the Dossier modal. */
+  onOpenDossier?: () => void
+}
+
+export function StudioMobile({ user, activeNav, onOpenDossier }: Props) {
   const [routine, setRoutine] = useState<string>(ROUTINES[0])
   const [sheetOpen, setSheetOpen] = useState(false)
   const avatarRef = useRef<HTMLButtonElement>(null)
@@ -219,14 +225,30 @@ export function StudioMobile({ user }: { user: StudioUser }) {
       {/* 7 — Bottom tab bar */}
       <nav className="studio-m-tabbar" aria-label="Primary">
         {TABS.map((tab) => {
-          const isActive = tab.href !== '#' && pathname.startsWith(tab.href)
+          const isActive = tab.key !== undefined && tab.key === activeNav
           const Icon = tab.icon
+          const className = isActive ? 'studio-m-tab studio-m-tab-active' : 'studio-m-tab'
+          if (tab.key === 'dossier' && onOpenDossier) {
+            return (
+              <button
+                key={tab.label}
+                type="button"
+                onClick={onOpenDossier}
+                aria-haspopup="dialog"
+                aria-current={isActive ? 'page' : undefined}
+                className={className}
+              >
+                <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                <span>{tab.label}</span>
+              </button>
+            )
+          }
           return (
             <Link
               key={tab.label}
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
-              className={isActive ? 'studio-m-tab studio-m-tab-active' : 'studio-m-tab'}
+              className={className}
             >
               <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
               <span>{tab.label}</span>

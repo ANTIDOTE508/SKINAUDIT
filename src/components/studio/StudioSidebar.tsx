@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import {
   LayoutGrid,
@@ -20,15 +19,18 @@ import { authClient } from '@/lib/auth-client'
 import { resetOnboarding } from '@/app/actions/onboarding'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
 
+export type StudioNavItem = 'studio' | 'dossier'
+
 type NavItem = {
+  key?: StudioNavItem
   label: string
   href: string
   icon: LucideIcon
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { label: 'Studio', href: '/studio', icon: LayoutGrid },
-  { label: 'Dossier', href: '#', icon: FileText },
+  { key: 'studio', label: 'Studio', href: '/studio', icon: LayoutGrid },
+  { key: 'dossier', label: 'Dossier', href: '#', icon: FileText },
   { label: 'Compatibility', href: '#', icon: GitCompareArrows },
   { label: 'Check-ins', href: '#', icon: CalendarCheck },
   { label: 'Progress', href: '#', icon: TrendingUp },
@@ -41,7 +43,16 @@ const SECONDARY_NAV: NavItem[] = [{ label: 'Settings', href: '#', icon: Settings
  * A single nav row. Kept local to the sidebar because its active treatment
  * (left accent bar + raised pill) is specific to this shell.
  */
-function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function NavLink({
+  item,
+  isActive,
+  onClick,
+}: {
+  item: NavItem
+  isActive: boolean
+  /** Renders a button instead of a link (e.g. Dossier opens a modal). */
+  onClick?: () => void
+}) {
   const [isHovered, setIsHovered] = useState(false)
   const Icon = item.icon
 
@@ -51,34 +62,30 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
       ? 'var(--color-alabaster-200)'
       : 'var(--color-alabaster-400)'
 
-  return (
-    <Link
-      href={item.href}
-      aria-current={isActive ? 'page' : undefined}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '0.625rem 0.875rem',
-        borderRadius: 'var(--radius-button)',
-        backgroundColor: isActive
-          ? 'var(--color-obsidian-800)'
-          : isHovered
-            ? 'rgba(255,255,255,0.02)'
-            : 'transparent',
-        color,
-        textDecoration: 'none',
-        fontFamily: 'var(--font-body)',
-        fontSize: '0.8125rem',
-        fontWeight: isActive ? 400 : 300,
-        letterSpacing: '0.02em',
-        transition:
-          'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
-      }}
-    >
+  const style: React.CSSProperties = {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.625rem 0.875rem',
+    borderRadius: 'var(--radius-button)',
+    backgroundColor: isActive
+      ? 'var(--color-obsidian-800)'
+      : isHovered
+        ? 'rgba(255,255,255,0.02)'
+        : 'transparent',
+    color,
+    textDecoration: 'none',
+    fontFamily: 'var(--font-body)',
+    fontSize: '0.8125rem',
+    fontWeight: isActive ? 400 : 300,
+    letterSpacing: '0.02em',
+    transition:
+      'background-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
+  }
+
+  const content = (
+    <>
       {/* Thin left accent bar — active only */}
       {isActive && (
         <span
@@ -97,6 +104,32 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
       )}
       <Icon size={16} strokeWidth={1.5} color={color} aria-hidden="true" />
       {item.label}
+    </>
+  )
+
+  const shared = {
+    'aria-current': isActive ? ('page' as const) : undefined,
+    onMouseEnter: () => setIsHovered(true),
+    onMouseLeave: () => setIsHovered(false),
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-haspopup="dialog"
+        {...shared}
+        style={{ ...style, width: '100%', border: 'none', textAlign: 'left', cursor: 'pointer' }}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <Link href={item.href} {...shared} style={style}>
+      {content}
     </Link>
   )
 }
@@ -123,8 +156,13 @@ function actionRowStyle(isHovered: boolean, isBusy: boolean): React.CSSPropertie
   }
 }
 
-export function StudioSidebar() {
-  const pathname = usePathname()
+type Props = {
+  activeNav: StudioNavItem | null
+  /** When set, the Dossier entry opens the Dossier modal. */
+  onOpenDossier?: () => void
+}
+
+export function StudioSidebar({ activeNav, onOpenDossier }: Props) {
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [logoutHovered, setLogoutHovered] = useState(false)
@@ -178,7 +216,8 @@ export function StudioSidebar() {
           <NavLink
             key={item.label}
             item={item}
-            isActive={item.href !== '#' && pathname.startsWith(item.href)}
+            isActive={item.key !== undefined && item.key === activeNav}
+            onClick={item.key === 'dossier' ? onOpenDossier : undefined}
           />
         ))}
       </div>

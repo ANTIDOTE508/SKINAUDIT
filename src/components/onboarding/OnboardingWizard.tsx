@@ -249,7 +249,7 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 
 // step 0 = full-bleed baseline transition screen (not counted); steps 1–24 =
 // the numbered wizard steps. Step 24 (StepDossierIntro) completes the
-// profile and hands off to the standalone /dossier/build route, so there is
+// profile and hands off to /dashboard (Dossier modal), so there is
 // no separate completion step beyond it. Every follow-up now lives inline on
 // its master step's screen, so there are no conditionally-skipped screens —
 // the flow is a straight 1…TOTAL_STEPS walk.
