@@ -1,48 +1,45 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { StudioSidebar, type StudioNavItem } from './StudioSidebar'
+import { StudioSidebar } from './StudioSidebar'
 import { StudioHeader } from './StudioHeader'
 import { RegimenRow } from './RegimenRow'
 import { RegimenOverview } from './RegimenOverview'
 import { StudioInsights } from './StudioInsights'
 import { StudioMobile } from './StudioMobile'
 import { DossierModal } from '@/components/dossier/DossierModal'
+import {
+  DossierModalContext,
+  type DossierModalStart,
+} from '@/components/dossier/DossierModalContext'
 import type { StudioUser } from './AccountSheet'
 
 type Props = {
   user: StudioUser
-  /** Nav entry to highlight; null highlights nothing. */
-  activeNav: StudioNavItem | null
-  /** No non-archived product in the Dossier yet. */
-  isDossierEmpty: boolean
   /** Open the Dossier modal on arrival (dashboard landing with an empty Dossier). */
   initialDossierOpen?: boolean
+  /** Page content for the central frame; defaults to the Studio overview. */
+  children?: ReactNode
 }
 
-export function StudioShell({
-  user,
-  activeNav,
-  isDossierEmpty,
-  initialDossierOpen = false,
-}: Props) {
+export function StudioShell({ user, initialDossierOpen = false, children }: Props) {
   const router = useRouter()
-  const [isDossierOpen, setIsDossierOpen] = useState(initialDossierOpen)
+  const [dossierStart, setDossierStart] = useState<DossierModalStart | null>(
+    initialDossierOpen ? 'empty' : null
+  )
 
-  // The Dossier entry only opens the modal while the Dossier is empty — the
-  // permanent Dossier section does not exist yet.
-  const onOpenDossier = isDossierEmpty ? () => setIsDossierOpen(true) : undefined
+  const openDossier = useCallback((startAt: DossierModalStart) => setDossierStart(startAt), [])
 
   const closeDossier = useCallback(() => {
-    setIsDossierOpen(false)
-    // A product may have been added: re-read the count on the server.
+    setDossierStart(null)
+    // A product may have been added: re-read the Dossier on the server.
     router.refresh()
   }, [router])
 
   return (
-    <>
-      <StudioMobile user={user} activeNav={activeNav} onOpenDossier={onOpenDossier} />
+    <DossierModalContext.Provider value={openDossier}>
+      <StudioMobile user={user}>{children}</StudioMobile>
 
       <div
         className="studio-desktop"
@@ -66,25 +63,34 @@ export function StudioShell({
             overflow: 'hidden',
           }}
         >
-          <StudioSidebar activeNav={activeNav} onOpenDossier={onOpenDossier} />
+          <StudioSidebar />
 
           <main
             style={{
               flex: 1,
               minWidth: 0,
               overflowY: 'auto',
-              padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+              // Custom pages own their full-bleed layout (rows, borders).
+              padding: children ? 0 : 'clamp(1.5rem, 3vw, 2.5rem)',
             }}
           >
-            <StudioHeader />
-            <RegimenRow />
-            <RegimenOverview />
-            <StudioInsights />
+            {children ?? (
+              <>
+                <StudioHeader />
+                <RegimenRow />
+                <RegimenOverview />
+                <StudioInsights />
+              </>
+            )}
           </main>
         </div>
       </div>
 
-      <DossierModal isOpen={isDossierOpen} onClose={closeDossier} />
-    </>
+      <DossierModal
+        isOpen={dossierStart !== null}
+        startAt={dossierStart ?? 'empty'}
+        onClose={closeDossier}
+      />
+    </DossierModalContext.Provider>
   )
 }

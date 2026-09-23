@@ -780,6 +780,9 @@ model UserDossierProduct {
   userId     String               @map("user_id")
   productId  Int                  @map("product_id")
   status     DossierProductStatus @default(ACTIVE)
+  /// The user's own category for this product; null falls back to the
+  /// catalogue's product.category, which is shared and never edited here.
+  category   ProductCategory?     @map("category")
   addedAt    DateTime             @default(now()) @map("addedAt")
   archivedAt DateTime?            @map("archivedAt")
   notes      String?

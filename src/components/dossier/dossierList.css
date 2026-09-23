@@ -1,0 +1,352 @@
+/* ================================================================
+   DOSSIER LIST — /dossier, values copied from
+   templates/buildDossier/screen08.html (minus its topbar).
+   ================================================================ */
+
+.dl-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  /* Mockup background: row hover (obsidian-900) must read against it. */
+  background-color: var(--color-obsidian-950);
+  font-family: var(--font-body);
+  font-weight: 300;
+}
+
+/* ── Status tabs ──────────────────────────────────────────────────────── */
+.dl-tabs {
+  display: flex;
+  flex-shrink: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dl-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.dl-tab {
+  position: relative;
+  flex-shrink: 0;
+  padding: 14px 0;
+  margin-right: 28px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+
+.dl-tab.active {
+  color: var(--color-sienna-400);
+  opacity: 1;
+}
+
+.dl-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-sienna-400);
+}
+
+.dl-tab:hover:not(.active) {
+  opacity: 0.85;
+}
+
+.dl-tab:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 2px;
+}
+
+/* ── Filter / sort bar ────────────────────────────────────────────────── */
+.dl-filter-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 32px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dl-filter-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dl-filter-btn {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  opacity: 0.7;
+}
+
+.dl-filter-btn:disabled {
+  cursor: default;
+}
+
+.dl-filter-count {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--color-alabaster-400);
+  opacity: 0.5;
+}
+
+/* ── Product rows ─────────────────────────────────────────────────────── */
+.dl-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dl-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-alabaster-50);
+  transition: background 0.12s;
+}
+
+.dl-row:last-child {
+  border-bottom: none;
+}
+
+.dl-row:hover {
+  background: var(--color-obsidian-900);
+}
+
+.dl-img {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 56px;
+  color: var(--color-alabaster-50);
+  opacity: 0.7;
+}
+
+.dl-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dl-brand {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.65;
+}
+
+.dl-name {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.38;
+  color: var(--color-alabaster-50);
+}
+
+.dl-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dl-tag {
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  border: 1px solid var(--color-border);
+  opacity: 0.55;
+}
+
+.dl-dot {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  opacity: 0.75;
+}
+
+/* Exact mockup status colours */
+.dl-dot.active {
+  background: #c4b09a;
+}
+
+.dl-dot.seasonal {
+  background: #8a9e8a;
+}
+
+.dl-dot.archived {
+  background: #5a5550;
+}
+
+.dl-status {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--color-alabaster-400);
+  opacity: 0.5;
+}
+
+.dl-tab-empty {
+  flex: 1;
+  margin: 0;
+  padding: 48px 32px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-alabaster-400);
+  opacity: 0.6;
+}
+
+/* ── Add Product — sticks to the bottom of the scrolling frame ──────── */
+.dl-fab-wrap {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding: 24px 32px 36px;
+  background: linear-gradient(to top, var(--color-obsidian-950) 55%, transparent 100%);
+  pointer-events: none;
+}
+
+.dl-fab {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 48px;
+  padding: 0 22px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-obsidian-950);
+  background: var(--color-sienna-400);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background 0.18s;
+}
+
+.dl-fab:hover {
+  background: var(--color-sienna-300);
+}
+
+.dl-fab:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: 3px;
+}
+
+@media (min-width: 900px) {
+  .dl-tabs {
+    padding: 0 48px;
+  }
+
+  .dl-filter-bar {
+    padding: 12px 48px;
+  }
+
+  .dl-row {
+    gap: 24px;
+    padding: 20px 48px;
+  }
+
+  .dl-img {
+    width: 44px;
+    height: 60px;
+  }
+
+  .dl-fab-wrap {
+    padding: 24px 48px 40px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile: the document scrolls, so the button is pinned to the viewport
+     just above the fixed tab bar (as in the mockup), and the list keeps
+     room underneath so the last row never hides behind it. */
+  .dl-fab-wrap {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .dl-list,
+  .dl-tab-empty {
+    padding-bottom: 100px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dl-tabs {
+    padding: 0 20px;
+  }
+
+  .dl-tab {
+    margin-right: 20px;
+    font-size: 10px;
+  }
+
+  .dl-filter-bar {
+    padding: 10px 20px;
+  }
+
+  .dl-row {
+    gap: 16px;
+    padding: 16px 20px;
+  }
+
+  .dl-img {
+    width: 36px;
+    height: 50px;
+  }
+
+  .dl-fab-wrap {
+    padding: 20px 20px 32px;
+  }
+}

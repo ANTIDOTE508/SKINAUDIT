@@ -6,9 +6,11 @@ import { gsap } from 'gsap'
 import { StepDossierBuild } from '@/components/onboarding/dossierBuild/StepDossierBuild'
 import '@/components/onboarding/dossierBuild/dossierBuild.css'
 import './dossierModal.css'
+import type { DossierModalStart } from './DossierModalContext'
 
 type Props = {
   isOpen: boolean
+  startAt: DossierModalStart
   /** Called on Escape, scrim click, the close button, and once the user
    *  finishes the add-product flow. */
   onClose: () => void
@@ -23,7 +25,7 @@ const FOCUSABLE =
  * Dossier modal: opens on the empty state (mockup 02) and runs the whole
  * add-product flow (mockups 03-07) in place, without leaving the dashboard.
  */
-export function DossierModal({ isOpen, onClose }: Props) {
+export function DossierModal({ isOpen, startAt, onClose }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const scrimRef = useRef<HTMLDivElement>(null)
   // createPortal needs a real <body>: false during SSR, true on the client.
@@ -128,9 +130,9 @@ export function DossierModal({ isOpen, onClose }: Props) {
         tabIndex={-1}
         onKeyDown={onTrapKeyDown}
       >
-        {/* Remounts on every open, so the flow always restarts on the empty
-            state rather than resuming a half-finished product. */}
-        <StepDossierBuild onClose={onClose} />
+        {/* Remounts on every open, so the flow always restarts from `startAt`
+            rather than resuming a half-finished product. */}
+        <StepDossierBuild startAt={startAt} onClose={onClose} />
       </div>
     </div>,
     document.body

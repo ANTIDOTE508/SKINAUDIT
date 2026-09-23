@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, type ReactNode } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { ChevronDown, LayoutGrid, FileText, CalendarCheck, TrendingUp, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
@@ -9,7 +10,7 @@ import { BottlePlaceholder } from './BottlePlaceholder'
 import { HealthGauge } from './HealthGauge'
 import { REGIMEN } from './RegimenRow'
 import { AccountSheet, type StudioUser } from './AccountSheet'
-import type { StudioNavItem } from './StudioSidebar'
+import { isNavActive } from './StudioSidebar'
 import { getInitials } from '@/lib/user-display'
 
 const ROUTINES = ['AM Routine', 'PM Routine', 'Weekly Treatment'] as const
@@ -20,9 +21,9 @@ const MOBILE_METRICS = [
   { label: 'Barrier Support', value: 'Good', score: '72/100', percent: 70 },
 ]
 
-const TABS: { key?: StudioNavItem; label: string; href: string; icon: LucideIcon }[] = [
-  { key: 'studio', label: 'Studio', href: '/studio', icon: LayoutGrid },
-  { key: 'dossier', label: 'Dossier', href: '#', icon: FileText },
+const TABS: { label: string; href: string; icon: LucideIcon }[] = [
+  { label: 'Studio', href: '/studio', icon: LayoutGrid },
+  { label: 'Dossier', href: '/dossier', icon: FileText },
   { label: 'Check-ins', href: '#', icon: CalendarCheck },
   { label: 'Progress', href: '#', icon: TrendingUp },
   { label: 'Profile', href: '#', icon: User },
@@ -121,12 +122,13 @@ function MobileMetricCard({
 
 type Props = {
   user: StudioUser
-  activeNav: StudioNavItem | null
-  /** When set, the Dossier tab opens the Dossier modal. */
-  onOpenDossier?: () => void
+  /** Page content between the top bar and the tab bar; defaults to the
+   *  Studio overview. */
+  children?: ReactNode
 }
 
-export function StudioMobile({ user, activeNav, onOpenDossier }: Props) {
+export function StudioMobile({ user, children }: Props) {
+  const pathname = usePathname()
   const [routine, setRoutine] = useState<string>(ROUTINES[0])
   const [sheetOpen, setSheetOpen] = useState(false)
   const avatarRef = useRef<HTMLButtonElement>(null)
@@ -160,89 +162,80 @@ export function StudioMobile({ user, activeNav, onOpenDossier }: Props) {
         </button>
       </header>
 
-      {/* 2 — Routine selector, full-bleed row */}
-      <div className="studio-m-routine">
-        <label htmlFor="studio-m-routine-select" className="studio-m-routine-label">
-          {routine}
-        </label>
-        <ChevronDown size={18} strokeWidth={1.5} aria-hidden="true" />
-        <select
-          id="studio-m-routine-select"
-          value={routine}
-          onChange={(e) => setRoutine(e.target.value)}
-          aria-label="Select routine"
-          className="studio-m-routine-select"
-        >
-          {ROUTINES.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* 3 — Circular product row */}
-      <div className="studio-m-products">
-        {REGIMEN.map((item, i) => (
-          <div key={item.step} className="studio-m-product">
-            <div className={i === 0 ? 'studio-m-circle studio-m-circle-active' : 'studio-m-circle'}>
-              {/* Same DOM as desktop, scaled down via CSS transform. */}
-              <div className="studio-m-bottle-scale">
-                <BottlePlaceholder step={item.step} showBadge={false} />
-              </div>
-            </div>
-            <span className="studio-m-product-num">{item.step}</span>
+      {children ?? (
+        <>
+          {/* 2 — Routine selector, full-bleed row */}
+          <div className="studio-m-routine">
+            <label htmlFor="studio-m-routine-select" className="studio-m-routine-label">
+              {routine}
+            </label>
+            <ChevronDown size={18} strokeWidth={1.5} aria-hidden="true" />
+            <select
+              id="studio-m-routine-select"
+              value={routine}
+              onChange={(e) => setRoutine(e.target.value)}
+              aria-label="Select routine"
+              className="studio-m-routine-select"
+            >
+              {ROUTINES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
           </div>
-        ))}
-      </div>
 
-      {/* 4 — Hero gauge */}
-      <div className="studio-m-gauge">
-        <HealthGauge value={78} label="Regimen Health Index" badge="Good" />
-      </div>
+          {/* 3 — Circular product row */}
+          <div className="studio-m-products">
+            {REGIMEN.map((item, i) => (
+              <div key={item.step} className="studio-m-product">
+                <div
+                  className={i === 0 ? 'studio-m-circle studio-m-circle-active' : 'studio-m-circle'}
+                >
+                  {/* Same DOM as desktop, scaled down via CSS transform. */}
+                  <div className="studio-m-bottle-scale">
+                    <BottlePlaceholder step={item.step} showBadge={false} />
+                  </div>
+                </div>
+                <span className="studio-m-product-num">{item.step}</span>
+              </div>
+            ))}
+          </div>
 
-      {/* 5 — Two metric cards */}
-      <div className="studio-m-metrics">
-        {MOBILE_METRICS.map((m) => (
-          <MobileMetricCard key={m.label} metric={m} />
-        ))}
-      </div>
+          {/* 4 — Hero gauge */}
+          <div className="studio-m-gauge">
+            <HealthGauge value={78} label="Regimen Health Index" badge="Good" />
+          </div>
 
-      {/* 6 — Today's Insight */}
-      <section className="studio-m-insight" aria-labelledby="studio-m-insight-heading">
-        <h2 id="studio-m-insight-heading" className="studio-m-insight-heading">
-          Today&rsquo;s Insight
-        </h2>
-        <p className="studio-m-insight-body">Your environment is drier than usual.</p>
-        <p className="studio-m-insight-body">Consider increasing barrier support.</p>
+          {/* 5 — Two metric cards */}
+          <div className="studio-m-metrics">
+            {MOBILE_METRICS.map((m) => (
+              <MobileMetricCard key={m.label} metric={m} />
+            ))}
+          </div>
 
-        <button type="button" className="studio-m-insight-action">
-          <span>View full analysis</span>
-          <span aria-hidden="true">&rarr;</span>
-        </button>
-      </section>
+          {/* 6 — Today's Insight */}
+          <section className="studio-m-insight" aria-labelledby="studio-m-insight-heading">
+            <h2 id="studio-m-insight-heading" className="studio-m-insight-heading">
+              Today&rsquo;s Insight
+            </h2>
+            <p className="studio-m-insight-body">Your environment is drier than usual.</p>
+            <p className="studio-m-insight-body">Consider increasing barrier support.</p>
+
+            <button type="button" className="studio-m-insight-action">
+              <span>View full analysis</span>
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          </section>
+        </>
+      )}
 
       {/* 7 — Bottom tab bar */}
       <nav className="studio-m-tabbar" aria-label="Primary">
         {TABS.map((tab) => {
-          const isActive = tab.key !== undefined && tab.key === activeNav
+          const isActive = isNavActive(tab.href, pathname)
           const Icon = tab.icon
           const className = isActive ? 'studio-m-tab studio-m-tab-active' : 'studio-m-tab'
-          if (tab.key === 'dossier' && onOpenDossier) {
-            return (
-              <button
-                key={tab.label}
-                type="button"
-                onClick={onOpenDossier}
-                aria-haspopup="dialog"
-                aria-current={isActive ? 'page' : undefined}
-                className={className}
-              >
-                <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                <span>{tab.label}</span>
-              </button>
-            )
-          }
           return (
             <Link
               key={tab.label}

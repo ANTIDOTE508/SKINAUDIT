@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutGrid,
   FileText,
@@ -19,18 +19,15 @@ import { authClient } from '@/lib/auth-client'
 import { resetOnboarding } from '@/app/actions/onboarding'
 import SkinauditLogo from '@/components/ui/SkinauditLogo'
 
-export type StudioNavItem = 'studio' | 'dossier'
-
 type NavItem = {
-  key?: StudioNavItem
   label: string
   href: string
   icon: LucideIcon
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { key: 'studio', label: 'Studio', href: '/studio', icon: LayoutGrid },
-  { key: 'dossier', label: 'Dossier', href: '#', icon: FileText },
+  { label: 'Studio', href: '/studio', icon: LayoutGrid },
+  { label: 'Dossier', href: '/dossier', icon: FileText },
   { label: 'Compatibility', href: '#', icon: GitCompareArrows },
   { label: 'Check-ins', href: '#', icon: CalendarCheck },
   { label: 'Progress', href: '#', icon: TrendingUp },
@@ -39,20 +36,17 @@ const PRIMARY_NAV: NavItem[] = [
 
 const SECONDARY_NAV: NavItem[] = [{ label: 'Settings', href: '#', icon: Settings }]
 
+/** Active when the URL is the item's route or one of its sub-routes.
+ *  Placeholder items (`#`) never match, so /dashboard highlights nothing. */
+export function isNavActive(href: string, pathname: string) {
+  return href !== '#' && (pathname === href || pathname.startsWith(`${href}/`))
+}
+
 /**
  * A single nav row. Kept local to the sidebar because its active treatment
  * (left accent bar + raised pill) is specific to this shell.
  */
-function NavLink({
-  item,
-  isActive,
-  onClick,
-}: {
-  item: NavItem
-  isActive: boolean
-  /** Renders a button instead of a link (e.g. Dossier opens a modal). */
-  onClick?: () => void
-}) {
+function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
   const [isHovered, setIsHovered] = useState(false)
   const Icon = item.icon
 
@@ -107,28 +101,14 @@ function NavLink({
     </>
   )
 
-  const shared = {
-    'aria-current': isActive ? ('page' as const) : undefined,
-    onMouseEnter: () => setIsHovered(true),
-    onMouseLeave: () => setIsHovered(false),
-  }
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        aria-haspopup="dialog"
-        {...shared}
-        style={{ ...style, width: '100%', border: 'none', textAlign: 'left', cursor: 'pointer' }}
-      >
-        {content}
-      </button>
-    )
-  }
-
   return (
-    <Link href={item.href} {...shared} style={style}>
+    <Link
+      href={item.href}
+      aria-current={isActive ? 'page' : undefined}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={style}
+    >
       {content}
     </Link>
   )
@@ -156,13 +136,8 @@ function actionRowStyle(isHovered: boolean, isBusy: boolean): React.CSSPropertie
   }
 }
 
-type Props = {
-  activeNav: StudioNavItem | null
-  /** When set, the Dossier entry opens the Dossier modal. */
-  onOpenDossier?: () => void
-}
-
-export function StudioSidebar({ activeNav, onOpenDossier }: Props) {
+export function StudioSidebar() {
+  const pathname = usePathname()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [logoutHovered, setLogoutHovered] = useState(false)
@@ -213,12 +188,7 @@ export function StudioSidebar({ activeNav, onOpenDossier }: Props) {
       {/* Primary nav */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
         {PRIMARY_NAV.map((item) => (
-          <NavLink
-            key={item.label}
-            item={item}
-            isActive={item.key !== undefined && item.key === activeNav}
-            onClick={item.key === 'dossier' ? onOpenDossier : undefined}
-          />
+          <NavLink key={item.label} item={item} isActive={isNavActive(item.href, pathname)} />
         ))}
       </div>
 

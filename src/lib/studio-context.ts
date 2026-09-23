@@ -34,6 +34,7 @@ export async function loadStudioContext() {
   }
 
   return {
+    userId,
     user: { name: session.user.name ?? null, email: session.user.email },
     isDossierEmpty: dossierProductCount === 0,
   }

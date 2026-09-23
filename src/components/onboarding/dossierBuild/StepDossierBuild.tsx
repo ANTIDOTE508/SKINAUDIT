@@ -9,6 +9,7 @@ import { ScreenConfirmMatch } from './ScreenConfirmMatch'
 import { ScreenCategoryStatus } from './ScreenCategoryStatus'
 import { ScreenAdded } from './ScreenAdded'
 import { addProductToDossier } from '@/app/actions/dossier'
+import type { DossierModalStart } from '@/components/dossier/DossierModalContext'
 import type { DossierProductSummary } from './types'
 import type { ProductCategory, DossierProductStatus } from '@prisma/client'
 
@@ -31,16 +32,17 @@ const STATUS_LABELS: Record<DossierProductStatus, string> = {
 type Screen = 1 | 2 | 3 | 4 | 5 | 6
 
 type Props = {
+  startAt: DossierModalStart
   /** Leaves the flow — closes the Dossier modal that hosts it. */
   onClose: () => void
 }
 
 /**
- * Add-product flow rendered inside DossierModal (mockups 02-07). Always
- * starts on the empty state; nothing is persisted until a product is added.
+ * Add-product flow rendered inside DossierModal (mockups 02-07). Nothing is
+ * persisted until a product is added.
  */
-export function StepDossierBuild({ onClose }: Props) {
-  const [screen, setScreen] = useState<Screen>(1)
+export function StepDossierBuild({ startAt, onClose }: Props) {
+  const [screen, setScreen] = useState<Screen>(startAt === 'method' ? 2 : 1)
   const [selectedProduct, setSelectedProduct] = useState<DossierProductSummary | null>(null)
   // Kept so "Show me other matches" (screen 4) returns to a populated result
   // list rather than a blank search field.
@@ -57,7 +59,11 @@ export function StepDossierBuild({ onClose }: Props) {
     if (!selectedProduct) return
     setCategoryError(null)
     try {
-      await addProductToDossier({ productId: selectedProduct.id, ...input })
+      const result = await addProductToDossier({ productId: selectedProduct.id, ...input })
+      if (!result.ok) {
+        setCategoryError('This product is already in your Dossier.')
+        return
+      }
       setSavedCategory(input.category)
       setSavedStatus(input.status)
       setScreen(6)
