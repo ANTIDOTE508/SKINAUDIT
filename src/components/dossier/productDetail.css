@@ -1,0 +1,370 @@
+/* ================================================================
+   DOSSIER PRODUCT DETAIL — /dossier/[id], values copied from
+   templates/buildDossier/screen10.html.
+   ================================================================ */
+
+.pd-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: var(--color-obsidian-950);
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--color-alabaster-50);
+}
+
+/* ── Product hero ─────────────────────────────────────────────────────── */
+.pd-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 32px 40px;
+  text-align: center;
+  background: var(--color-obsidian-900);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pd-hero-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 120px;
+  margin-bottom: 28px;
+  color: var(--color-alabaster-300);
+  opacity: 0.65;
+}
+
+.pd-hero-brand {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.65;
+}
+
+.pd-hero-name {
+  margin: 0 0 10px;
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.22;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  color: var(--color-alabaster-50);
+}
+
+.pd-hero-size {
+  display: block;
+  margin-bottom: 20px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--color-alabaster-400);
+  opacity: 0.6;
+}
+
+.pd-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pd-badge {
+  padding: 3px 10px;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  border: 1px solid var(--color-border);
+  opacity: 0.65;
+}
+
+.pd-badge.status-active {
+  color: var(--color-sienna-400);
+  border-color: rgba(196, 176, 154, 0.4);
+  opacity: 0.9;
+}
+
+/* ── Meta strip ───────────────────────────────────────────────────────── */
+.pd-meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 0;
+  padding: 16px 32px;
+  background: var(--color-obsidian-900);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pd-meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pd-meta-label {
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.5;
+}
+
+.pd-meta-value {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--color-alabaster-300);
+}
+
+.pd-meta-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 28px;
+  background: var(--color-border);
+}
+
+/* ── Section label ────────────────────────────────────────────────────── */
+.pd-section-header {
+  margin: 0;
+  padding: 28px 32px 12px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.5;
+}
+
+.pd-error {
+  margin: 20px 32px 0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: #b07a7a;
+}
+
+/* Inside a DossierSheet: its own padding frames it. */
+.pd-error.pd-error-sheet {
+  margin: 16px 0 0;
+  text-align: center;
+}
+
+/* ── Action rows ──────────────────────────────────────────────────────── */
+.pd-action-group {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pd-danger-group {
+  margin-bottom: 48px;
+}
+
+.pd-action-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 18px 32px;
+  font-family: var(--font-body);
+  text-align: left;
+  color: var(--color-alabaster-50);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.pd-action-row:is(a) {
+  text-decoration: none;
+}
+
+.pd-action-row:last-child {
+  border-bottom: none;
+}
+
+.pd-action-row:hover:not(:disabled) {
+  background: var(--color-obsidian-900);
+}
+
+.pd-action-row:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: -2px;
+}
+
+/* Screen not built yet: visible, but clearly inert. */
+.pd-action-row:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.pd-action-row.danger {
+  color: #9a6a6a;
+}
+
+.pd-action-row.danger:hover {
+  background: rgba(154, 106, 106, 0.06);
+}
+
+.pd-action-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+}
+
+.pd-action-row.danger .pd-action-icon {
+  color: #9a6a6a;
+  opacity: 0.7;
+}
+
+.pd-action-text {
+  flex: 1;
+}
+
+.pd-action-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: inherit;
+}
+
+.pd-action-desc {
+  display: block;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-400);
+  opacity: 0.6;
+}
+
+.pd-action-row.danger .pd-action-desc {
+  color: #9a6a6a;
+  opacity: 0.65;
+}
+
+.pd-action-arrow {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--color-alabaster-400);
+  opacity: 0.25;
+}
+
+/* ── Notes ────────────────────────────────────────────────────────────── */
+.pd-notes-wrap {
+  margin: 0 32px 40px;
+  padding: 18px 20px;
+  background: var(--color-obsidian-900);
+  border: 1px solid var(--color-border);
+}
+
+/* ── Remove confirmation (inside DossierSheet) ────────────────────────── */
+.pd-confirm-text {
+  margin: 0 0 28px;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-400);
+}
+
+.ds-btn-primary.pd-btn-danger {
+  color: var(--color-alabaster-50);
+  background: #9a6a6a;
+}
+
+.ds-btn-primary.pd-btn-danger:hover {
+  background: #b07a7a;
+}
+
+.ds-btn-primary:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* ── Desktop ──────────────────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  .pd-hero {
+    padding: 56px 48px 44px;
+  }
+
+  .pd-hero-name {
+    font-size: 30px;
+  }
+
+  .pd-meta-strip {
+    gap: 32px;
+    padding: 18px 48px;
+  }
+
+  .pd-section-header {
+    padding: 32px 48px 14px;
+  }
+
+  .pd-error {
+    margin: 20px 48px 0;
+  }
+
+  .pd-action-row {
+    padding: 20px 48px;
+  }
+
+  .pd-notes-wrap {
+    margin: 0 48px 48px;
+  }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .pd-hero {
+    padding: 36px 24px 32px;
+  }
+
+  .pd-hero-name {
+    font-size: 22px;
+  }
+
+  .pd-hero-img {
+    width: 64px;
+    height: 96px;
+    margin-bottom: 22px;
+  }
+
+  .pd-meta-strip {
+    gap: 16px;
+    padding: 14px 24px;
+  }
+
+  .pd-section-header {
+    padding: 22px 20px 10px;
+  }
+
+  .pd-error {
+    margin: 16px 20px 0;
+  }
+
+  .pd-action-row {
+    gap: 14px;
+    padding: 16px 20px;
+  }
+
+  .pd-notes-wrap {
+    margin: 0 20px 40px;
+  }
+}

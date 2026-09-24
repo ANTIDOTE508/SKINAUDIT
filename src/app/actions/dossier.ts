@@ -1,6 +1,7 @@
 'use server'
 
 import { headers } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
@@ -76,7 +77,7 @@ export async function addProductToDossier(input: {
           data: {
             dossierProductId: existing.id,
             type: 'STATUS_CHANGED',
-            metadata: { from: existing.status, to: input.status },
+            metadata: { from: existing.status, to: input.status, category: input.category },
           },
         })
         return { ok: true, dossierProductId: existing.id } as const
@@ -94,7 +95,7 @@ export async function addProductToDossier(input: {
         data: {
           dossierProductId: created.id,
           type: 'ADDED_TO_DOSSIER',
-          metadata: { status: input.status },
+          metadata: { status: input.status, category: input.category },
         },
       })
       return { ok: true, dossierProductId: created.id } as const
@@ -141,72 +142,6 @@ export async function listDossierProducts(filter?: {
   }))
 }
 
-export async function getProductDetail(dossierProductId: number) {
-  const user = await requireSession()
-
-  const item = await prisma.userDossierProduct.findFirstOrThrow({
-    where: { id: dossierProductId, userId: user.id },
-    include: {
-      product: {
-        include: {
-          brand: true,
-          versions: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-            include: {
-              ingredients: {
-                orderBy: { position: 'asc' },
-                include: { canonicalIngredient: true },
-              },
-            },
-          },
-        },
-      },
-      ritualItems: true,
-    },
-  })
-
-  const latestVersion = item.product.versions[0]
-  const structuredIngredients =
-    latestVersion?.ingredients.map((i) => ({
-      inci: i.canonicalIngredient.inci,
-      isKeyIngredient: i.isKeyIngredient,
-      concentration: i.concentration,
-    })) ?? []
-
-  return {
-    dossierProductId: item.id,
-    status: item.status,
-    productName: item.product.name,
-    brandName: item.product.brand?.name ?? null,
-    category: item.category ?? item.product.category,
-    sizeLabel: item.product.sizeLabel,
-    usedIn: item.ritualItems.map((r) => ({ timeOfDay: r.timeOfDay, stepOrder: r.stepOrder })),
-    // Les produits importés (source=CATALOG_SEED) n'ont pas de matching fin
-    // vers CanonicalIngredient (hors périmètre du chantier de sync OBF) —
-    // en repli, on expose le texte brut d'ingrédients OBF tel quel pour
-    // que l'écran Ingredients affiche quelque chose plutôt qu'une liste vide.
-    ingredients: structuredIngredients,
-    rawIngredientsText: structuredIngredients.length === 0 ? item.product.ingredientsText : null,
-  }
-}
-
-export async function getDossierProductHistory(dossierProductId: number) {
-  const user = await requireSession()
-
-  await prisma.userDossierProduct.findFirstOrThrow({
-    where: { id: dossierProductId, userId: user.id },
-    select: { id: true },
-  })
-
-  const events = await prisma.dossierProductEvent.findMany({
-    where: { dossierProductId },
-    orderBy: { occurredAt: 'desc' },
-  })
-
-  return events.map((e) => ({ type: e.type, metadata: e.metadata, occurredAt: e.occurredAt }))
-}
-
 export async function updateDossierProductStatus(
   dossierProductId: number,
   status: DossierProductStatus
@@ -222,7 +157,7 @@ export async function updateDossierProductStatus(
 
     await tx.userDossierProduct.update({
       where: { id: dossierProductId },
-      data: { status },
+      data: { status, archivedAt: status === 'ARCHIVED' ? new Date() : null },
     })
 
     await tx.dossierProductEvent.create({
@@ -233,4 +168,65 @@ export async function updateDossierProductStatus(
       },
     })
   })
+
+  revalidateDossierProduct(dossierProductId)
+}
+
+const NOTES_MAX_LENGTH = 2000
+
+/** The Dossier list plus every screen of one product (detail, ingredients, history). */
+function revalidateDossierProduct(dossierProductId: number) {
+  revalidatePath('/dossier')
+  for (const screen of ['', '/ingredients', '/history']) {
+    revalidatePath(`/dossier/${dossierProductId}${screen}`)
+  }
+}
+
+/** Personal notes on a Dossier product (mockup 10). Blank clears them. */
+export async function updateDossierProductNotes(dossierProductId: number, notes: string) {
+  const user = await requireSession()
+
+  const trimmed = notes.trim().slice(0, NOTES_MAX_LENGTH)
+  const next = trimmed.length > 0 ? trimmed : null
+
+  await prisma.$transaction(async (tx) => {
+    const current = await tx.userDossierProduct.findFirstOrThrow({
+      where: { id: dossierProductId, userId: user.id },
+      select: { notes: true },
+    })
+
+    if (current.notes === next) return
+
+    await tx.userDossierProduct.update({
+      where: { id: dossierProductId },
+      data: { notes: next },
+    })
+
+    await tx.dossierProductEvent.create({
+      data: {
+        dossierProductId,
+        type: 'EDITED',
+        // The text is kept so the History timeline (mockup 12) can quote it.
+        metadata: {
+          field: 'notes',
+          change: next === null ? 'removed' : current.notes === null ? 'added' : 'updated',
+          text: next,
+        },
+      },
+    })
+  })
+
+  revalidateDossierProduct(dossierProductId)
+}
+
+/** Permanently deletes a Dossier product; its events and ritual items cascade. */
+export async function removeDossierProduct(dossierProductId: number) {
+  const user = await requireSession()
+
+  const { count } = await prisma.userDossierProduct.deleteMany({
+    where: { id: dossierProductId, userId: user.id },
+  })
+  if (count === 0) throw new Error('Dossier product not found')
+
+  revalidatePath('/dossier')
 }

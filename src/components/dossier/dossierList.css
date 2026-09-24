@@ -150,22 +150,39 @@
   padding: 0;
 }
 
+.dl-item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dl-item:last-child {
+  border-bottom: none;
+}
+
+/* Each row links to its product detail (mockup 10). */
 .dl-row {
   display: flex;
   align-items: center;
   gap: 20px;
   padding: 18px 32px;
-  border-bottom: 1px solid var(--color-border);
   color: var(--color-alabaster-50);
+  text-decoration: none;
   transition: background 0.12s;
-}
-
-.dl-row:last-child {
-  border-bottom: none;
 }
 
 .dl-row:hover {
   background: var(--color-obsidian-900);
+}
+
+.dl-row:focus-visible {
+  outline: 2px solid var(--color-sienna-400);
+  outline-offset: -2px;
+}
+
+.dl-arrow {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--color-alabaster-400);
+  opacity: 0.25;
 }
 
 .dl-img {

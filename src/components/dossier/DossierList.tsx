@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import type { DossierProductStatus } from '@prisma/client'
 import { DossierEmptyState } from './DossierEmptyState'
 import { DossierFilterSheet } from './DossierFilterSheet'
@@ -159,35 +160,49 @@ export function DossierList({ items }: { items: DossierListItem[] }) {
       ) : (
         <ul className="dl-list">
           {visible.map((item) => (
-            // Rows are not interactive yet: the product detail (mockup 10)
-            // does not exist, so the mockup's chevron is left out too.
-            <li key={item.id} className="dl-row">
-              <div className="dl-img" aria-hidden="true">
-                <svg
-                  width="20"
-                  height="32"
-                  viewBox="0 0 20 32"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="4" y="11" width="12" height="19" rx="2" />
-                  <rect x="6" y="7" width="8" height="5" rx="1" />
-                  <line x1="10" y1="3" x2="10" y2="7" />
-                  <circle cx="10" cy="2" r="1.2" />
-                </svg>
-              </div>
-              <div className="dl-info">
-                {item.brandName && <span className="dl-brand">{item.brandName}</span>}
-                <span className="dl-name">{item.productName}</span>
-                <div className="dl-meta">
-                  <span className="dl-tag">{CATEGORY_LABELS[item.category]}</span>
-                  <span className={`dl-dot ${item.status.toLowerCase()}`} aria-hidden="true" />
-                  <span className="dl-status">{STATUS_LABELS[item.status]}</span>
+            <li key={item.id} className="dl-item">
+              <Link href={`/dossier/${item.id}`} className="dl-row">
+                <div className="dl-img" aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="32"
+                    viewBox="0 0 20 32"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="4" y="11" width="12" height="19" rx="2" />
+                    <rect x="6" y="7" width="8" height="5" rx="1" />
+                    <line x1="10" y1="3" x2="10" y2="7" />
+                    <circle cx="10" cy="2" r="1.2" />
+                  </svg>
                 </div>
-              </div>
+                <div className="dl-info">
+                  {item.brandName && <span className="dl-brand">{item.brandName}</span>}
+                  <span className="dl-name">{item.productName}</span>
+                  <div className="dl-meta">
+                    <span className="dl-tag">{CATEGORY_LABELS[item.category]}</span>
+                    <span className={`dl-dot ${item.status.toLowerCase()}`} aria-hidden="true" />
+                    <span className="dl-status">{STATUS_LABELS[item.status]}</span>
+                  </div>
+                </div>
+                <span className="dl-arrow" aria-hidden="true">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="5,2 10,7 5,12" />
+                  </svg>
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

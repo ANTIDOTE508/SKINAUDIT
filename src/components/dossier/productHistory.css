@@ -1,0 +1,270 @@
+/* ================================================================
+   DOSSIER PRODUCT HISTORY — /dossier/[id]/history, values copied
+   from templates/buildDossier/screen12.html.
+   ================================================================ */
+
+.ph-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: var(--color-obsidian-950);
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--color-alabaster-50);
+}
+
+.ph-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 40px;
+  padding: 36px 32px 72px;
+}
+
+.ph-section-label {
+  display: block;
+  margin: 0 0 20px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+}
+
+/* ── Summary strip ────────────────────────────────────────────────────── */
+.ph-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  border: 1px solid var(--color-border);
+}
+
+/* Markup is term then value (valid <dl>); the mockup shows the value on top. */
+.ph-summary-cell {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  padding: 18px 20px;
+  border-right: 1px solid var(--color-border);
+}
+
+.ph-summary-cell:last-child {
+  border-right: none;
+}
+
+.ph-summary-val {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-50);
+}
+
+.ph-summary-key {
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+}
+
+/* ── Timeline ─────────────────────────────────────────────────────────── */
+.ph-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ph-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+}
+
+.ph-left {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 16px;
+}
+
+/* Vertical connector, down to the next item's dot. */
+.ph-item:not(:last-child) .ph-left::after {
+  content: '';
+  position: absolute;
+  top: 30px;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--color-border);
+}
+
+.ph-dot {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5a5550;
+}
+
+.ph-dot.added,
+.ph-dot.active {
+  background: #c4b09a;
+}
+
+.ph-dot.seasonal {
+  background: #8a9e8a;
+}
+
+.ph-dot.archived {
+  background: #5a5550;
+}
+
+.ph-dot.note {
+  background: transparent;
+  border: 1px solid var(--color-border);
+}
+
+.ph-right {
+  min-width: 0;
+  padding: 12px 0 28px 8px;
+}
+
+.ph-date {
+  margin: 0 0 5px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.45;
+}
+
+.ph-event {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-50);
+}
+
+.ph-detail {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  font-weight: 300;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-alabaster-400);
+  opacity: 0.6;
+}
+
+.ph-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 2px 8px 2px 6px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  border: 1px solid var(--color-border);
+  opacity: 0.75;
+}
+
+.ph-badge-dot {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.ph-badge-dot.active {
+  background: #c4b09a;
+}
+
+.ph-badge-dot.seasonal {
+  background: #8a9e8a;
+}
+
+.ph-badge-dot.archived {
+  background: #5a5550;
+}
+
+.ph-empty {
+  margin: 0;
+  padding: 20px 0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--color-alabaster-400);
+  opacity: 0.4;
+}
+
+/* ── Notes ────────────────────────────────────────────────────────────── */
+.ph-notes-area {
+  padding: 18px 20px;
+  background: var(--color-obsidian-900);
+  border: 1px solid var(--color-border);
+}
+
+.ph-notes-area .dn-placeholder {
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  opacity: 0.45;
+}
+
+@media (min-width: 900px) {
+  .ph-body {
+    padding: 40px 48px 80px;
+  }
+
+  .ph-summary-cell {
+    padding: 20px 24px;
+  }
+
+  .ph-summary-val {
+    font-size: 28px;
+  }
+
+  .ph-item {
+    grid-template-columns: 80px 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .ph-body {
+    gap: 32px;
+    padding: 24px 20px 56px;
+  }
+
+  .ph-summary-cell {
+    padding: 14px 16px;
+  }
+
+  .ph-summary-val {
+    font-size: 22px;
+  }
+
+  .ph-item {
+    grid-template-columns: 52px 1fr;
+  }
+
+  .ph-notes-area {
+    padding: 14px 16px;
+  }
+}

@@ -1,0 +1,215 @@
+/* ================================================================
+   DOSSIER PRODUCT INGREDIENTS — /dossier/[id]/ingredients, values
+   copied from templates/buildDossier/screen11.html.
+   ================================================================ */
+
+.pi-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: var(--color-obsidian-950);
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--color-alabaster-50);
+}
+
+.pi-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 36px;
+  padding: 32px 32px 60px;
+}
+
+.pi-section-label {
+  display: block;
+  margin: 0 0 14px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+}
+
+/* ── Key actives grid ─────────────────────────────────────────────────── */
+.pi-actives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pi-active-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  background: rgba(196, 176, 154, 0.08);
+  border: 1px solid rgba(196, 176, 154, 0.28);
+}
+
+.pi-active-name {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--color-sienna-400);
+}
+
+.pi-active-pct {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--color-sienna-400);
+  opacity: 0.75;
+}
+
+.pi-active-role {
+  font-size: 11px;
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-400);
+  opacity: 0.65;
+}
+
+/* ── Full ingredient list ─────────────────────────────────────────────── */
+.pi-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+}
+
+.pi-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+
+.pi-row:last-child {
+  border-bottom: none;
+}
+
+.pi-row:hover {
+  background: #161310;
+}
+
+.pi-row.highlighted {
+  background: rgba(196, 176, 154, 0.08);
+}
+
+.pi-num {
+  flex-shrink: 0;
+  min-width: 20px;
+  padding-top: 2px;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-align: right;
+  color: var(--color-alabaster-400);
+  opacity: 0.35;
+}
+
+.pi-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pi-name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+  color: var(--color-alabaster-50);
+}
+
+.pi-row.highlighted .pi-name {
+  font-weight: 400;
+  color: var(--color-sienna-400);
+}
+
+.pi-common {
+  display: block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  color: var(--color-alabaster-400);
+  opacity: 0.55;
+}
+
+.pi-badge {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 2px 7px;
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-sienna-400);
+  border: 1px solid rgba(196, 176, 154, 0.28);
+  opacity: 0.8;
+}
+
+/* ── Empty + source note ──────────────────────────────────────────────── */
+.pi-empty {
+  margin: 0;
+  padding: 24px 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-alabaster-400);
+  opacity: 0.6;
+}
+
+.pi-source-note {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 10.5px;
+  font-weight: 300;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--color-alabaster-400);
+  opacity: 0.4;
+}
+
+@media (min-width: 900px) {
+  .pi-body {
+    padding: 36px 48px 72px;
+  }
+
+  .pi-actives-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .pi-body {
+    gap: 28px;
+    padding: 24px 20px 52px;
+  }
+
+  .pi-actives-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .pi-active-card {
+    padding: 14px 16px;
+  }
+
+  .pi-row {
+    padding: 12px 16px;
+  }
+}
