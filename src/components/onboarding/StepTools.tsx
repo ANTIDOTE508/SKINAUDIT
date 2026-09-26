@@ -1,6 +1,8 @@
 'use client'
 
-import { useRef, useEffect, useState, useTransition, useId } from 'react'
+import { useRef, useEffect, useState, useTransition, useId, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { gsap } from 'gsap'
 import { StepFooter } from './StepFooter'
 import { RadioPill } from './RadioPill'
@@ -11,6 +13,8 @@ import type {
   ToolUsageFrequency,
   ToolLastUsed,
 } from '@prisma/client'
+
+const noopSubscribe = () => () => {}
 
 // ─── Option lists ─────────────────────────────────────────────
 
@@ -398,6 +402,12 @@ export function StepTools({
   const rootRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  // createPortal needs a real <body> — only available after mount.
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false
+  )
   const homeLabelId = useId()
   const proLabelId = useId()
 
@@ -457,6 +467,95 @@ export function StepTools({
 
   return (
     <div ref={rootRef}>
+      {/* Full-bleed background — a dimmed treatment room: the chair and the
+          ring lamp sit centre-left, the under-cabinet light glows along the
+          upper-right. Scrim is heaviest on the left (copy column) and bottom
+          (footer). Same portal pattern as StepPihFrequency — escape the
+          680px content column's transform. */}
+      {mounted &&
+        createPortal(
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 0,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+              backgroundColor: 'var(--color-obsidian-950)',
+            }}
+          >
+            <div className="step-tools-frame">
+              <Image
+                src="/images/onboarding/stepTreatment/onboarding-step-treatment.webp"
+                alt=""
+                fill
+                priority
+                sizes="(min-width: 1024px) 67vh, 100vw"
+                className="step-tools-image"
+              />
+            </div>
+            <div className="step-tools-scrim" />
+
+            <style>{`
+              .step-tools-frame {
+                position: absolute;
+                inset: 0;
+              }
+              .step-tools-image {
+                object-fit: cover;
+                object-position: 40% 50%;
+              }
+              /* The photo is portrait (2:3): covering a landscape viewport
+                 would crop it to a narrow band. On desktop, show it whole at
+                 full height, anchored right, its left edge feathered into
+                 the obsidian ground. */
+              @media (min-width: 1024px) {
+                .step-tools-frame {
+                  left: auto;
+                  aspect-ratio: 2 / 3;
+                  max-width: 100%;
+                  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 28%);
+                  mask-image: linear-gradient(to right, transparent 0%, #000 28%);
+                }
+              }
+              .step-tools-scrim {
+                position: absolute;
+                inset: 0;
+                background:
+                  linear-gradient(
+                    to bottom,
+                    rgba(6,5,5,0.40) 0%,
+                    rgba(6,5,5,0.10) 35%,
+                    rgba(6,5,5,0.30) 68%,
+                    rgba(6,5,5,0.86) 100%
+                  ),
+                  linear-gradient(
+                    to right,
+                    rgba(6,5,5,0.94) 0%,
+                    rgba(6,5,5,0.80) 32%,
+                    rgba(6,5,5,0.46) 58%,
+                    rgba(6,5,5,0.16) 82%,
+                    rgba(6,5,5,0.06) 100%
+                  );
+              }
+              /* Below the two-column breakpoint the long option lists cover
+                 the whole frame — flatten to an even veil for legibility. */
+              @media (max-width: 1023px) {
+                .step-tools-scrim {
+                  background: linear-gradient(
+                    to bottom,
+                    rgba(6,5,5,0.86) 0%,
+                    rgba(6,5,5,0.74) 45%,
+                    rgba(6,5,5,0.92) 100%
+                  );
+                }
+              }
+            `}</style>
+          </div>,
+          document.body
+        )}
+
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '34rem' }}>
         <h2
           data-reveal
