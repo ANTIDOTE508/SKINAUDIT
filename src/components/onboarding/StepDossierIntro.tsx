@@ -1,55 +1,60 @@
 'use client'
 
-import { useRef, useEffect, useState, useTransition } from 'react'
+import { useRef, useEffect, useState, useTransition, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { gsap } from 'gsap'
-import { ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { completeProfile } from '@/app/actions/onboarding'
+import { jost } from '@/components/landing/fonts'
+import { OnboardingSignOut } from './OnboardingSignOut'
 
 type Props = {
   onBack: () => void
 }
 
+const noopSubscribe = () => () => {}
+
 /**
- * Opens the dossier-building portion of onboarding. No user input — the CTA
- * only advances the resume marker and moves to the product picker.
+ * Last onboarding screen — matches templates/fillMyDossier.html, minus the
+ * step counter (the counter ends on step 21). It owns the whole viewport:
+ * portaled to <body> as a full-page layer with its own top bar, so it covers
+ * the wizard's header and escapes the 680px content column's transform.
+ * The CTA completes the profile and hands off to /dashboard.
  */
 export function StepDossierIntro({ onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
+  // createPortal needs a real <body> — only available after mount.
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false
+  )
   const router = useRouter()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     const node = rootRef.current
     if (!node) return
     const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
+      if (!blocks.length) return
       if (reduced) {
-        if (blocks.length) gsap.set(blocks, { y: 0, opacity: 1 })
+        gsap.set(blocks, { y: 0, opacity: 1 })
         return
       }
-      if (blocks.length) {
-        gsap.fromTo(
-          blocks,
-          { y: 18, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, stagger: 0.12, ease: 'power3.out', delay: 0.15 }
-        )
-      }
+      gsap.fromTo(
+        blocks,
+        { y: 18, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.12, ease: 'power3.out', delay: 0.15 }
+      )
     }, node)
     return () => ctx.revert()
-  }, [])
+  }, [mounted])
 
   const handleContinue = () => {
     setError(null)
@@ -63,163 +68,253 @@ export function StepDossierIntro({ onBack }: Props) {
     })
   }
 
-  return (
-    <div ref={rootRef}>
-      {/* Background scene — portaled to body so GSAP's transform on ancestor
-          content doesn't trap this fixed layer inside the wizard's 680px
-          column. The product still-life occupies the lower-right of the
-          frame, so the scrim is heaviest at the top-left where the copy
-          sits and lifts over the bottles so they stay visible. */}
-      {mounted &&
-        createPortal(
-          <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', backgroundColor: 'var(--color-obsidian-950)' }}>
-            <Image
-              src="/images/onboarding/step12/bg-fill-dossier.webp"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="step12-bg-image"
-            />
-            <div className="step12-bg-scrim" />
+  if (!mounted) return null
 
-            <style>{`
-              .step12-bg-image {
-                object-fit: cover;
-                object-position: center 40%;
-              }
-              @media (min-width: 1024px) {
-                .step12-bg-image { object-position: center 35%; }
-              }
-              .step12-bg-scrim {
-                position: absolute;
-                inset: 0;
-                background:
-                  linear-gradient(
-                    180deg,
-                    rgba(6,5,5,0.88) 0%,
-                    rgba(6,5,5,0.62) 35%,
-                    rgba(6,5,5,0.35) 60%,
-                    rgba(6,5,5,0.55) 100%
-                  ),
-                  linear-gradient(
-                    90deg,
-                    rgba(6,5,5,0.7) 0%,
-                    rgba(6,5,5,0.35) 45%,
-                    rgba(6,5,5,0.15) 100%
-                  );
-              }
-            `}</style>
-          </div>,
-          document.body
-        )}
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '34rem' }}>
-        <h2
-          data-reveal
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 300,
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            lineHeight: 1.15,
-            letterSpacing: '-0.01em',
-            color: 'var(--color-alabaster-50)',
-            margin: '0 0 1.25rem',
-            textShadow: '0 1px 24px rgba(6,5,5,0.7)',
-          }}
-        >
-          Let&apos;s begin with a few
-          <br />
-          products you already own.
-        </h2>
-
-        <p
-          data-reveal
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontWeight: 300,
-            fontSize: '0.9375rem',
-            lineHeight: 1.7,
-            color: 'var(--color-alabaster-300)',
-            margin: 0,
-            textShadow: '0 1px 16px rgba(6,5,5,0.8)',
-          }}
-        >
-          SkinAudit evaluates routines using what is already in your cabinet.
-        </p>
-
-        {error && (
-          <p
-            role="alert"
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.8125rem',
-              color: 'var(--color-blush-500)',
-              marginTop: '1.5rem',
-              marginBottom: 0,
-            }}
-          >
-            {error}
-          </p>
-        )}
-
-        {/* CTA — sits low in the frame so the still-life stays visible above it */}
-        <div data-reveal style={{ marginTop: 'clamp(3rem, 22vh, 12rem)' }}>
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={isPending}
-            className="btn-primary btn-primary-accent"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-              width: '100%',
-              minHeight: '58px',
-              paddingInline: '1.5rem',
-            }}
-          >
-            {/* Spacer mirrors the arrow so the label stays optically centred */}
-            <span aria-hidden="true" style={{ width: 20, flexShrink: 0 }} />
-            {isPending ? 'Loading…' : 'Fill My Dossier'}
-            <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" style={{ flexShrink: 0 }} />
-          </button>
-
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={isPending}
-            style={{
-              display: 'block',
-              marginTop: '1rem',
-              background: 'none',
-              border: 'none',
-              padding: '2px 0',
-              cursor: isPending ? 'default' : 'pointer',
-              fontFamily: 'var(--font-body)',
-              fontSize: '12px',
-              fontWeight: 400,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'var(--color-alabaster-400)',
-              transition: 'color 200ms ease',
-            }}
-            onMouseEnter={(e) => {
-              if (!isPending) {
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isPending) {
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
-              }
-            }}
-          >
-            ← Back
-          </button>
-        </div>
+  return createPortal(
+    <div ref={rootRef} className={`${jost.variable} fmd-root`}>
+      <div className="fmd-bg" aria-hidden="true">
+        <Image
+          src="/images/onboarding/fillMyDossier/bg-fill-my-dossier-cabinet.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="fmd-bg-image"
+        />
       </div>
-    </div>
+
+      <div className="fmd-page">
+        <header className="fmd-topbar">
+          <span className="fmd-wordmark">Skin Audit</span>
+          <OnboardingSignOut className="fmd-sign-out" label="Sign Out" />
+        </header>
+
+        <main className="fmd-content">
+          <h1 data-reveal className="fmd-heading">
+            Let&apos;s begin with a few products you already own.
+          </h1>
+          <p data-reveal className="fmd-subhead">
+            Skin Audit evaluates routines using what is already in your cabinet.
+          </p>
+
+          {error && (
+            <p role="alert" className="fmd-error">
+              {error}
+            </p>
+          )}
+
+          <div data-reveal>
+            <button type="button" onClick={handleContinue} disabled={isPending} className="fmd-cta">
+              <span>{isPending ? 'Loading…' : 'Fill My Dossier'}</span>
+              <span className="fmd-cta-arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+
+            <button type="button" onClick={onBack} disabled={isPending} className="fmd-back">
+              <span aria-hidden="true">←</span> Back
+            </button>
+          </div>
+        </main>
+      </div>
+
+      <style>{`
+        .fmd-root {
+          --fmd-bg: #060504;
+          --fmd-border: rgba(255,255,255,0.10);
+          --fmd-text: #fafaf8;
+          --fmd-muted: rgba(250,250,248,0.45);
+          --fmd-cta: #c4b09a;
+          --fmd-cta-hover: #d0bcaa;
+          --fmd-cta-text: #09080a;
+          position: fixed;
+          inset: 0;
+          z-index: 50;
+          overflow-y: auto;
+          background: var(--fmd-bg);
+          color: var(--fmd-text);
+          font-family: var(--font-jost), 'Jost', system-ui, sans-serif;
+          font-weight: 300;
+          -webkit-font-smoothing: antialiased;
+        }
+        .fmd-root *, .fmd-root *::before, .fmd-root *::after { box-sizing: border-box; }
+
+        /* ── Background image + overlays ── */
+        .fmd-bg {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+        }
+        .fmd-bg-image {
+          object-fit: cover;
+          object-position: center top;
+        }
+        /* Dark vignette — heavy left/bottom, lighter right where products are */
+        .fmd-bg::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(to right,  rgba(6,5,4,0.82) 0%, rgba(6,5,4,0.55) 55%, rgba(6,5,4,0.30) 100%),
+            linear-gradient(to bottom, rgba(6,5,4,0.55) 0%, rgba(6,5,4,0.10) 40%, rgba(6,5,4,0.72) 100%);
+        }
+
+        /* ── Page ── */
+        .fmd-page {
+          min-height: 100svh;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+        }
+
+        /* ── Top bar ── */
+        .fmd-topbar {
+          position: relative;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          padding: 0 48px;
+          height: 64px;
+          flex-shrink: 0;
+          border-bottom: 1px solid var(--fmd-border);
+          gap: 24px;
+        }
+        .fmd-wordmark {
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: 0.30em;
+          text-transform: uppercase;
+          color: var(--fmd-text);
+          opacity: 0.9;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .fmd-sign-out {
+          margin-left: auto;
+          font-family: inherit;
+          font-size: 10px;
+          font-weight: 400;
+          letter-spacing: 0.20em;
+          text-transform: uppercase;
+          color: var(--fmd-muted);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          appearance: none;
+          -webkit-appearance: none;
+          white-space: nowrap;
+          flex-shrink: 0;
+          transition: color 0.15s;
+        }
+        .fmd-sign-out:hover { color: var(--fmd-text); }
+        .fmd-sign-out:disabled { cursor: default; }
+        .fmd-sign-out:focus-visible { outline: 2px solid var(--fmd-cta); outline-offset: 3px; }
+
+        /* ── Main content ── */
+        .fmd-content {
+          position: relative;
+          z-index: 10;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 60px 48px 80px;
+          max-width: 760px;
+        }
+        .fmd-heading {
+          font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+          font-size: clamp(36px, 5vw, 58px);
+          font-weight: 300;
+          color: var(--fmd-text);
+          letter-spacing: 0.01em;
+          line-height: 1.12;
+          margin: 0 0 20px;
+          max-width: 580px;
+          text-wrap: balance;
+        }
+        .fmd-subhead {
+          font-size: 14px;
+          font-weight: 300;
+          color: var(--fmd-text);
+          opacity: 0.55;
+          letter-spacing: 0.03em;
+          line-height: 1.6;
+          margin: 0 0 52px;
+          max-width: 420px;
+        }
+        .fmd-error {
+          font-size: 13px;
+          color: var(--color-blush-500);
+          margin: -32px 0 20px;
+        }
+
+        /* ── CTA button ── */
+        .fmd-cta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          max-width: 460px;
+          height: 64px;
+          background: var(--fmd-cta);
+          color: var(--fmd-cta-text);
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          border: none;
+          border-radius: 0;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          padding: 0 28px;
+          transition: background 0.18s;
+          flex-shrink: 0;
+        }
+        .fmd-cta:hover { background: var(--fmd-cta-hover); }
+        .fmd-cta:disabled { cursor: default; }
+        .fmd-cta:focus-visible { outline: 2px solid var(--fmd-cta); outline-offset: 3px; }
+        .fmd-cta-arrow {
+          font-size: 18px;
+          font-weight: 300;
+          line-height: 1;
+        }
+
+        /* ── Back link ── */
+        .fmd-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 20px;
+          font-family: inherit;
+          font-size: 11px;
+          font-weight: 400;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--fmd-muted);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          appearance: none;
+          -webkit-appearance: none;
+          transition: color 0.15s;
+        }
+        .fmd-back:hover { color: var(--fmd-text); }
+        .fmd-back:disabled { cursor: default; }
+        .fmd-back:focus-visible { outline: 2px solid var(--fmd-cta); outline-offset: 3px; }
+
+        /* ── Mobile ── */
+        @media (max-width: 600px) {
+          .fmd-topbar { padding: 0 20px; height: 56px; }
+          .fmd-content { padding: 48px 24px 64px; }
+          .fmd-cta { max-width: 100%; height: 56px; }
+          .fmd-heading { font-size: clamp(30px, 8vw, 44px); }
+        }
+      `}</style>
+    </div>,
+    document.body
   )
 }

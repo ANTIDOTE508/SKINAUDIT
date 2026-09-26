@@ -254,8 +254,13 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 // its master step's screen, so there are no conditionally-skipped screens —
 // the flow is a straight 1…TOTAL_STEPS walk.
 const TOTAL_STEPS = 24
+// The step counter covers the questionnaire only: it ends on step 21
+// (StepTools). Steps 22–24 (interpretation, completion, Dossier intro) are
+// closing screens and show no counter.
+const LAST_COUNTED_STEP = 21
 
 const ALL_SCREENS: number[] = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1)
+const COUNTED_SCREENS_TOTAL = ALL_SCREENS.filter((step) => step <= LAST_COUNTED_STEP).length
 
 function activeScreens(): number[] {
   return ALL_SCREENS
@@ -517,13 +522,14 @@ export function OnboardingWizard({
     }
   }, [state, transitionToStep, runTransition])
 
-  // steps 1–TOTAL_STEPS show the counter (the step 0 transition screen doesn't);
-  // interstitials hide it — they are framing, not a counted step.
-  const showCounter = state.step >= 1 && state.step <= TOTAL_STEPS && !state.interstitialId
+  // steps 1–LAST_COUNTED_STEP show the counter (the step 0 transition screen
+  // and the closing screens after it don't); interstitials hide it — they
+  // are framing, not a counted step.
+  const showCounter = state.step >= 1 && state.step <= LAST_COUNTED_STEP && !state.interstitialId
   const activeInterstitial = state.interstitialId ? getInterstitialById(state.interstitialId) : null
   // Position within the screens active for this user, not the raw step number.
   const counterCurrent = Math.max(1, screens.indexOf(state.step) + 1)
-  const counterTotal = screens.length
+  const counterTotal = COUNTED_SCREENS_TOTAL
 
   return (
     <div

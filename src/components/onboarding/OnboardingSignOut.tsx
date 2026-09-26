@@ -4,7 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 
-export function OnboardingSignOut() {
+type Props = {
+  /** When set, the caller styles the button entirely (no inline styles). */
+  className?: string
+  label?: string
+}
+
+export function OnboardingSignOut({ className, label = 'Sign out' }: Props = {}) {
   const [isPending, setIsPending] = useState(false)
   const router = useRouter()
 
@@ -17,6 +23,20 @@ export function OnboardingSignOut() {
     } catch {
       setIsPending(false)
     }
+  }
+
+  if (className) {
+    return (
+      <button
+        type="button"
+        onClick={handleSignOut}
+        disabled={isPending}
+        aria-label="Sign out of your account"
+        className={className}
+      >
+        {isPending ? 'Signing out…' : label}
+      </button>
+    )
   }
 
   return (
@@ -52,7 +72,7 @@ export function OnboardingSignOut() {
         }
       }}
     >
-      {isPending ? 'Signing out…' : 'Sign out'}
+      {isPending ? 'Signing out…' : label}
     </button>
   )
 }
