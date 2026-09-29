@@ -21,6 +21,7 @@
     "@prisma/adapter-neon": "^7.8.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "barcode-detector": "^3.2.2",
     "better-auth": "^1.6.14",
     "country-state-city": "^3.2.1",
     "dotenv": "^17.4.2",

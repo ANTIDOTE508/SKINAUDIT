@@ -1,4 +1,4 @@
-// scripts/lib/obf-normalize.ts
+// src/lib/obf-normalize.ts — shared by scripts/sync-obf.ts and the barcode lookup action
 import type { ProductCategory } from '@prisma/client'
 
 export type ObfRecord = {
@@ -89,7 +89,9 @@ export function normalizeObfRecord(record: ObfRecord): NormalizedObfProduct | nu
   // pour ~33,5% des produits skincare (mesuré sur le dump du 2026-09-16,
   // 775/2313) — on le préfère quand présent, sinon on retombe sur
   // product_name (langue du contributeur d'origine, souvent français).
-  const name = (record.product_name_en ?? record.product_name ?? '').trim() || `Unnamed product (${record.code})`
+  const name =
+    (record.product_name_en ?? record.product_name ?? '').trim() ||
+    `Unnamed product (${record.code})`
 
   return {
     barcode: record.code!.trim(),
@@ -99,4 +101,14 @@ export function normalizeObfRecord(record: ObfRecord): NormalizedObfProduct | nu
     sizeLabel: record.quantity?.trim() || null,
     ingredientsText: record.ingredients_text!.trim(),
   }
+}
+
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 200)
 }

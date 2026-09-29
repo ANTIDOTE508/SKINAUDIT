@@ -9,7 +9,12 @@ import { createGunzip } from 'node:zlib'
 import { createInterface } from 'node:readline'
 import { Readable } from 'node:stream'
 import { prisma } from '../src/lib/prisma'
-import { normalizeObfRecord, type NormalizedObfProduct, type ObfRecord } from './lib/obf-normalize'
+import {
+  normalizeObfRecord,
+  slugify,
+  type NormalizedObfProduct,
+  type ObfRecord,
+} from '../src/lib/obf-normalize'
 
 const OBF_DUMP_URL = 'https://static.openbeautyfacts.org/data/openbeautyfacts-products.jsonl.gz'
 
@@ -37,7 +42,10 @@ async function fetchDumpStream(): Promise<NodeJS.ReadableStream> {
   return Readable.fromWeb(response.body as unknown as import('stream/web').ReadableStream)
 }
 
-async function collectNormalizedProducts(): Promise<{ products: NormalizedObfProduct[]; stats: SyncStats }> {
+async function collectNormalizedProducts(): Promise<{
+  products: NormalizedObfProduct[]
+  stats: SyncStats
+}> {
   const stats: SyncStats = {
     linesRead: 0,
     parseErrors: 0,
@@ -122,16 +130,6 @@ async function upsertBatch(batch: NormalizedObfProduct[], stats: SyncStats) {
   }
 }
 
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 200)
-}
-
 async function main() {
   console.log(`[sync-obf] Starting OBF sync at ${new Date().toISOString()}`)
 
@@ -139,7 +137,7 @@ async function main() {
 
   console.log(
     `[sync-obf] Parsed dump: ${stats.linesRead} lines read, ${stats.parseErrors} parse errors, ` +
-      `${stats.filteredOut} filtered out, ${stats.normalized} normalized.`,
+      `${stats.filteredOut} filtered out, ${stats.normalized} normalized.`
   )
 
   if (products.length < MINIMUM_EXPECTED_UPSERTS) {
@@ -147,7 +145,7 @@ async function main() {
       `[sync-obf] ABORTING: only ${products.length} products passed filtering, below the minimum ` +
         `expected threshold of ${MINIMUM_EXPECTED_UPSERTS}. This matches the documented OBF dump-` +
         `incompleteness failure mode (see spec) — refusing to upsert a partial/corrupt dump. ` +
-        `No database writes were made.`,
+        `No database writes were made.`
     )
     process.exit(1)
   }
@@ -155,16 +153,20 @@ async function main() {
   for (let i = 0; i < products.length; i += UPSERT_BATCH_SIZE) {
     const batch = products.slice(i, i + UPSERT_BATCH_SIZE)
     await upsertBatch(batch, stats)
-    console.log(`[sync-obf] Upserted batch ${i / UPSERT_BATCH_SIZE + 1}: ${stats.upserted} total so far.`)
+    console.log(
+      `[sync-obf] Upserted batch ${i / UPSERT_BATCH_SIZE + 1}: ${stats.upserted} total so far.`
+    )
   }
 
   console.log(
     `[sync-obf] Done. ${stats.upserted} upserted, ${stats.upsertErrors} upsert errors, ` +
-      `${stats.parseErrors} parse errors.`,
+      `${stats.parseErrors} parse errors.`
   )
 
   if (stats.upsertErrors > 0) {
-    console.error(`[sync-obf] Completed with ${stats.upsertErrors} upsert errors — check logs above.`)
+    console.error(
+      `[sync-obf] Completed with ${stats.upsertErrors} upsert errors — check logs above.`
+    )
     process.exit(1)
   }
 }

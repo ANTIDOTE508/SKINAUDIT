@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import { DossierEmptyState } from '@/components/dossier/DossierEmptyState'
 import { ScreenAddMethod } from './ScreenAddMethod'
 import { ScreenSearch } from './ScreenSearch'
+import { ScreenScan } from './ScreenScan'
 import { ScreenConfirmMatch } from './ScreenConfirmMatch'
 import { ScreenCategoryStatus } from './ScreenCategoryStatus'
 import { ScreenAdded } from './ScreenAdded'
@@ -28,8 +29,8 @@ const STATUS_LABELS: Record<DossierProductStatus, string> = {
 }
 
 // 1 = Empty Dossier, 2 = Add Method, 3 = Search, 4 = Confirm Match,
-// 5 = Category & Status, 6 = Added.
-type Screen = 1 | 2 | 3 | 4 | 5 | 6
+// 5 = Category & Status, 6 = Added, 7 = Scan.
+type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 type Props = {
   startAt: DossierModalStart
@@ -47,6 +48,8 @@ export function StepDossierBuild({ startAt, onClose }: Props) {
   // Kept so "Show me other matches" (screen 4) returns to a populated result
   // list rather than a blank search field.
   const [lastQuery, setLastQuery] = useState('')
+  // Where Confirm Match's back arrow returns: the result list or the scanner.
+  const [matchOrigin, setMatchOrigin] = useState<3 | 7>(3)
   // Carried from screen 5 to screen 6's recap sentence ("saved as Treatment · Active").
   const [savedCategory, setSavedCategory] = useState<ProductCategory | null>(null)
   const [savedStatus, setSavedStatus] = useState<DossierProductStatus | null>(null)
@@ -99,7 +102,13 @@ export function StepDossierBuild({ startAt, onClose }: Props) {
       case 1:
         return <DossierEmptyState onAddProduct={() => setScreen(2)} />
       case 2:
-        return <ScreenAddMethod onChooseSearch={() => setScreen(3)} onClose={onClose} />
+        return (
+          <ScreenAddMethod
+            onChooseSearch={() => setScreen(3)}
+            onChooseScan={() => setScreen(7)}
+            onClose={onClose}
+          />
+        )
       case 3:
         return (
           <ScreenSearch
@@ -108,17 +117,34 @@ export function StepDossierBuild({ startAt, onClose }: Props) {
             onQueryChange={setLastQuery}
             onSelectProduct={(product) => {
               setSelectedProduct(product)
+              setMatchOrigin(3)
               setScreen(4)
             }}
+          />
+        )
+      case 7:
+        return (
+          <ScreenScan
+            onBack={() => setScreen(2)}
+            onFound={(product) => {
+              setSelectedProduct(product)
+              setMatchOrigin(7)
+              setScreen(4)
+            }}
+            onSearchInstead={() => setScreen(3)}
           />
         )
       case 4:
         return selectedProduct ? (
           <ScreenConfirmMatch
             product={selectedProduct}
-            onBack={() => setScreen(3)}
+            onBack={() => setScreen(matchOrigin)}
             onConfirm={() => setScreen(5)}
-            onShowOtherMatches={() => setScreen(3)}
+            onShowOtherMatches={() => {
+              // A scan leaves no search term — seed the list with the brand.
+              if (matchOrigin === 7) setLastQuery(selectedProduct.brandName ?? '')
+              setScreen(3)
+            }}
             onNotMyProduct={() => {
               setSelectedProduct(null)
               setScreen(3)

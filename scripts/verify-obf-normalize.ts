@@ -5,7 +5,7 @@ import {
   mapObfCategoryToProductCategory,
   normalizeObfRecord,
   type ObfRecord,
-} from './lib/obf-normalize'
+} from '../src/lib/obf-normalize'
 
 function assertEqual<T>(actual: T, expected: T, label: string) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {

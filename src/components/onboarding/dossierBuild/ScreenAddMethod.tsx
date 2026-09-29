@@ -6,6 +6,7 @@ import { ScreenHeader } from './ScreenHeader'
 
 type Props = {
   onChooseSearch: () => void
+  onChooseScan: () => void
   onClose: () => void
 }
 
@@ -33,9 +34,8 @@ const CARD: CSSProperties = {
 const ICON_SIZE = 26
 const ICON_STROKE = 1.5
 
-// Mockup drives all three rows to the same search flow — Scan and Enter
-// manually have no dedicated implementation yet, so they land the user on
-// Search rather than being disabled.
+// Enter manually has no dedicated implementation yet, so it lands the user
+// on Search rather than being disabled.
 const METHODS: Method[] = [
   {
     key: 'search',
@@ -47,7 +47,7 @@ const METHODS: Method[] = [
     key: 'scan',
     icon: Camera,
     label: 'Scan',
-    description: 'Photograph the product or ingredient list.',
+    description: "Scan the product's barcode.",
   },
   {
     key: 'manual',
@@ -57,14 +57,19 @@ const METHODS: Method[] = [
   },
 ]
 
-export function ScreenAddMethod({ onChooseSearch, onClose }: Props) {
+export function ScreenAddMethod({ onChooseSearch, onChooseScan, onClose }: Props) {
   return (
     <>
       <ScreenHeader title="Add a product" onClose={onClose} />
 
       <div className="db-content" style={{ gap: '1rem' }}>
         {METHODS.map(({ key, icon: Icon, label, description }) => (
-          <button key={key} type="button" onClick={onChooseSearch} style={CARD}>
+          <button
+            key={key}
+            type="button"
+            onClick={key === 'scan' ? onChooseScan : onChooseSearch}
+            style={CARD}
+          >
             <Icon size={ICON_SIZE} strokeWidth={ICON_STROKE} color="var(--color-sienna-400)" />
             <span style={{ display: 'block', minWidth: 0, flex: 1 }}>
               <span
