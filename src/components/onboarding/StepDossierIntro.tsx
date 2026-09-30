@@ -306,6 +306,11 @@ export function StepDossierIntro({ onBack }: Props) {
         .fmd-back:disabled { cursor: default; }
         .fmd-back:focus-visible { outline: 2px solid var(--fmd-cta); outline-offset: 3px; }
 
+        /* ── Desktop — shift crop point down to reveal more shelves ── */
+        @media (min-width: 720px) {
+          .fmd-bg-image { object-position: center 30%; }
+        }
+
         /* ── Mobile ── */
         @media (max-width: 600px) {
           .fmd-topbar { padding: 0 20px; height: 56px; }
