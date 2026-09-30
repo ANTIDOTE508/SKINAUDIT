@@ -605,7 +605,14 @@ export function OnboardingWizard({
           overflowY: 'auto',
         }}
       >
-        <div ref={contentRef} style={{ width: '100%', maxWidth: '680px' }}>
+        <div
+          ref={contentRef}
+          style={{
+            width: '100%',
+            // StepTools lays its picker and details side by side on wide screens.
+            maxWidth: !activeInterstitial && state.step === 21 ? '1240px' : '680px',
+          }}
+        >
           {activeInterstitial ? (
             activeInterstitial.id === BASELINE_AFTER_IDENTITY_ID ? (
               // Same full-bleed visual as step 0, single "Continue" CTA, no Back.
