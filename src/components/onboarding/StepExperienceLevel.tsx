@@ -1,65 +1,98 @@
 'use client'
 
-import { useRef, useEffect, useState, useTransition, useId } from 'react'
+import { useRef, useEffect, useState, useTransition, type KeyboardEvent } from 'react'
 import { gsap } from 'gsap'
-import { Info, Sprout, BookOpen, FlaskConical, Sparkles } from 'lucide-react'
 import { StepFooter } from './StepFooter'
-import { InfoSheet, type InfoSheetItem } from './InfoSheet'
 import { saveExperienceLevel } from '@/app/actions/onboarding'
 import type { SkincareExperience } from '@prisma/client'
+import './stepExperience.css'
 
-/**
- * Experience level — single select. Each option carries a definition that is
- * shown, verbatim, in the shared InfoSheet when the user taps its ⓘ icon;
- * the tapped option is highlighted inside the panel via `activeValue`.
- */
-const OPTIONS: {
+// Screen 8 — experience level, as a four-stop journey scale
+// (templates/stepXpWithSkinCare). The live card below shows what the chosen
+// level means and how results will read; an optional term check suggests a
+// level for people who aren't sure.
+
+const LEVELS: {
   value: SkincareExperience
-  label: string
-  definition: string
+  name: string
+  quote: string
+  def: string
+  sample: string
   icon: React.ReactNode
 }[] = [
   {
     value: 'NEW',
-    label: 'New to skincare',
-    definition: 'beginning to build habits or explore products',
-    icon: <Sprout size={18} strokeWidth={1.5} />,
+    name: 'New to skincare',
+    quote: '“I wash my face and use whatever moisturizer is around.”',
+    def: 'Beginning to build habits or explore products.',
+    sample: 'Your skin could use more moisture. Use a gentle moisturizer every morning and night.',
+    icon: (
+      <>
+        <path d="M12 21v-9" />
+        <path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6z" />
+        <path d="M12 14c0-3-2-5-6-5 0 3 2 5 6 5z" />
+      </>
+    ),
   },
   {
     value: 'SOMEWHAT_EXPERIENCED',
-    label: 'Somewhat experienced',
-    definition: 'basic understanding, some routine consistency',
-    icon: <BookOpen size={18} strokeWidth={1.5} />,
+    name: 'Somewhat experienced',
+    quote: '“I have a routine most days and a few products I trust.”',
+    def: 'Basic understanding, some routine consistency.',
+    sample:
+      'Your skin barrier looks dry. Add a hydrating serum before your moisturizer, and keep it gentle for a couple of weeks.',
+    icon: (
+      <>
+        <path d="M4 5.5C6.5 4 9.5 4 12 5.5v14C9.5 18 6.5 18 4 19.5z" />
+        <path d="M20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" />
+      </>
+    ),
   },
   {
     value: 'EXPERIENCED',
-    label: 'Experienced',
-    definition: 'understand ingredients, actives, and how routines work',
-    icon: <FlaskConical size={18} strokeWidth={1.5} />,
+    name: 'Experienced',
+    quote: '“I read ingredient lists and know what my actives do.”',
+    def: 'Understand ingredients, actives, and how routines work.',
+    sample:
+      'Signs of a weakened barrier. Look for ceramides and a humectant like glycerin, and pause strong exfoliating acids for a week.',
+    icon: (
+      <>
+        <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3" />
+        <path d="M7.5 15h9" />
+      </>
+    ),
   },
   {
     value: 'OBSESSIVE',
-    label: 'Skincare obsessive',
-    definition: 'skincare is a passion; enjoy continuous refinement and tracking',
-    icon: <Sparkles size={18} strokeWidth={1.5} />,
+    name: 'Skincare obsessive',
+    quote: '“I track my skin and fine-tune my routine every week.”',
+    def: 'Skincare is a passion; enjoy continuous refinement and tracking.',
+    sample:
+      'Barrier stress is up versus your baseline. Pair a ceramide–cholesterol moisturizer with a humectant serum, and drop retinoid nights to two a week until it settles.',
+    icon: (
+      <>
+        <path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" />
+        <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
+      </>
+    ),
   },
 ]
 
-const INFO_ITEMS: InfoSheetItem[] = OPTIONS.map((o) => ({
-  value: o.value,
-  label: o.label,
-  description: o.definition,
-  icon: o.icon,
-}))
-
-const SUB_COPY: React.CSSProperties = {
-  fontFamily: 'var(--font-body)',
-  fontWeight: 300,
-  fontSize: '0.9375rem',
-  lineHeight: 1.6,
-  color: 'var(--color-alabaster-400)',
-  margin: '0 0 2.25rem',
-}
+// Quick check: the more terms someone can explain, the further along the
+// scale they likely are.
+const TERMS = [
+  'Cleanser',
+  'SPF',
+  'Serum',
+  'Skin barrier',
+  'Niacinamide',
+  'Retinol',
+  'AHA / BHA',
+  'Purging',
+  'pH',
+  'Slugging',
+]
+const suggest = (n: number) => (n <= 3 ? 0 : n <= 5 ? 1 : n <= 8 ? 2 : 3)
 
 type Props = {
   value: SkincareExperience | null
@@ -70,21 +103,24 @@ type Props = {
 
 export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
+  const stopsRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLElement>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [infoOpen, setInfoOpen] = useState(false)
-  // The option whose ⓘ was tapped — highlighted in the panel. Null means the
-  // panel was opened from the header hint, so nothing is highlighted.
-  const [infoValue, setInfoValue] = useState<SkincareExperience | null>(null)
+  const [checkOpen, setCheckOpen] = useState(false)
+  const [known, setKnown] = useState<string[]>([])
+  // Bumped on each user pick so the card remounts and replays its swap
+  // animation; stays 0 for a value restored on resume (no animation).
+  const [swapKey, setSwapKey] = useState(0)
 
-  const labelId = useId()
+  const index = value ? LEVELS.findIndex((l) => l.value === value) : -1
+  const level = index >= 0 ? LEVELS[index] : null
+  const suggested = LEVELS[suggest(known.length)]
 
   useEffect(() => {
     const node = rootRef.current
     if (!node) return
-    const reduced =
-      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
       const blocks = node.querySelectorAll('[data-reveal]')
@@ -102,26 +138,36 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
     return () => ctx.revert()
   }, [])
 
-  /** Arrow keys move between pills and select as they go, per the WAI-ARIA
-   *  radiogroup pattern. Wraps around at both ends. */
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const delta =
-      e.key === 'ArrowDown' || e.key === 'ArrowRight'
-        ? 1
-        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
-          ? -1
-          : 0
-    if (delta === 0) return
-    e.preventDefault()
-    const next = (index + delta + OPTIONS.length) % OPTIONS.length
-    onChange(OPTIONS[next].value)
-    const pills = listRef.current?.querySelectorAll<HTMLButtonElement>('[data-exp-radio]')
-    pills?.[next]?.focus()
+  const pick = (i: number) => {
+    onChange(LEVELS[i].value)
+    setSwapKey((k) => k + 1)
+    setError(null)
   }
 
-  const openInfo = (v: SkincareExperience | null) => {
-    setInfoValue(v)
-    setInfoOpen(true)
+  /** Arrow keys move along the scale and select as they go (WAI-ARIA
+   *  radiogroup). Clamped at both ends, like the template. */
+  const handleKeyDown = (e: KeyboardEvent) => {
+    const d =
+      e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? -1
+          : 0
+    if (d === 0) return
+    e.preventDefault()
+    const next = Math.max(0, Math.min(LEVELS.length - 1, index + d))
+    if (next === index) return
+    pick(next)
+    stopsRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]?.focus()
+  }
+
+  const toggleTerm = (t: string) =>
+    setKnown((k) => (k.includes(t) ? k.filter((x) => x !== t) : [...k, t]))
+
+  const useSuggestion = () => {
+    pick(suggest(known.length))
+    setCheckOpen(false)
+    cardRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }
 
   const handleContinue = () => {
@@ -142,208 +188,133 @@ export function StepExperienceLevel({ value, onChange, onContinue, onBack }: Pro
 
   return (
     <div ref={rootRef}>
-      <div style={{ maxWidth: '32rem' }}>
-        <h2
-          data-reveal
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 300,
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            lineHeight: 1.1,
-            letterSpacing: '-0.01em',
-            color: 'var(--color-alabaster-50)',
-            margin: '0 0 1rem',
-          }}
-        >
-          How would you describe your experience with skincare?
-        </h2>
-
-        <p data-reveal style={SUB_COPY}>
-          This shapes how we present your results.{' '}
-          <button
-            type="button"
-            onClick={() => openInfo(null)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              padding: 0,
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--color-sienna-400)',
-              cursor: 'pointer',
-              font: 'inherit',
-            }}
-          >
-            Tap <Info size={14} strokeWidth={1.5} aria-hidden="true" /> to see definitions.
-          </button>
-        </p>
-
-        <span
-          id={labelId}
-          style={{
-            position: 'absolute',
-            width: '1px',
-            height: '1px',
-            overflow: 'hidden',
-            clip: 'rect(0 0 0 0)',
-            clipPath: 'inset(50%)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Your experience with skincare
-        </span>
-
-        <div
-          ref={listRef}
-          role="radiogroup"
-          aria-labelledby={labelId}
-          aria-required="true"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.625rem',
-            marginBottom: '2.25rem',
-          }}
-        >
-          {OPTIONS.map((option, index) => {
-            const isSelected = value === option.value
-            return (
-              <div
-                key={option.value}
-                data-reveal
-                style={{
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  gap: '0.5rem',
-                }}
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  data-exp-radio
-                  aria-checked={isSelected}
-                  aria-label={option.label}
-                  tabIndex={isSelected || (!value && index === 0) ? 0 : -1}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
-                  onClick={() => onChange(option.value)}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.875rem',
-                    textAlign: 'left',
-                    padding: '0.9375rem 1.125rem',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    border: isSelected
-                      ? '1px solid var(--color-sienna-400)'
-                      : '1px solid rgba(196, 176, 154,0.28)',
-                    backgroundColor: isSelected ? 'rgba(196, 176, 154,0.14)' : 'rgba(6,5,5,0.42)',
-                    transition:
-                      'border-color var(--duration-micro) var(--ease-luxury), background-color var(--duration-micro) var(--ease-luxury)',
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      display: 'flex',
-                      flexShrink: 0,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      border: isSelected
-                        ? '1px solid var(--color-sienna-400)'
-                        : '1px solid rgba(196, 176, 154,0.45)',
-                      color: 'var(--color-sienna-400)',
-                    }}
-                  >
-                    {isSelected ? (
-                      <span
-                        style={{
-                          width: '10px',
-                          height: '10px',
-                          borderRadius: '50%',
-                          backgroundColor: 'var(--color-sienna-400)',
-                        }}
-                      />
-                    ) : (
-                      option.icon
-                    )}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontWeight: 300,
-                      fontSize: '0.9375rem',
-                      color: isSelected
-                        ? 'var(--color-alabaster-50)'
-                        : 'var(--color-alabaster-300)',
-                      transition: 'color var(--duration-micro) var(--ease-luxury)',
-                    }}
-                  >
-                    {option.label}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => openInfo(option.value)}
-                  aria-label={`What "${option.label}" means`}
-                  aria-haspopup="dialog"
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '44px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(196, 176, 154,0.28)',
-                    background: 'rgba(6,5,5,0.42)',
-                    color: 'var(--color-alabaster-400)',
-                    cursor: 'pointer',
-                    transition:
-                      'border-color var(--duration-micro) var(--ease-luxury), color var(--duration-micro) var(--ease-luxury)',
-                  }}
-                >
-                  <Info size={18} strokeWidth={1.5} aria-hidden="true" />
-                </button>
-              </div>
-            )
-          })}
+      <div className="sx-root">
+        <div data-reveal>
+          <h2 className="sx-title">How would you describe your experience with skincare?</h2>
+          <p className="sx-sub">
+            This shapes how we present your results. Pick the one that sounds most like you.
+          </p>
         </div>
 
-        {error && (
-          <p
-            role="alert"
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.8125rem',
-              color: 'var(--color-blush-500)',
-              marginBottom: '1rem',
-            }}
+        <div className="sx-journey" data-reveal>
+          <div className="sx-rail" aria-hidden="true">
+            <i style={{ width: index < 0 ? '0' : `${(index / (LEVELS.length - 1)) * 100}%` }} />
+          </div>
+          <div
+            ref={stopsRef}
+            className="sx-stops"
+            role="radiogroup"
+            aria-label="Your experience with skincare"
+            aria-required="true"
+            onKeyDown={handleKeyDown}
           >
+            {LEVELS.map((l, i) => (
+              <button
+                key={l.value}
+                type="button"
+                role="radio"
+                aria-checked={i === index}
+                tabIndex={(index < 0 ? 0 : index) === i ? 0 : -1}
+                className={`sx-stop${index >= 0 && i < index ? ' past' : ''}`}
+                onClick={() => pick(i)}
+              >
+                <span className="sx-ic">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    {l.icon}
+                  </svg>
+                </span>
+                <span className="sx-lb">{l.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Stable live region: the card inside remounts on each pick to
+            replay its swap animation, which screen readers announce poorly. */}
+        <div aria-live="polite" data-reveal>
+          <section
+            key={swapKey}
+            ref={cardRef}
+            className={level ? `sx-card${swapKey ? ' swap' : ''}` : 'sx-card empty'}
+          >
+            {level ? (
+              <>
+                <h3 className="sx-lvl">{level.name}</h3>
+                <p className="sx-quote">{level.quote}</p>
+                <p className="sx-def">{level.def}</p>
+                <div className="sx-preview">
+                  <span className="sx-eyebrow">How your results could read</span>
+                  <p>{level.sample}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <b>Where are you on the journey?</b>
+                <span>Tap a stop above to see what it means and how your results could read.</span>
+              </>
+            )}
+          </section>
+        </div>
+
+        <section className={`sx-check${checkOpen ? ' open' : ''}`} data-reveal>
+          <button
+            type="button"
+            className="sx-checkhead"
+            aria-expanded={checkOpen}
+            aria-controls="sx-checkbody"
+            onClick={() => setCheckOpen((o) => !o)}
+          >
+            <span>
+              <b>Not sure?</b> <span className="sx-hint">Take a 10-second check</span>
+            </span>
+            <span className="sx-arrow">{checkOpen ? 'Close' : 'Start'}</span>
+          </button>
+          <div id="sx-checkbody" hidden={!checkOpen}>
+            <p className="sx-def" style={{ marginBottom: 12 }}>
+              Tap every term you could explain to a friend.
+            </p>
+            <div className="sx-terms">
+              {TERMS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="sx-term"
+                  aria-pressed={known.includes(t)}
+                  onClick={() => toggleTerm(t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="sx-verdict">
+              <span className="sx-v">
+                {known.length ? (
+                  <>
+                    {known.length} of {TERMS.length} · sounds like <b>{suggested.name}</b>
+                  </>
+                ) : (
+                  "Nothing tapped yet? That's fine. It points to New to skincare."
+                )}
+              </span>
+              <button type="button" className="sx-use" onClick={useSuggestion}>
+                Use {suggested.name}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {error && (
+          <p className="sx-error" role="alert">
             {error}
           </p>
         )}
-
-        <StepFooter
-          onContinue={handleContinue}
-          onBack={onBack}
-          isLoading={isPending}
-          continueDisabled={!value}
-        />
       </div>
 
-      <InfoSheet
-        title="Experience levels"
-        items={INFO_ITEMS}
-        isOpen={infoOpen}
-        onClose={() => setInfoOpen(false)}
-        activeValue={infoValue ?? undefined}
+      <StepFooter
+        onContinue={handleContinue}
+        onBack={onBack}
+        isLoading={isPending}
+        continueDisabled={!value}
       />
     </div>
   )
