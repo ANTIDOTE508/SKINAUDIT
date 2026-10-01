@@ -610,8 +610,15 @@ export function OnboardingWizard({
           ref={contentRef}
           style={{
             width: '100%',
-            // StepTools lays its picker and details side by side on wide screens.
-            maxWidth: !activeInterstitial && state.step === 21 ? '1240px' : '680px',
+            // StepTools lays its picker and details side by side on wide
+            // screens; StepIdentity adds a summary column next to its cards.
+            maxWidth: activeInterstitial
+              ? '680px'
+              : state.step === 21
+                ? '1240px'
+                : state.step === 1
+                  ? '1180px'
+                  : '680px',
           }}
         >
           {activeInterstitial ? (

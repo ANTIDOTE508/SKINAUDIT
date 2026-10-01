@@ -1,0 +1,578 @@
+/* Step 1 — profile (name, identity, birth date). Mirrors
+   templates/stepProfile/stepProfile.html: a sticky three-step stepper,
+   numbered question cards in the main column and a live summary column on
+   the right (stacks to one column under 1024px). The wizard keeps its own
+   counter and the StepFooter Back / Next, so the template's brand row,
+   back arrow and actions card are not ported. */
+
+.sp-root {
+  --card: #131110;
+  --card-2: #181614;
+  --line: rgba(239, 233, 225, 0.08);
+  --line-2: rgba(239, 233, 225, 0.16);
+  --fg: #efe9e1;
+  --muted: #a9a097;
+  --faint: #6f675f;
+  --sand: #d6c3ae;
+  --sand-ink: #1a1612;
+  --sand-wash: rgba(214, 195, 174, 0.1);
+  --good: #8fbf8a;
+
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.sp-root *,
+.sp-root *::before,
+.sp-root *::after {
+  box-sizing: border-box;
+}
+.sp-root button,
+.sp-root input {
+  font: inherit;
+  color: inherit;
+}
+.sp-root button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.sp-root button:focus-visible,
+.sp-root input:focus-visible {
+  outline: 2px solid var(--sand);
+  outline-offset: 2px;
+}
+
+/* header */
+.sp-title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--fg);
+}
+.sp-sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* stepper — sticks to the top of the wizard's scroll area. Sticky offsets
+   are measured from the scroll container's content box, so `top` cancels the
+   wizard's top padding (OnboardingWizard: clamp(1rem, 3vh, 2.5rem)) to sit
+   flush under the header instead of letting cards show through the gap. */
+.sp-stepper {
+  position: sticky;
+  top: calc(-1 * clamp(1rem, 3vh, 2.5rem));
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 14px 0 12px;
+  padding: 12px 4px;
+  background: rgba(11, 10, 9, 0.9);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.sp-stepper.stuck {
+  border-bottom-color: var(--line);
+}
+/* Column centres sit at 1/6, 3/6 and 5/6 of the inner width. */
+.sp-stepper::before {
+  content: '';
+  position: absolute;
+  left: calc(4px + (100% - 8px) / 6);
+  right: calc(4px + (100% - 8px) / 6);
+  top: 24px;
+  height: 1px;
+  background: var(--line-2);
+}
+.sp-fill {
+  position: absolute;
+  left: calc(4px + (100% - 8px) / 6);
+  top: 24px;
+  height: 1px;
+  background: var(--sand);
+  transition: width 0.4s;
+}
+.sp-root .sp-st {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.sp-st .n {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  background: #0b0a09;
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  transition: all 0.25s;
+}
+.sp-root .sp-st.active {
+  color: var(--fg);
+}
+.sp-st.active .n {
+  border-color: var(--sand);
+  color: var(--sand);
+  box-shadow: 0 0 0 4px var(--sand-wash);
+}
+.sp-st.done .n {
+  background: var(--sand);
+  border-color: var(--sand);
+  color: var(--sand-ink);
+}
+
+/* layout */
+.sp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .sp-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px;
+    align-items: start;
+  }
+  .sp-side {
+    position: sticky;
+    top: 80px;
+  }
+}
+.sp-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* cards */
+.sp-card {
+  scroll-margin-top: 96px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.25s;
+}
+@media (min-width: 700px) {
+  .sp-card {
+    padding: 22px 24px;
+  }
+}
+.sp-card.focus {
+  border-color: rgba(214, 195, 174, 0.3);
+}
+.sp-ch {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sp-ch .num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  flex: none;
+  transition: all 0.25s;
+}
+.sp-card.ok .sp-ch .num {
+  border-color: var(--sand);
+  color: var(--sand);
+}
+.sp-ch h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 23px;
+  line-height: 1.15;
+  margin: 0;
+  color: var(--fg);
+}
+.sp-ch .tick {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--good);
+  opacity: 0;
+  transition: opacity 0.25s;
+  white-space: nowrap;
+}
+.sp-card.ok .sp-ch .tick {
+  opacity: 1;
+}
+
+/* name field */
+.sp-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card-2);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 0 14px;
+  transition: border-color 0.2s;
+}
+.sp-field:focus-within {
+  border-color: var(--sand);
+}
+.sp-field svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  stroke: var(--faint);
+  fill: none;
+  stroke-width: 1.5;
+}
+.sp-root .sp-field input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 14px 0;
+  font-size: 16px;
+}
+.sp-root .sp-field input:focus {
+  outline: none;
+}
+.sp-field input::placeholder {
+  color: var(--faint);
+}
+
+/* identity pills */
+.sp-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sp-root .sp-pill {
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  background: var(--card-2);
+  transition: all 0.15s;
+}
+.sp-root .sp-pill:hover {
+  border-color: var(--muted);
+}
+.sp-root .sp-pill[aria-checked='true'] {
+  border-color: var(--sand);
+  background: var(--sand-wash);
+}
+
+/* birth month */
+.sp-lab {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 10px;
+}
+.sp-months {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+@media (min-width: 560px) {
+  .sp-months {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+.sp-root .sp-mchip {
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+  text-align: center;
+  transition: all 0.15s;
+}
+.sp-root .sp-mchip:hover {
+  border-color: var(--muted);
+}
+.sp-root .sp-mchip[aria-checked='true'] {
+  border-color: var(--sand);
+  background: var(--sand-wash);
+}
+
+/* birth year ruler */
+.sp-yearread {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  justify-content: center;
+}
+.sp-yearread b {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 54px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sp-yearread b.unset {
+  color: rgba(239, 233, 225, 0.3);
+}
+.sp-yearread span {
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 96px;
+}
+.sp-ruler {
+  position: relative;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  outline: none;
+  margin-top: 6px;
+}
+.sp-ruler:focus-visible {
+  border-color: var(--sand);
+}
+.sp-ruler::before,
+.sp-ruler::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  z-index: 2;
+  pointer-events: none;
+}
+.sp-ruler::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--card), transparent);
+}
+.sp-ruler::after {
+  right: 0;
+  background: linear-gradient(-90deg, var(--card), transparent);
+}
+.sp-needle {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 22px;
+  width: 2px;
+  background: var(--sand);
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+}
+.sp-needle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -1px;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--sand);
+}
+.sp-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  cursor: grab;
+  padding: 0 calc(50% - 7px);
+}
+.sp-track::-webkit-scrollbar {
+  display: none;
+}
+.sp-track.drag {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+.sp-yr {
+  flex: none;
+  width: 14px;
+  height: 80px;
+  scroll-snap-align: center;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.sp-yr i {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 20px;
+  background: var(--line-2);
+}
+.sp-yr.five i {
+  height: 32px;
+  background: var(--faint);
+}
+.sp-yr.ten i {
+  height: 44px;
+  background: var(--muted);
+}
+.sp-yr small {
+  position: absolute;
+  bottom: 4px;
+  font-size: 10.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sp-nudge {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.sp-root .sp-nudge button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  background: var(--card-2);
+}
+
+/* summary column */
+.sp-sumh {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.15;
+  margin: 0;
+  color: var(--fg);
+}
+.sp-sump {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.sp-gauge {
+  position: relative;
+  width: 170px;
+  height: 150px;
+  margin: 6px auto 0;
+}
+.sp-gauge svg {
+  width: 170px;
+  height: 150px;
+  display: block;
+}
+.sp-gauge .bgarc {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.sp-gauge .fgarc {
+  fill: none;
+  stroke: var(--sand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sp-gauge .val {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44px;
+  text-align: center;
+}
+.sp-gauge .val b {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 52px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sp-gauge .val span {
+  font-size: 12px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.sp-gauge .val span i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.sp-gauge .val span i.on {
+  background: var(--good);
+}
+.sp-gcap {
+  text-align: center;
+  font-size: 12px;
+  color: var(--faint);
+  margin: -8px 0 0;
+}
+.sp-rows {
+  display: flex;
+  flex-direction: column;
+}
+.sp-r {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.sp-r:first-child {
+  border-top: 0;
+}
+.sp-r svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  stroke: var(--muted);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sp-r span {
+  color: var(--muted);
+  flex: 1;
+}
+.sp-r b {
+  font-weight: 400;
+  text-align: right;
+}
+.sp-r b.empty {
+  color: var(--faint);
+}
+@media (max-width: 1023px) {
+  .sp-gaugecard {
+    display: none;
+  }
+}
+
+.sp-error {
+  margin: 16px 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-blush-500);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-root *,
+  .sp-root *::before,
+  .sp-root *::after {
+    transition: none !important;
+  }
+}
