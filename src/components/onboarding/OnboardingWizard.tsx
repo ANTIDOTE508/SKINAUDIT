@@ -559,8 +559,9 @@ export function OnboardingWizard({
         }}
       />
 
-      {/* Top bar */}
+      {/* Top bar — StepEnvironment's full-screen map measures it to start below. */}
       <header
+        data-onboarding-header
         style={{
           position: 'relative',
           zIndex: 10,

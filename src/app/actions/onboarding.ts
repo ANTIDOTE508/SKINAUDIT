@@ -583,10 +583,10 @@ export async function saveBreakouts(payload: BreakoutsPayload) {
   return { ok: true }
 }
 
-// ─── Step 16 — Persistent facial redness (+ inline follow-up) ──
-// When redness is PERSISTENT or INTERMITTENT, the same screen also asks for
-// the affected areas, the flushing triggers, and how quickly redness fades.
-// For OCCASIONAL / NONE all of that is skipped and cleared.
+// ─── Step 16 — Persistent facial redness (question cards) ──────
+// Mirrors templates/stepRedness: any answer but NONE also asks where the
+// redness shows; everyone answers the flushing triggers; the fade speed is
+// asked unless the triggers answer is "none".
 export type RednessPayload = {
   rednessPattern: RednessPattern
   rednessAreas: string[]
@@ -599,9 +599,7 @@ export async function saveRedness(payload: RednessPayload) {
 
   if (!payload.rednessPattern) throw new Error('Redness pattern is required')
 
-  const followUp =
-    payload.rednessPattern === 'PERSISTENT' ||
-    payload.rednessPattern === 'INTERMITTENT'
+  const asksAreas = payload.rednessPattern !== 'NONE'
 
   const areas = Array.isArray(payload.rednessAreas) ? payload.rednessAreas : []
   if (areas.some((a) => typeof a !== 'string' || a.trim().length === 0)) {
@@ -612,22 +610,15 @@ export async function saveRedness(payload: RednessPayload) {
     throw new Error('Invalid flushing trigger selection')
   }
 
-  if (followUp) {
-    if (areas.length === 0) throw new Error('At least one redness area is required')
-    if (rawTriggers.length === 0) {
-      throw new Error('At least one flushing trigger is required')
-    }
-    if (!payload.flushFadeSpeed) throw new Error('Flush fade speed is required')
-  }
+  if (asksAreas && areas.length === 0) throw new Error('At least one redness area is required')
+  if (rawTriggers.length === 0) throw new Error('At least one flushing trigger is required')
 
-  const rednessAreas = followUp ? areas : []
+  const rednessAreas = asksAreas ? areas : []
   // "none" is exclusive — normalise a mixed selection down to just "none".
-  const flushTriggers = followUp
-    ? rawTriggers.includes('none')
-      ? ['none']
-      : rawTriggers
-    : []
-  const flushFadeSpeed = followUp ? payload.flushFadeSpeed : null
+  const flushTriggers = rawTriggers.includes('none') ? ['none'] : rawTriggers
+  const asksFade = !flushTriggers.includes('none')
+  if (asksFade && !payload.flushFadeSpeed) throw new Error('Flush fade speed is required')
+  const flushFadeSpeed = asksFade ? payload.flushFadeSpeed : null
 
   await prisma.userProfile.upsert({
     where: { userId: user.id },
@@ -835,7 +826,8 @@ export async function saveDarkerAreas(payload: DarkerAreasPayload) {
 export type EnvironmentPayload = {
   city?: string
   countryCode?: string
-  climateZone?: ClimateZone
+  /** null clears a climate left over from a previously saved city. */
+  climateZone?: ClimateZone | null
   season?: Season
 }
 

@@ -1,24 +1,45 @@
 'use client'
 
-import { useRef, useEffect, useState, useTransition } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+  type KeyboardEvent,
+} from 'react'
 import { createPortal } from 'react-dom'
-import Image from 'next/image'
-import { gsap } from 'gsap'
-import { MapPin } from 'lucide-react'
 import { StepFooter } from './StepFooter'
-import { CityAutocomplete } from './CityAutocomplete'
-import { detectSeason, detectClimateZone, reverseGeocode } from './environmentAutoDetect'
+import { detectSeason, detectClimateZone } from './environmentAutoDetect'
+import {
+  countryName,
+  guessCityFromTimeZone,
+  loadGeoData,
+  placeLine,
+  resolveSavedCity,
+  searchCities,
+  snapToCity,
+  type City,
+  type GeoData,
+} from './location/geoData'
+import { WorldMap } from './location/worldMap'
 import { saveEnvironment } from '@/app/actions/onboarding'
 import type { ClimateZone, Season } from '@prisma/client'
+import './location/stepLocation.css'
 
-const SUB_COPY: React.CSSProperties = {
-  fontFamily: 'var(--font-body)',
-  fontWeight: 300,
-  fontSize: '0.9375rem',
-  lineHeight: 1.6,
-  color: 'var(--color-alabaster-400)',
-  margin: '0 0 2.25rem',
-}
+// Screen 20 — dot-matrix world map (templates/stepLocation/stepLocation.html,
+// spec in stepLocation_spec.md). Three ways to set the city — search, tap the
+// map, Locate me — all end in the same flight + pin drop. Only the city and
+// country are kept; climate and season are derived from the city's
+// coordinates and persisted in the background, never shown on screen.
+
+// "I split my time between two places" is built but off. Preview it by
+// opening the onboarding with #multicity at the end of the URL. The second
+// city is not persisted yet (no column for it).
+const FEATURES = { multiCity: false }
+
+const noopSubscribe = () => () => {}
 
 type EnvironmentData = {
   city: string
@@ -42,226 +63,274 @@ export function StepEnvironment({
   onContinue,
   onBack,
 }: Props) {
-  const rootRef = useRef<HTMLDivElement>(null)
+  // createPortal needs a real <body> — only available after mount.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
+  const multiCity = useSyncExternalStore(
+    noopSubscribe,
+    () => FEATURES.multiCity || location.hash === '#multicity',
+    () => FEATURES.multiCity,
+  )
+  const [data, setData] = useState<GeoData | null>(null)
+  const [loadError, setLoadError] = useState(false)
+
+  const [main, setMain] = useState<City | null>(null)
+  const [second, setSecond] = useState<City | null>(null)
+  const [split, setSplit] = useState(false)
+  const [slot, setSlot] = useState<0 | 1>(0)
+
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<City[]>([])
+  const [listOpen, setListOpen] = useState(false)
+  const [active, setActive] = useState(0)
+
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [hintVisible, setHintVisible] = useState(true)
+  const [locating, setLocating] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
-  const [countryName, setCountryName] = useState('')
 
-  // Two-state screen: 'ask' shows the geolocation permission prompt, 'manual'
-  // shows the city + climate + season form. A resuming user who already has an
-  // answer skips straight to 'manual' so they can review/adjust it.
-  const hasSavedAnswer = Boolean(climateZone || season || city)
-  const [mode, setMode] = useState<'ask' | 'manual'>(hasSavedAnswer ? 'manual' : 'ask')
-  // idle → requesting → (done | denied | error), or 'declined' if the user
-  // taps Decline. Anything other than idle/requesting reveals the "Set
-  // location manually" secondary link.
-  const [geoStatus, setGeoStatus] = useState<
-    'idle' | 'requesting' | 'done' | 'denied' | 'error' | 'declined'
-  >('idle')
-  const geoAbortRef = useRef<AbortController | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const mapRef = useRef<WorldMap | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // In-flight climate lookup for the committed city; Next awaits it so the
+  // saved climate always belongs to the saved city.
+  const climateFetch = useRef<{
+    controller: AbortController
+    promise: Promise<ClimateZone | null>
+  } | null>(null)
+  // The City last committed — compared by identity, so two same-name cities
+  // in one country (Springfield IL / MO) still count as a change.
+  const committedRef = useRef<City | null>(null)
+  // Set once the user picks a city, so the async opening move never
+  // overrides their choice.
+  const userPickedRef = useRef(false)
+  // False after unmount (e.g. Back during the location permission prompt).
+  const aliveRef = useRef(true)
 
-  // Latest props, read inside the async auto-detect flow below so we never
-  // overwrite a value the user already set (manually, or from a prior resume)
-  // between the fetch starting and resolving, and never dispatch a patch
-  // built from stale city/countryCode/climateZone/season closures.
+  // Latest props, read from async callbacks so a resolved climate lookup is
+  // merged into fresh city/season values instead of a stale closure.
   const propsRef = useRef({ city, countryCode, climateZone, season })
-  propsRef.current = { city, countryCode, climateZone, season }
-  const climateFetchRef = useRef<AbortController | null>(null)
-  // Tracked independently: a city pick can auto-fill one field while the
-  // other was already answered manually, so a single shared flag would show
-  // the "auto-detected" caption on the wrong section.
-  const [climateAutoDetected, setClimateAutoDetected] = useState(false)
-  const [seasonAutoDetected, setSeasonAutoDetected] = useState(false)
-  // Mirrors of the two flags above, read inside the async detectClimateZone
-  // .then() callback so it sees the flag's value at *resolution* time rather
-  // than the stale value closed over when the fetch started.
-  const climateAutoDetectedRef = useRef(climateAutoDetected)
-  climateAutoDetectedRef.current = climateAutoDetected
+  // Latest pin state, read from the map's tap callback (bound once).
+  const pinsRef = useRef({ main, second, split, slot })
+  useLayoutEffect(() => {
+    propsRef.current = { city, countryCode, climateZone, season }
+    pinsRef.current = { main, second, split, slot }
+  })
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    return () => climateFetchRef.current?.abort()
-  }, [])
-
-  useEffect(() => {
-    return () => geoAbortRef.current?.abort()
-  }, [])
-
-  useEffect(() => {
-    if (!countryCode) {
-      setCountryName('')
-      return
-    }
+    aliveRef.current = true
     let cancelled = false
-    import('country-state-city').then(({ Country }) => {
-      if (cancelled) return
-      setCountryName(Country.getCountryByCode(countryCode)?.name ?? '')
-    })
+    loadGeoData()
+      .then((d) => !cancelled && setData(d))
+      .catch(() => !cancelled && setLoadError(true))
     return () => {
       cancelled = true
+      aliveRef.current = false
+      climateFetch.current?.controller.abort()
+      if (toastTimer.current) clearTimeout(toastTimer.current)
     }
-  }, [countryCode])
+  }, [])
 
-  const update = (patch: Partial<EnvironmentData>) => {
-    onChange({ ...propsRef.current, ...patch })
+  // The wizard's own header (counter + sign out) stays visible: the map layer
+  // starts right under it, tracking its height across breakpoints.
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    const header = document.querySelector<HTMLElement>('[data-onboarding-header]')
+    if (!root || !header) return
+    const sync = () => root.style.setProperty('--sl-top', `${header.getBoundingClientRect().bottom}px`)
+    sync()
+    const ro = new ResizeObserver(sync)
+    ro.observe(header)
+    return () => ro.disconnect()
+  }, [mounted])
+
+  const toast = (msg: string) => {
+    setToastMsg(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToastMsg(null), 2200)
   }
 
-  const handleAllowLocation = () => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGeoStatus('error')
+  /** Make `c` the user's city: persistable fields + derived climate/season. */
+  const commit = (c: City) => {
+    const prev = propsRef.current
+    const committed = committedRef.current
+    // Before any commit, the saved props are the reference (resume case).
+    const sameCity = committed
+      ? committed === c
+      : prev.city === c.name && prev.countryCode === c.cc
+    committedRef.current = c
+    if (sameCity && climateFetch.current) return
+    climateFetch.current?.controller.abort()
+    climateFetch.current = null
+    onChange({
+      ...prev,
+      city: c.name,
+      countryCode: c.cc,
+      season: sameCity && prev.season ? prev.season : detectSeason(c.lat),
+      climateZone: sameCity ? prev.climateZone : '',
+    })
+    if (sameCity && prev.climateZone) return
+    const controller = new AbortController()
+    const promise = detectClimateZone(c.lat, c.lon, controller.signal)
+    climateFetch.current = { controller, promise }
+    promise.then((zone) => {
+      if (controller.signal.aborted || !zone || committedRef.current !== c) return
+      onChange({ ...propsRef.current, climateZone: zone })
+    })
+  }
+
+  const choose = (c: City, how: 'search' | 'tap' | 'city' | 'locate') => {
+    const { main: m, second: s, split: sp, slot: sl } = pinsRef.current
+    const target = how === 'locate' || !sp ? 0 : sl
+    if (target === 1 && m && c === m) {
+      toast("That's already your main city")
       return
     }
-    setError(null)
-    setGeoStatus('requesting')
+    const nextMain = target === 0 ? c : m
+    const nextSecond = target === 1 ? c : s
+    userPickedRef.current = true
+    if (target === 0) {
+      setMain(c)
+      commit(c)
+    } else setSecond(c)
+    mapRef.current?.setPins(nextMain, nextSecond, sp, c)
+    if (how === 'tap') toast(`Pinned to ${c.name}, the nearest city`)
+    setHintVisible(false)
+  }
+  const chooseRef = useRef(choose)
+  useLayoutEffect(() => {
+    chooseRef.current = choose
+  })
 
+  // Boot the map once the data and the portaled canvas are both there.
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const wrap = wrapRef.current
+    if (!data || !canvas || !wrap) return
+    const map = new WorldMap(canvas, wrap, data, {
+      fontFamily: getComputedStyle(wrap).fontFamily || 'system-ui, sans-serif',
+      onTap: (c, onDot) => chooseRef.current(c, onDot ? 'city' : 'tap'),
+    })
+    mapRef.current = map
+
+    // Opening move: the saved city on resume, else a guess from the time
+    // zone, flown to from the whole-world view.
+    let cancelled = false
+    const { city: savedCity, countryCode: savedCc } = propsRef.current
+    resolveSavedCity(data, savedCity, savedCc).then((saved) => {
+      // The user already picked a city while this resolved: keep their choice.
+      if (cancelled || userPickedRef.current) return
+      const start = saved ?? (savedCity ? null : guessCityFromTimeZone(data.cities))
+      if (start) {
+        setMain(start)
+        commit(start)
+      }
+      map.intro(start)
+    })
+
+    return () => {
+      cancelled = true
+      map.destroy()
+      mapRef.current = null
+    }
+    // commit/onChange are read through refs at call time; boot once per data load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, mounted])
+
+  /* ---------- search ---------- */
+
+  const onQuery = (v: string) => {
+    setQuery(v)
+    const r = data ? searchCities(data.cities, v) : []
+    setResults(r)
+    setListOpen(v.trim().length > 0)
+    setActive(0)
+  }
+
+  const pick = (c: City | undefined) => {
+    if (!c) return
+    setQuery('')
+    setResults([])
+    setListOpen(false)
+    inputRef.current?.blur()
+    choose(c, 'search')
+  }
+
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!listOpen || !results.length) {
+      if (e.key === 'Escape') setListOpen(false)
+      return
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActive((a) => (a + (e.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length)
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      pick(results[active])
+    } else if (e.key === 'Escape') {
+      setListOpen(false)
+    }
+  }
+
+  /* ---------- Locate me ---------- */
+
+  // Browser location → nearest city in the dataset. The raw coordinate never
+  // leaves this function: only the resolved city is kept.
+  const locate = () => {
+    const failed = () => {
+      if (!aliveRef.current) return
+      setLocating(false)
+      toast("We couldn't find you. Search for your city instead.")
+      inputRef.current?.focus()
+    }
+    if (!data || typeof navigator === 'undefined' || !navigator.geolocation) return failed()
+    setLocating(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude
-        const lng = pos.coords.longitude
-
-        // Season is a pure function of latitude + today's date — set it now.
-        const patch: Partial<EnvironmentData> = { season: detectSeason(lat) }
-
-        const controller = new AbortController()
-        geoAbortRef.current = controller
-
-        Promise.allSettled([
-          detectClimateZone(lat, lng, controller.signal),
-          reverseGeocode(lat, lng, controller.signal),
-        ]).then(([climateRes, geoRes]) => {
-          if (controller.signal.aborted) return
-
-          const zone = climateRes.status === 'fulfilled' ? climateRes.value : null
-          const place = geoRes.status === 'fulfilled' ? geoRes.value : null
-
-          if (zone) patch.climateZone = zone
-          if (place) {
-            patch.city = place.city
-            patch.countryCode = place.countryCode
-          }
-
-          update(patch)
-          setSeasonAutoDetected(true)
-          if (zone) setClimateAutoDetected(true)
-          setGeoStatus('done')
-
-          // Nothing usable came back — hand the user to the manual form.
-          if (!zone && !place) setMode('manual')
-        })
+        if (!aliveRef.current) return
+        const c = snapToCity(data.cities, { lon: pos.coords.longitude, lat: pos.coords.latitude })
+        setLocating(false)
+        choose(c, 'locate')
+        toast(`Found you in ${c.name}`)
       },
-      (err) => {
-        setGeoStatus(err.code === err.PERMISSION_DENIED ? 'denied' : 'error')
-      },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 600_000 }
+      failed,
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 600_000 },
     )
   }
 
-  const handleCitySelect = ({
-    city: selectedCity,
-    countryCode: selectedCountryCode,
-    latitude,
-    longitude,
-  }: {
-    city: string
-    countryCode: string
-    latitude: string | null
-    longitude: string | null
-  }) => {
-    // Cancel any in-flight climate fetch from a previously selected city —
-    // its result would otherwise land after this newer selection.
-    climateFetchRef.current?.abort()
+  /* ---------- multi-city (flagged) ---------- */
 
-    const lat = latitude !== null ? Number(latitude) : NaN
-    const lng = longitude !== null ? Number(longitude) : NaN
-    const canAutoDetect = Boolean(selectedCity) && !Number.isNaN(lat) && !Number.isNaN(lng)
-
-    // A different city is being picked than the one currently on file, so
-    // climate/season must be re-derived for it — e.g. Paris -> Rio de
-    // Janeiro. This also covers the resume case: on mount, climateZone/season
-    // can already be filled from the DB but climateAutoDetected/
-    // seasonAutoDetected both start false (they're local state, not
-    // persisted), so relying on those flags alone would wrongly treat a
-    // resumed value as a manual answer and block re-detection on the very
-    // first city change after reload. Re-detect UNLESS the current value is
-    // a manual user choice for *this* city (a card click/keypress after
-    // landing on it clears the auto-detected flag) — never clobber something
-    // the user explicitly picked for the city they're currently on.
-    const isDifferentCity = selectedCity !== propsRef.current.city
-    const canOverrideSeason = isDifferentCity || seasonAutoDetected || !propsRef.current.season
-    const canOverrideClimate =
-      isDifferentCity || climateAutoDetected || !propsRef.current.climateZone
-
-    // Single patch/update call: propsRef.current only refreshes on the next
-    // render, so multiple sequential update() calls in this same handler
-    // would each merge against the same stale snapshot and the last one to
-    // dispatch would clobber city/countryCode set by the earlier calls.
-    const patch: Partial<EnvironmentData> = { city: selectedCity, countryCode: selectedCountryCode }
-    if (canAutoDetect && canOverrideSeason) {
-      patch.season = detectSeason(lat)
-      setSeasonAutoDetected(true)
-    }
-    update(patch)
-
-    if (canAutoDetect && canOverrideClimate) {
-      const controller = new AbortController()
-      climateFetchRef.current = controller
-      detectClimateZone(lat, lng, controller.signal).then((zone) => {
-        if (controller.signal.aborted || !zone) return
-        // Re-check at resolution time in case the user manually picked a
-        // climate while the fetch was in flight — but only treat it as a
-        // manual pick if it happened for *this* city (isDifferentCity was
-        // already true when the fetch started, so a still-false
-        // climateAutoDetectedRef here can't be a stale resume value from
-        // the previous city, only a genuine manual override made since).
-        if (!isDifferentCity && !climateAutoDetectedRef.current && propsRef.current.climateZone)
-          return
-        update({ climateZone: zone })
-        setClimateAutoDetected(true)
-      })
+  const toggleSplit = () => {
+    const on = !split
+    setSplit(on)
+    if (on) setSlot(1)
+    else {
+      setSecond(null)
+      setSlot(0)
+      mapRef.current?.setPins(main, null, false, null)
     }
   }
 
-  const hasValidCity = Boolean(city && countryCode)
-  // Climate and season are no longer shown or picked on screen — they are
-  // derived from the location (lat/lng + date) and persisted in the
-  // background. Continue only gates on having a valid city.
-  const canContinue = hasValidCity
+  /* ---------- next ---------- */
 
-  useEffect(() => {
-    const node = rootRef.current
-    if (!node) return
-    const reduced =
-      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    const ctx = gsap.context(() => {
-      const blocks = node.querySelectorAll('[data-reveal]')
-      if (reduced) {
-        if (blocks.length) gsap.set(blocks, { y: 0, opacity: 1 })
-        return
-      }
-      if (blocks.length) {
-        gsap.fromTo(
-          blocks,
-          { y: 18, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.55, stagger: 0.09, ease: 'power3.out', delay: 0.15 }
-        )
-      }
-    }, node)
-    return () => ctx.revert()
-  }, [])
-
-  const persist = () => {
+  const canContinue = Boolean(city && countryCode)
+  const handleContinue = () => {
+    if (!canContinue) return
     setError(null)
     startTransition(async () => {
       try {
+        // A city picked just before Next may still be resolving its climate:
+        // wait for it, and send null (clears the column) when it's unknown so
+        // the previous city's climate never sticks to the new one.
+        let zone = (climateZone || null) as ClimateZone | null
+        if (!zone && climateFetch.current) zone = await climateFetch.current.promise
         await saveEnvironment({
           city: city || undefined,
           countryCode: countryCode || undefined,
-          climateZone: (climateZone || undefined) as ClimateZone | undefined,
+          climateZone: zone,
           season: (season || undefined) as Season | undefined,
         })
         onContinue()
@@ -271,320 +340,162 @@ export function StepEnvironment({
     })
   }
 
-  const handleContinue = () => {
-    if (!canContinue) return
-    persist()
-  }
+  const cityName = main?.name ?? city
+  const cityLine = main ? placeLine(main) : countryName(countryCode)
+  const showList = listOpen && query.trim().length > 0
 
-  // Manual form is shown when the user opted into it, or when a geolocation
-  // lookup produced at least one usable field (so it can be reviewed/adjusted).
-  const showManualForm = mode === 'manual' || geoStatus === 'done'
-  const showManualFallbackLink =
-    mode === 'ask' && (geoStatus === 'denied' || geoStatus === 'error' || geoStatus === 'declined')
+  if (!mounted) return null
 
-  // Climate/season are still derived and persisted, just no longer surfaced
-  // in this summary line.
-  const detectedSummary = city && countryName ? `${city}, ${countryName}` : city || ''
+  return createPortal(
+    <div className="sl-root" ref={rootRef}>
+      <div className="sl-mapwrap" ref={wrapRef}>
+        <canvas
+          ref={canvasRef}
+          className="sl-map"
+          aria-label="World map. Tap to choose the nearest city, or use the search field."
+        />
+        <div className="sl-mapfade" />
+        <div className="sl-zoom sl-glass">
+          <button type="button" aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()}>
+            +
+          </button>
+          <button type="button" aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()}>
+            −
+          </button>
+        </div>
+        <div className="sl-maphint sl-glass" hidden={!hintVisible || !data}>
+          Tap the map to drop a pin
+        </div>
+        <div className="sl-toast sl-glass" role="status" hidden={!toastMsg}>
+          {toastMsg}
+        </div>
+      </div>
 
-  return (
-    <div ref={rootRef}>
-      {/* Background scene — portaled to body so GSAP's transform on ancestor
-          content doesn't trap this fixed layer inside the wizard's 680px
-          column. This step's content (form + two card grids) spans the full
-          height, so a single full-bleed treatment with a strong, even scrim
-          is used across all breakpoints instead of a top/bottom gradient —
-          the dense form must stay legible everywhere. */}
-      {mounted &&
-        createPortal(
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 0,
-              overflow: 'hidden',
-              pointerEvents: 'none',
-              backgroundColor: 'var(--color-obsidian-950)',
-            }}
-          >
-            <Image
-              src="/images/onboarding/step5/bg-environment-window.webp"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="step5-bg-image"
-            />
-            <div className="step5-bg-scrim" />
-
-            <style>{`
-              .step5-bg-image {
-                object-fit: cover;
-                object-position: center 30%;
-              }
-              @media (min-width: 1024px) {
-                .step5-bg-image { object-position: 25% center; }
-              }
-              .step5-bg-scrim {
-                position: absolute;
-                inset: 0;
-                background:
-                  linear-gradient(
-                    180deg,
-                    rgba(6,5,5,0.55) 0%,
-                    rgba(6,5,5,0.45) 40%,
-                    rgba(6,5,5,0.65) 100%
-                  ),
-                  linear-gradient(
-                    90deg,
-                    rgba(6,5,5,0.2) 0%,
-                    rgba(6,5,5,0.55) 55%,
-                    rgba(6,5,5,0.7) 100%
-                  );
-              }
-            `}</style>
-          </div>,
-          document.body
-        )}
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Heading — progress lives in the wizard header's StepCounter, so
-            this step carries no eyebrow of its own, matching every other
-            rebuilt step. */}
-        <h2
-          data-reveal
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 300,
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            lineHeight: 1.1,
-            letterSpacing: '-0.01em',
-            color: 'var(--color-alabaster-50)',
-            margin: '0 0 1rem',
-            textShadow: '0 1px 24px rgba(6,5,5,0.7)',
-          }}
-        >
-          SkinAudit uses your general location to understand the environment around your routine.
-        </h2>
-
-        <p data-reveal style={SUB_COPY}>
+      <section className="sl-panel sl-glass" aria-label="Your location">
+        <h1>SkinAudit uses your general location to understand the environment around your routine.</h1>
+        <p className="sl-sub">
           Allow location and we&apos;ll handle the context automatically. We care about the city
           you&apos;re in, not your home address.
         </p>
 
-        {/* ── State A: geolocation permission prompt ── */}
-        {!showManualForm && (
-          <div data-reveal style={{ marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
-              <button
-                type="button"
-                onClick={handleAllowLocation}
-                disabled={geoStatus === 'requesting'}
-                className="btn-primary"
-                style={{
-                  minHeight: '52px',
-                  paddingLeft: '2.5rem',
-                  paddingRight: '2.5rem',
-                }}
-              >
-                {geoStatus === 'requesting' ? 'Detecting…' : 'Allow location access'}
-              </button>
+        <div className="sl-city">
+          <span className="sl-eyebrow">Current location</span>
+          <h2 className={cityName ? undefined : 'is-empty'}>{cityName || 'Not set yet'}</h2>
+          {cityLine && <div className="sl-country">{cityLine}</div>}
+        </div>
 
-              {geoStatus !== 'requesting' && !showManualFallbackLink && (
-                <button
-                  type="button"
-                  onClick={() => setGeoStatus('declined')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: '2px 0',
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '12px',
-                    fontWeight: 400,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-alabaster-400)',
-                    transition: 'color 200ms ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
-                  }}
-                  onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.color =
-                      'var(--color-alabaster-400)'
-                  }}
-                >
-                  Decline
-                </button>
-              )}
-            </div>
-
-            {showManualFallbackLink && (
-              <button
-                type="button"
-                onClick={() => setMode('manual')}
-                style={{
-                  display: 'block',
-                  marginTop: '1rem',
-                  background: 'none',
-                  border: 'none',
-                  padding: '2px 0',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '12px',
-                  fontWeight: 400,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-alabaster-400)',
-                  transition: 'color 200ms ease',
-                }}
-                onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-sienna-400)'
-                }}
-                onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-alabaster-400)'
-                }}
-              >
-                Set location manually
-              </button>
-            )}
-
-            {(geoStatus === 'denied' || geoStatus === 'declined') && (
-              <p
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 300,
-                  fontSize: '0.8125rem',
-                  lineHeight: 1.6,
-                  color: 'var(--color-text-muted)',
-                  margin: '0.75rem 0 0',
-                  maxWidth: '28rem',
-                }}
-              >
-                No problem — you can set your location manually instead.
-              </p>
-            )}
-            {geoStatus === 'error' && (
-              <p
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 300,
-                  fontSize: '0.8125rem',
-                  lineHeight: 1.6,
-                  color: 'var(--color-text-muted)',
-                  margin: '0.75rem 0 0',
-                  maxWidth: '28rem',
-                }}
-              >
-                We couldn&apos;t detect your location. You can set it manually instead.
-              </p>
-            )}
-
-            <StepFooter onContinue={() => {}} onBack={onBack} isLoading={false} continueDisabled />
-          </div>
-        )}
-
-        {/* ── After a successful detection: confirmation banner ── */}
-        {showManualForm && geoStatus === 'done' && detectedSummary && (
-          <div
-            data-reveal
-            style={{
-              marginBottom: '1.5rem',
-              padding: '0.875rem 1rem',
-              borderRadius: 'var(--radius-card)',
-              border: '1px solid rgba(196, 176, 154,0.28)',
-              backgroundColor: 'var(--color-accent-subtle)',
-            }}
-          >
-            <span
-              style={{
-                display: 'block',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 300,
-                fontSize: '0.8125rem',
-                color: 'var(--color-alabaster-50)',
-              }}
-            >
-              Detected: {detectedSummary}
-            </span>
-            <span
-              style={{
-                display: 'block',
-                marginTop: '0.25rem',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 300,
-                fontSize: '0.6875rem',
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              Adjust any field below if it looks off.
-            </span>
-          </div>
-        )}
-
-        {/* ── State B: manual city + climate + season form ── */}
-        {showManualForm && (
-          <>
-            {/* Location field — city autocomplete, country deduced automatically */}
-            <div data-reveal style={{ marginBottom: '2rem' }}>
-              <span className="label-caps" style={{ display: 'block', marginBottom: '0.75rem' }}>
-                Current location
-              </span>
-              <div
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  border: '1px solid rgba(196, 176, 154,0.28)',
-                  borderRadius: '4px',
-                  padding: '0.9375rem 1.125rem',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <CityAutocomplete
-                    city={city}
-                    countryName={countryName}
-                    onSelect={handleCitySelect}
-                  />
-                </div>
-                <MapPin
-                  size={18}
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                  style={{ flexShrink: 0, color: 'var(--color-sienna-400)' }}
-                />
-              </div>
-            </div>
-
-            {/* Climate and season are intentionally not rendered — they are
-            derived from the selected location and persisted in the
-            background (see handleCitySelect / handleAllowLocation). */}
-
-            {error && (
-              <p
-                role="alert"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.8125rem',
-                  color: 'var(--color-blush-500)',
-                  marginTop: '0.75rem',
-                }}
-              >
-                {error}
-              </p>
-            )}
-
-            <StepFooter
-              onContinue={handleContinue}
-              onBack={onBack}
-              isLoading={isPending}
-              continueDisabled={!canContinue}
+        <div className="sl-search">
+          <div className="sl-field">
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => onQuery(e.target.value)}
+              onKeyDown={onKeyDown}
+              onBlur={() => setTimeout(() => setListOpen(false), 150)}
+              onFocus={() => query && setListOpen(true)}
+              placeholder={split && slot === 1 ? 'Search your second city' : 'Search any city'}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showList && results.length > 0}
+              aria-controls="sl-sugg"
+              aria-autocomplete="list"
+              aria-activedescendant={showList && results.length ? `sl-opt-${active}` : undefined}
+              aria-label="Search any city"
+              disabled={!data}
             />
-          </>
+            <button type="button" className="sl-locate" onClick={locate} disabled={!data || locating}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                <circle cx="12" cy="12" r="7" />
+              </svg>
+              <span>{locating ? 'Locating…' : 'Locate me'}</span>
+            </button>
+          </div>
+          {showList && results.length > 0 && (
+            <ul className="sl-sugg" id="sl-sugg" role="listbox">
+              {results.map((c, i) => (
+                <li
+                  key={`${c.name}-${c.cc}-${c.lat}-${c.lon}`}
+                  role="option"
+                  id={`sl-opt-${i}`}
+                  aria-selected={i === active}
+                >
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className={i === active ? 'active' : undefined}
+                    // mousedown fires before the input's blur closes the list.
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => pick(c)}
+                  >
+                    {c.name}
+                    <span>{placeLine(c)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {showList && data && results.length === 0 && (
+            <div className="sl-sugg sl-sugg-empty" role="status">
+              No city found. Try a nearby larger city.
+            </div>
+          )}
+        </div>
+
+        {loadError && (
+          <p className="sl-error" role="alert">
+            The map couldn&apos;t load. Check your connection and reload the page.
+          </p>
         )}
-      </div>
-    </div>
+
+        {multiCity && (
+          <div className="sl-second">
+            <button
+              type="button"
+              className="sl-switch"
+              role="switch"
+              aria-checked={split}
+              onClick={toggleSplit}
+            >
+              <span>I split my time between two places</span>
+              <span className="knob" aria-hidden="true" />
+            </button>
+            {split && (
+              <div>
+                <p className="sl-fine" style={{ marginBottom: 8 }}>
+                  Tap the map or search to add your second city.
+                </p>
+                <div className="sl-chipsel" role="group" aria-label="Which pin to place">
+                  <button type="button" aria-pressed={slot === 0} onClick={() => setSlot(0)}>
+                    Main city
+                  </button>
+                  <button type="button" aria-pressed={slot === 1} onClick={() => setSlot(1)}>
+                    Second city
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <p className="sl-error" role="alert">
+            {error}
+          </p>
+        )}
+      </section>
+
+      <footer className="sl-foot">
+        <StepFooter
+          onContinue={handleContinue}
+          onBack={onBack}
+          isLoading={isPending}
+          continueDisabled={!canContinue}
+        />
+      </footer>
+    </div>,
+    document.body,
   )
 }

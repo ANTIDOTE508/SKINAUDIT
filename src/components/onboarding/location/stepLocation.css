@@ -1,0 +1,435 @@
+/* Step 20 — location map. Mirrors templates/stepLocation/stepLocation.html.
+   Desktop (1024+): the map fills the viewport behind everything, frosted panel
+   docked right. Below 1024: map on top (50vh), panel slides up over it like a
+   sheet. The whole screen is one fixed layer portaled to <body>, so it covers
+   the wizard chrome and scrolls on its own below 1024. */
+
+.sl-root {
+  --bg: #0b0a09;
+  --glass: rgba(20, 18, 16, 0.78);
+  --line: rgba(239, 233, 225, 0.1);
+  --line-2: rgba(239, 233, 225, 0.2);
+  --fg: #efe9e1;
+  --muted: #b0a69b;
+  --faint: #7d746b;
+  --sand: #d6c3ae;
+  --sand-ink: #1a1612;
+  --sand-wash: rgba(214, 195, 174, 0.12);
+  --display: var(--font-heading);
+  --body: var(--font-body);
+  --gutter: 16px;
+
+  position: fixed;
+  /* Starts under the wizard's header (counter + sign out), which stays
+     visible; --sl-top is measured by StepEnvironment. */
+  top: var(--sl-top, 72px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Above the wizard's <main> (z-index 10). */
+  z-index: 20;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  color-scheme: dark;
+}
+@media (min-width: 700px) {
+  .sl-root {
+    --gutter: 32px;
+  }
+}
+@media (min-width: 1024px) {
+  .sl-root {
+    overflow: hidden;
+  }
+}
+.sl-root *,
+.sl-root *::before,
+.sl-root *::after {
+  box-sizing: border-box;
+}
+.sl-root :where([hidden]) {
+  display: none !important;
+}
+.sl-root :where(button, input) {
+  font: inherit;
+  color: inherit;
+}
+.sl-root :where(button) {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.sl-root button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.sl-root button:focus-visible,
+.sl-root input:focus-visible {
+  outline: 2px solid var(--sand);
+  outline-offset: 2px;
+}
+.sl-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sl-glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+}
+
+/* ── map ── */
+.sl-mapwrap {
+  position: relative;
+  height: 50vh;
+  min-height: 320px;
+  overflow: hidden;
+  touch-action: none;
+}
+@media (min-width: 1024px) {
+  .sl-mapwrap {
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
+}
+.sl-map {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+.sl-map.dragging {
+  cursor: grabbing;
+}
+.sl-mapfade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(11, 10, 9, 0.85));
+}
+.sl-zoom {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 2;
+}
+.sl-zoom button {
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  color: var(--muted);
+}
+.sl-zoom button + button {
+  border-top: 1px solid var(--line);
+}
+@media (min-width: 1024px) {
+  .sl-zoom {
+    bottom: 108px;
+  }
+}
+.sl-maphint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 48px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  .sl-maphint {
+    left: calc((100% - 480px) / 2);
+    bottom: 108px;
+  }
+}
+.sl-toast {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  z-index: 3;
+  white-space: nowrap;
+  max-width: calc(100% - 2 * var(--gutter));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (min-width: 1024px) {
+  .sl-toast {
+    left: calc((100% - 480px) / 2);
+    top: 18px;
+  }
+}
+
+/* ── panel ── */
+.sl-panel {
+  position: relative;
+  z-index: 4;
+  margin: -28px auto 0;
+  max-width: 640px;
+  border-radius: 24px 24px 0 0;
+  padding: 22px var(--gutter) 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-width: 1px 0 0;
+}
+@media (min-width: 700px) {
+  .sl-panel {
+    border-radius: 24px;
+    margin-bottom: 104px;
+    border-width: 1px;
+    padding: 28px 28px 32px;
+  }
+}
+@media (min-width: 1024px) {
+  .sl-panel {
+    position: absolute;
+    top: 50%;
+    transform: translateY(calc(-50% - 44px));
+    right: var(--gutter);
+    max-height: calc(100% - 200px);
+    width: 440px;
+    margin: 0;
+    overflow: auto;
+    padding: 28px;
+  }
+}
+.sl-panel h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(26px, 2.6vw, 32px);
+  line-height: 1.15;
+  margin: 0;
+  text-wrap: balance;
+}
+.sl-sub {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
+}
+
+.sl-search {
+  position: relative;
+}
+.sl-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  padding: 4px 6px 4px 14px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.sl-field:focus-within {
+  border-color: var(--sand);
+}
+.sl-field input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 10px 0;
+  font-size: 15px;
+}
+.sl-field input:focus {
+  outline: none;
+}
+.sl-field input::placeholder {
+  color: var(--faint);
+}
+.sl-locate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--sand-ink);
+  background: var(--sand);
+  border-radius: 10px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+.sl-locate svg {
+  width: 14px;
+  height: 14px;
+}
+.sl-sugg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 5;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #171513;
+  border: 1px solid var(--line-2);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+.sl-sugg li button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+.sl-sugg li button span {
+  color: var(--faint);
+  font-size: 12.5px;
+}
+.sl-sugg li button:hover,
+.sl-sugg li button.active {
+  background: var(--sand-wash);
+}
+.sl-sugg-empty {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.sl-city {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.sl-city h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1;
+  margin: 4px 0 0;
+}
+.sl-city h2.is-empty {
+  color: var(--faint);
+}
+.sl-country {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sl-second {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.sl-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  text-align: left;
+}
+.sl-switch .knob {
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--line-2);
+  position: relative;
+  flex: none;
+  transition: background 0.2s;
+}
+.sl-switch .knob::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--fg);
+  transition: transform 0.2s;
+}
+.sl-switch[aria-checked='true'] .knob {
+  background: var(--sand);
+}
+.sl-switch[aria-checked='true'] .knob::after {
+  transform: translateX(16px);
+  background: var(--sand-ink);
+}
+.sl-chipsel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sl-chipsel button {
+  font-size: 13px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+.sl-chipsel button[aria-pressed='true'] {
+  background: var(--sand);
+  color: var(--sand-ink);
+  border-color: var(--sand);
+}
+.sl-fine {
+  font-size: 11.5px;
+  color: var(--faint);
+  margin: 0;
+}
+.sl-error {
+  font-size: 13px;
+  color: var(--color-blush-500, #d9a3a3);
+  margin: 0;
+}
+
+/* ── footer: the wizard's StepFooter (Back / Next), pinned over the map ── */
+.sl-foot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  /* Same side gutter as the wizard header, so Back/Next line up with it. */
+  padding: 14px clamp(1.5rem, 5vw, 4rem) calc(16px + env(safe-area-inset-bottom, 0px));
+  /* Below 1024 the panel scrolls under the footer: frosted bar, as in the template. */
+  background: rgba(11, 10, 9, 0.92);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border-top: 1px solid var(--line);
+}
+@media (min-width: 1024px) {
+  .sl-foot {
+    background: linear-gradient(to top, rgba(11, 10, 9, 0.95) 40%, rgba(11, 10, 9, 0));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-top: 0;
+  }
+}
+.sl-foot .screen-footer {
+  margin-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-root * {
+    transition: none !important;
+  }
+}
